@@ -1,0 +1,70 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-17 060201.png",
+    "stored_filename": "a8b93684-8d7e-4622-8946-19fafe5f6593.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-19T08:34:45.444649+00:00"
+  },
+  "species_list": [
+    "Asiatic Lion"
+  ],
+  "detection_counts": {
+    "Asiatic Lion": 1
+  },
+  "confidence_levels": {
+    "Asiatic Lion": {
+      "avg_confidence": 0.8686,
+      "max_confidence": 0.8686,
+      "min_confidence": 0.8686
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "asiatic lion"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 1,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 1,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [
+      "Asiatic Lion"
+    ],
+    "vulnerable_species": [],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 93,
+    "brightness": 129.2,
+    "contrast": 66.2,
+    "blur": "Low",
+    "sharpness": 755.8,
+    "resolution": {
+      "width": 762,
+      "height": 607
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 86.9
+  },
+  "processing_time_ms": 921.1156368255615,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

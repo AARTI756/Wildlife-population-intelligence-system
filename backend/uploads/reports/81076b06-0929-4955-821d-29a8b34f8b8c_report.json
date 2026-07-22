@@ -1,0 +1,66 @@
+{
+  "project_information": {
+    "project_name": "Silent Valley Bioacoustic Audit",
+    "description": "Automated regional surveillance program inside Silent Valley Sairandhri.",
+    "site_id": 16,
+    "survey_id": 16
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 190902.png",
+    "stored_filename": "81076b06-0929-4955-821d-29a8b34f8b8c.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-18T14:49:22.863511+00:00"
+  },
+  "species_list": [
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Unknown Species": {
+      "avg_confidence": 0.4427,
+      "max_confidence": 0.4427,
+      "min_confidence": 0.4427
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 0,
+    "unique_species_detected": [],
+    "species_richness": 0,
+    "shannon_diversity_index": 0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "Medium",
+    "overall_score": 69,
+    "brightness": 49.7,
+    "contrast": 43.5,
+    "blur": "Low",
+    "sharpness": 469.2,
+    "resolution": {
+      "width": 597,
+      "height": 366
+    },
+    "exposure": "Underexposed",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 44.3
+  },
+  "processing_time_ms": 679.8548698425293,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 44%)."
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 212905.png",
+    "stored_filename": "49c0f23c-9ef2-47a0-b46a-32bda8474adc.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-19T08:32:22.790276+00:00"
+  },
+  "species_list": [
+    "Bengal Tiger"
+  ],
+  "detection_counts": {
+    "Bengal Tiger": 1
+  },
+  "confidence_levels": {
+    "Bengal Tiger": {
+      "avg_confidence": 0.8831,
+      "max_confidence": 0.8831,
+      "min_confidence": 0.8831
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "bengal tiger"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 1,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 1,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [
+      "Bengal Tiger"
+    ],
+    "vulnerable_species": [],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 85,
+    "brightness": 105.6,
+    "contrast": 46.5,
+    "blur": "Low",
+    "sharpness": 1338.3,
+    "resolution": {
+      "width": 662,
+      "height": 435
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 88.3
+  },
+  "processing_time_ms": 9834.280967712402,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

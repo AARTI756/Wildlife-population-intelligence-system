@@ -1,0 +1,70 @@
+{
+  "project_information": {
+    "project_name": "Foothill Species Diversity",
+    "description": "Automated regional surveillance program inside Manas Bansbari Range.",
+    "site_id": 17,
+    "survey_id": 17
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 163825.png",
+    "stored_filename": "aea924e6-e241-4350-8201-1d1a517c6ca3.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-18T14:47:17.607175+00:00"
+  },
+  "species_list": [
+    "Asiatic Lion"
+  ],
+  "detection_counts": {
+    "Asiatic Lion": 2
+  },
+  "confidence_levels": {
+    "Asiatic Lion": {
+      "avg_confidence": 0.893,
+      "max_confidence": 0.9161,
+      "min_confidence": 0.8699
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 2,
+    "unique_species_detected": [
+      "asiatic lion"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 2,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 2,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [
+      "Asiatic Lion"
+    ],
+    "vulnerable_species": [],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 90,
+    "brightness": 104.5,
+    "contrast": 58.0,
+    "blur": "Low",
+    "sharpness": 436.8,
+    "resolution": {
+      "width": 802,
+      "height": 547
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 91.6
+  },
+  "processing_time_ms": 10261.015176773071,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

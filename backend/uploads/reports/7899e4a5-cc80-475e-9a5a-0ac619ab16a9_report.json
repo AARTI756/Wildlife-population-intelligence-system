@@ -1,0 +1,88 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "mixkit-owl-in-a-forest-2466.wav",
+    "stored_filename": "7899e4a5-cc80-475e-9a5a-0ac619ab16a9.wav",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-19T09:22:33.158483+00:00"
+  },
+  "species_list": [
+    "Barbet",
+    "Unknown Species",
+    "Snipe",
+    "Dove"
+  ],
+  "detection_counts": {
+    "Barbet": 6,
+    "Unknown Species": 3,
+    "Snipe": 1,
+    "Dove": 5
+  },
+  "confidence_levels": {
+    "Barbet": {
+      "avg_confidence": 0.7955,
+      "max_confidence": 0.995,
+      "min_confidence": 0.5852
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.2512,
+      "max_confidence": 0.283,
+      "min_confidence": 0.2175
+    },
+    "Snipe": {
+      "avg_confidence": 0.4148,
+      "max_confidence": 0.4148,
+      "min_confidence": 0.4148
+    },
+    "Dove": {
+      "avg_confidence": 0.6169,
+      "max_confidence": 0.8691,
+      "min_confidence": 0.4297
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 12,
+    "unique_species_detected": [
+      "snipe",
+      "dove",
+      "barbet"
+    ],
+    "species_richness": 3,
+    "shannon_diversity_index": 0.9184,
+    "simpson_diversity_index": 0.5694,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 12,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 12
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 6111.089468002319,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Barbet (confidence: 59%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 25%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 22%).",
+    "Manual verification recommended for low confidence detection of Snipe (confidence: 41%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 28%).",
+    "Manual verification recommended for low confidence detection of Dove (confidence: 50%).",
+    "Manual verification recommended for low confidence detection of Dove (confidence: 43%).",
+    "Manual verification recommended for low confidence detection of Dove (confidence: 49%)."
+  ]
+}

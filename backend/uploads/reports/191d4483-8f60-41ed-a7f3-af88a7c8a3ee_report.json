@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-22 143953.png",
+    "stored_filename": "191d4483-8f60-41ed-a7f3-af88a7c8a3ee.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-22T09:10:10.833575+00:00"
+  },
+  "species_list": [
+    "Kangaroo"
+  ],
+  "detection_counts": {
+    "Kangaroo": 1
+  },
+  "confidence_levels": {
+    "Kangaroo": {
+      "avg_confidence": 0.9601,
+      "max_confidence": 0.9601,
+      "min_confidence": 0.9601
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "kangaroo"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 83,
+    "brightness": 88.0,
+    "contrast": 41.6,
+    "blur": "Low",
+    "sharpness": 434.4,
+    "resolution": {
+      "width": 692,
+      "height": 591
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 96.0
+  },
+  "processing_time_ms": 418.08366775512695,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-17 051831.png",
+    "stored_filename": "b9bfab34-6da9-429b-bff9-ee62f45b76f6.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-19T10:49:48.698705+00:00"
+  },
+  "species_list": [
+    "Giraffe"
+  ],
+  "detection_counts": {
+    "Giraffe": 2
+  },
+  "confidence_levels": {
+    "Giraffe": {
+      "avg_confidence": 0.7915,
+      "max_confidence": 0.8226,
+      "min_confidence": 0.7603
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 2,
+    "unique_species_detected": [
+      "giraffe"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 2,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 2,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [
+      "Giraffe"
+    ],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 83,
+    "brightness": 106.0,
+    "contrast": 42.9,
+    "blur": "Low",
+    "sharpness": 2523.2,
+    "resolution": {
+      "width": 873,
+      "height": 515
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 82.3
+  },
+  "processing_time_ms": 237.08152770996094,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

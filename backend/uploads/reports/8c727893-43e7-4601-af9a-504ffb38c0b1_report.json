@@ -1,0 +1,86 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 164302.png",
+    "stored_filename": "8c727893-43e7-4601-af9a-504ffb38c0b1.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-19T10:32:09.088017+00:00"
+  },
+  "species_list": [
+    "Indian Leopard",
+    "Kangaroo",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Indian Leopard": 1,
+    "Kangaroo": 1,
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Indian Leopard": {
+      "avg_confidence": 0.8931,
+      "max_confidence": 0.8931,
+      "min_confidence": 0.8931
+    },
+    "Kangaroo": {
+      "avg_confidence": 0.4273,
+      "max_confidence": 0.4273,
+      "min_confidence": 0.4273
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.175,
+      "max_confidence": 0.175,
+      "min_confidence": 0.175
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 2,
+    "unique_species_detected": [
+      "kangaroo",
+      "indian leopard"
+    ],
+    "species_richness": 2,
+    "shannon_diversity_index": 0.6931,
+    "simpson_diversity_index": 0.5,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 1,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 1,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [
+      "Indian Leopard"
+    ],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "Medium",
+    "overall_score": 70,
+    "brightness": 54.9,
+    "contrast": 46.5,
+    "blur": "Low",
+    "sharpness": 1772.5,
+    "resolution": {
+      "width": 827,
+      "height": 387
+    },
+    "exposure": "Underexposed",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 89.3
+  },
+  "processing_time_ms": 684.5550537109375,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Kangaroo (confidence: 43%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 17%)."
+  ]
+}

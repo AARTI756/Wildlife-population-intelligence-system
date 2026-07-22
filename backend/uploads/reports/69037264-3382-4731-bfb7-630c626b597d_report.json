@@ -1,0 +1,75 @@
+{
+  "project_information": {
+    "project_name": "Canopy & Soil Bioacoustics",
+    "description": "Automated regional surveillance program inside Satpura Madhai Range.",
+    "site_id": 9,
+    "survey_id": 9
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 163728.png",
+    "stored_filename": "69037264-3382-4731-bfb7-630c626b597d.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-19T08:36:18.501398+00:00"
+  },
+  "species_list": [
+    "Deer",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Deer": 1,
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Deer": {
+      "avg_confidence": 0.6879,
+      "max_confidence": 0.6879,
+      "min_confidence": 0.6879
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.1059,
+      "max_confidence": 0.1059,
+      "min_confidence": 0.1059
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "deer"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 77,
+    "brightness": 130.2,
+    "contrast": 50.8,
+    "blur": "Moderate",
+    "sharpness": 102.9,
+    "resolution": {
+      "width": 1416,
+      "height": 672
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 68.8
+  },
+  "processing_time_ms": 1012.2766494750977,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 11%)."
+  ]
+}

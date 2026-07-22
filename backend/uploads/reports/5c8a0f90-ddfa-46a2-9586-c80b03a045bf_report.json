@@ -1,0 +1,58 @@
+{
+  "project_information": {
+    "project_name": "Dry Deciduous Wildlife Survey",
+    "description": "Automated regional surveillance program inside Ranthambore Zone 3.",
+    "site_id": 10,
+    "survey_id": 10
+  },
+  "media_metadata": {
+    "original_filename": "dragon-studio-goat-sound-390298.mp3",
+    "stored_filename": "5c8a0f90-ddfa-46a2-9586-c80b03a045bf.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-22T09:01:39.436343+00:00"
+  },
+  "species_list": [
+    "Mammal Vocalization"
+  ],
+  "detection_counts": {
+    "Mammal Vocalization": 1
+  },
+  "confidence_levels": {
+    "Mammal Vocalization": {
+      "avg_confidence": 0.6596,
+      "max_confidence": 0.6596,
+      "min_confidence": 0.6596
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "mammal vocalization"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 48.707008361816406,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

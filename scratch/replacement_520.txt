@@ -1,0 +1,16 @@
+  useEffect(() => {
+    if (groupedDetections.length > 0) {
+      const initial = {};
+      groupedDetections.forEach((g) => {
+        initial[g.species] = false;
+      });
+      setExpandedCards(initial);
+    }
+  }, [groupedDetections]);
+
+  const toggleCard = (speciesKey) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [speciesKey]: !prev[speciesKey]
+    }));
+  };

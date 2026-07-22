@@ -1,0 +1,58 @@
+{
+  "project_information": {
+    "project_name": "Western Ghats Monsoon Census",
+    "description": "Automated regional surveillance program inside Periyar Thekkady Lake.",
+    "site_id": 11,
+    "survey_id": 11
+  },
+  "media_metadata": {
+    "original_filename": "dragon-studio-frog-croaking-sound-effect-322956.mp3",
+    "stored_filename": "326e8f57-d06b-49dc-aeaf-0a39eb6b3fab.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-18T14:54:42.257251+00:00"
+  },
+  "species_list": [
+    "Pacific Chorus Frog"
+  ],
+  "detection_counts": {
+    "Pacific Chorus Frog": 3
+  },
+  "confidence_levels": {
+    "Pacific Chorus Frog": {
+      "avg_confidence": 0.9826,
+      "max_confidence": 0.9931,
+      "min_confidence": 0.9724
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 3,
+    "unique_species_detected": [
+      "pacific chorus frog"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 3,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 3
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 708.5831165313721,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

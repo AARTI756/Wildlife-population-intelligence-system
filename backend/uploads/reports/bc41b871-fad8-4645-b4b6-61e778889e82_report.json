@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-19 144709.png",
+    "stored_filename": "bc41b871-fad8-4645-b4b6-61e778889e82.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-22T09:08:14.000793+00:00"
+  },
+  "species_list": [
+    "Deer"
+  ],
+  "detection_counts": {
+    "Deer": 2
+  },
+  "confidence_levels": {
+    "Deer": {
+      "avg_confidence": 0.7802,
+      "max_confidence": 0.8057,
+      "min_confidence": 0.7547
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 2,
+    "unique_species_detected": [
+      "deer"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 2,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 2
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 80,
+    "brightness": 115.9,
+    "contrast": 35.4,
+    "blur": "Low",
+    "sharpness": 381.2,
+    "resolution": {
+      "width": 576,
+      "height": 368
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 80.6
+  },
+  "processing_time_ms": 289.79015350341797,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

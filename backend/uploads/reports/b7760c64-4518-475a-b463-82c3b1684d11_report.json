@@ -1,0 +1,77 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-17 061616.png",
+    "stored_filename": "b7760c64-4518-475a-b463-82c3b1684d11.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-22T09:07:19.484369+00:00"
+  },
+  "species_list": [
+    "Cheetah",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Cheetah": 1,
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Cheetah": {
+      "avg_confidence": 0.9601,
+      "max_confidence": 0.9601,
+      "min_confidence": 0.9601
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.1451,
+      "max_confidence": 0.1451,
+      "min_confidence": 0.1451
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "cheetah"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 1,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 1,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [
+      "Cheetah"
+    ],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 90,
+    "brightness": 108.9,
+    "contrast": 57.9,
+    "blur": "Low",
+    "sharpness": 641.1,
+    "resolution": {
+      "width": 906,
+      "height": 415
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 96.0
+  },
+  "processing_time_ms": 9205.0940990448,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 15%)."
+  ]
+}

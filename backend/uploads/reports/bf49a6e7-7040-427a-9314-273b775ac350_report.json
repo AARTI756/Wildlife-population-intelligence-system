@@ -1,0 +1,58 @@
+{
+  "project_information": {
+    "project_name": "Asiatic Lion Registry 2026",
+    "description": "Automated regional surveillance program inside Gir Sasan Sanctuary.",
+    "site_id": 8,
+    "survey_id": 8
+  },
+  "media_metadata": {
+    "original_filename": "dffdv-tiger-attack-195840.mp3",
+    "stored_filename": "bf49a6e7-7040-427a-9314-273b775ac350.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-22T11:29:13.886974+00:00"
+  },
+  "species_list": [
+    "Mammal Vocalization"
+  ],
+  "detection_counts": {
+    "Mammal Vocalization": 1
+  },
+  "confidence_levels": {
+    "Mammal Vocalization": {
+      "avg_confidence": 0.8294,
+      "max_confidence": 0.8294,
+      "min_confidence": 0.8294
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "mammal vocalization"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 1772.289752960205,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

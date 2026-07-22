@@ -1,0 +1,77 @@
+{
+  "project_information": {
+    "project_name": "Western Ghats Monsoon Census",
+    "description": "Automated regional surveillance program inside Periyar Thekkady Lake.",
+    "site_id": 11,
+    "survey_id": 11
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-19 144828.png",
+    "stored_filename": "517467b4-9cd1-4bb4-8dff-3305ff8c0886.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-19T09:18:36.212047+00:00"
+  },
+  "species_list": [
+    "Jellyfish",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Jellyfish": 1,
+    "Unknown Species": 2
+  },
+  "confidence_levels": {
+    "Jellyfish": {
+      "avg_confidence": 0.4403,
+      "max_confidence": 0.4403,
+      "min_confidence": 0.4403
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.1934,
+      "max_confidence": 0.267,
+      "min_confidence": 0.1198
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "jellyfish"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 85,
+    "brightness": 95.6,
+    "contrast": 47.6,
+    "blur": "Low",
+    "sharpness": 732.8,
+    "resolution": {
+      "width": 598,
+      "height": 395
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 44.0
+  },
+  "processing_time_ms": 761.406660079956,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Jellyfish (confidence: 44%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 27%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 12%)."
+  ]
+}

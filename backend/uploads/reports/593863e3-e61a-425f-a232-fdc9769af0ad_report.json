@@ -1,0 +1,78 @@
+{
+  "project_information": {
+    "project_name": "Nilgiri Biosphere Monitoring",
+    "description": "Automated regional surveillance program inside Mudumalai Kargudi Area.",
+    "site_id": 13,
+    "survey_id": 13
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 164302.png",
+    "stored_filename": "593863e3-e61a-425f-a232-fdc9769af0ad.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-18T14:51:56.881217+00:00"
+  },
+  "species_list": [
+    "Indian Leopard",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Indian Leopard": 1,
+    "Unknown Species": 2
+  },
+  "confidence_levels": {
+    "Indian Leopard": {
+      "avg_confidence": 0.8931,
+      "max_confidence": 0.8931,
+      "min_confidence": 0.8931
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.3012,
+      "max_confidence": 0.4273,
+      "min_confidence": 0.175
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "indian leopard"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 1,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 1,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [
+      "Indian Leopard"
+    ],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "Medium",
+    "overall_score": 70,
+    "brightness": 54.9,
+    "contrast": 46.5,
+    "blur": "Low",
+    "sharpness": 1772.5,
+    "resolution": {
+      "width": 827,
+      "height": 387
+    },
+    "exposure": "Underexposed",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 89.3
+  },
+  "processing_time_ms": 629.5003890991211,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 43%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 17%)."
+  ]
+}

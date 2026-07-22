@@ -1,0 +1,70 @@
+{
+  "project_information": {
+    "project_name": "Dry Deciduous Wildlife Survey",
+    "description": "Automated regional surveillance program inside Ranthambore Zone 3.",
+    "site_id": 10,
+    "survey_id": 10
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 150917.png",
+    "stored_filename": "c49c2c47-6962-407d-87b6-de07645c305d.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-21T14:30:58.196878+00:00"
+  },
+  "species_list": [
+    "Lion"
+  ],
+  "detection_counts": {
+    "Lion": 1
+  },
+  "confidence_levels": {
+    "Lion": {
+      "avg_confidence": 0.9083,
+      "max_confidence": 0.9083,
+      "min_confidence": 0.9083
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "lion"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 1,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 1,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [
+      "Lion"
+    ],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 85,
+    "brightness": 100.6,
+    "contrast": 45.8,
+    "blur": "Low",
+    "sharpness": 1078.1,
+    "resolution": {
+      "width": 407,
+      "height": 487
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 90.8
+  },
+  "processing_time_ms": 14427.657127380371,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "project_information": {
+    "project_name": "Grassland Mammal Surveillance",
+    "description": "Automated regional surveillance program inside Kaziranga Kohora Range.",
+    "site_id": 7,
+    "survey_id": 7
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-19 145628.png",
+    "stored_filename": "9456f5f1-9119-47ec-983a-93cebbef80d1.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-19T09:27:10.047016+00:00"
+  },
+  "species_list": [
+    "Hedgehog",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Hedgehog": 1,
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Hedgehog": {
+      "avg_confidence": 0.9153,
+      "max_confidence": 0.9153,
+      "min_confidence": 0.9153
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.319,
+      "max_confidence": 0.319,
+      "min_confidence": 0.319
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "hedgehog"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 84,
+    "brightness": 146.8,
+    "contrast": 45.5,
+    "blur": "Low",
+    "sharpness": 409.2,
+    "resolution": {
+      "width": 471,
+      "height": 345
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 91.5
+  },
+  "processing_time_ms": 604.7983169555664,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 32%)."
+  ]
+}

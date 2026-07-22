@@ -1,0 +1,84 @@
+{
+  "project_information": {
+    "project_name": "Silent Valley Bioacoustic Audit",
+    "description": "Automated regional surveillance program inside Silent Valley Sairandhri.",
+    "site_id": 16,
+    "survey_id": 16
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-17 061337.png",
+    "stored_filename": "a22f5b0c-fb15-4241-ad26-9446d46a1a92.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-18T14:50:06.530138+00:00"
+  },
+  "species_list": [
+    "Proboscis Monkey",
+    "Monitor Lizard",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Proboscis Monkey": 1,
+    "Monitor Lizard": 1,
+    "Unknown Species": 2
+  },
+  "confidence_levels": {
+    "Proboscis Monkey": {
+      "avg_confidence": 0.9186,
+      "max_confidence": 0.9186,
+      "min_confidence": 0.9186
+    },
+    "Monitor Lizard": {
+      "avg_confidence": 0.8872,
+      "max_confidence": 0.8872,
+      "min_confidence": 0.8872
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.265,
+      "max_confidence": 0.3713,
+      "min_confidence": 0.1587
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 2,
+    "unique_species_detected": [
+      "monitor lizard",
+      "proboscis monkey"
+    ],
+    "species_richness": 2,
+    "shannon_diversity_index": 0.6931,
+    "simpson_diversity_index": 0.5,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 2,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 2
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 89,
+    "brightness": 98.3,
+    "contrast": 56.9,
+    "blur": "Low",
+    "sharpness": 1434.8,
+    "resolution": {
+      "width": 881,
+      "height": 486
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 91.9
+  },
+  "processing_time_ms": 735.126256942749,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 37%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 16%)."
+  ]
+}

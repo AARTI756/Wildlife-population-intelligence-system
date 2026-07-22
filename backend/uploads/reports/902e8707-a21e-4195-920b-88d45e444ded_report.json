@@ -1,0 +1,76 @@
+{
+  "project_information": {
+    "project_name": "Western Ghats Monsoon Census",
+    "description": "Automated regional surveillance program inside Periyar Thekkady Lake.",
+    "site_id": 11,
+    "survey_id": 11
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-22 143842.png",
+    "stored_filename": "902e8707-a21e-4195-920b-88d45e444ded.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-22T13:27:56.282754+00:00"
+  },
+  "species_list": [
+    "Deer",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Deer": 1,
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Deer": {
+      "avg_confidence": 0.4538,
+      "max_confidence": 0.4538,
+      "min_confidence": 0.4538
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.3116,
+      "max_confidence": 0.3116,
+      "min_confidence": 0.3116
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "deer"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 88,
+    "brightness": 138.0,
+    "contrast": 54.3,
+    "blur": "Low",
+    "sharpness": 489.2,
+    "resolution": {
+      "width": 712,
+      "height": 516
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 45.4
+  },
+  "processing_time_ms": 867.5854206085205,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Deer (confidence: 45%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 31%)."
+  ]
+}

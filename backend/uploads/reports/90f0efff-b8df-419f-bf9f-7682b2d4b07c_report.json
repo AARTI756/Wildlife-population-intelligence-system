@@ -1,0 +1,56 @@
+{
+  "project_information": {
+    "project_name": "Asiatic Lion Registry 2026",
+    "description": "Automated regional surveillance program inside Gir Sasan Sanctuary.",
+    "site_id": 8,
+    "survey_id": 8
+  },
+  "media_metadata": {
+    "original_filename": "dragon-studio-horse-neigh-390297.mp3",
+    "stored_filename": "90f0efff-b8df-419f-bf9f-7682b2d4b07c.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-22T11:28:01.211728+00:00"
+  },
+  "species_list": [
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Unknown Species": {
+      "avg_confidence": 0.3348,
+      "max_confidence": 0.3348,
+      "min_confidence": 0.3348
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 0,
+    "unique_species_detected": [],
+    "species_richness": 0,
+    "shannon_diversity_index": 0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 266.57962799072266,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 33%)."
+  ]
+}

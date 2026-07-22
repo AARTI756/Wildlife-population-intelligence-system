@@ -1,0 +1,43 @@
+  // Collapsible cards state
+  const [expandedCards, setExpandedCards] = useState({});
+
+  // Grouping logic for detections by species
+  const groupedDetections = useMemo(() => {
+    if (!analysisResult?.detections) return [];
+    const groups = {};
+    analysisResult.detections.forEach((det) => {
+      const speciesKey = det.species;
+      if (!groups[speciesKey]) {
+        groups[speciesKey] = {
+          species: speciesKey,
+          detections: [],
+          raw_prediction: det.raw_prediction,
+          scientific_name: det.scientific_name,
+          profile_available: det.profile_available,
+          species_profile: det.species_profile,
+          is_endangered: det.is_endangered,
+          is_unknown: det.is_unknown,
+          is_likely: det.is_likely,
+          profile_message: det.profile_message,
+          confidence_level: det.confidence_level,
+          status: det.status,
+          recommendation: det.recommendation
+        };
+      }
+      groups[speciesKey].detections.push(det);
+    });
+    
+    return Object.values(groups).map((group) => {
+      const totalConf = group.detections.reduce((acc, d) => acc + d.confidence, 0);
+      const avgConf = totalConf / group.detections.length;
+      
+      // Sort detections inside group by start_time
+      group.detections.sort((a, b) => a.start_time - b.start_time);
+      
+      return {
+        ...group,
+        avg_confidence: avgConf,
+        confidence: avgConf // for badge calculations
+      };
+    });
+  }, [analysisResult]);

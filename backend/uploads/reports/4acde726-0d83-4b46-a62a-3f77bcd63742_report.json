@@ -1,0 +1,66 @@
+{
+  "project_information": {
+    "project_name": "Asiatic Lion Registry 2026",
+    "description": "Automated regional surveillance program inside Gir Sasan Sanctuary.",
+    "site_id": 8,
+    "survey_id": 8
+  },
+  "media_metadata": {
+    "original_filename": "mixkit-owl-in-a-forest-2466.wav",
+    "stored_filename": "4acde726-0d83-4b46-a62a-3f77bcd63742.wav",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-22T11:30:50.997570+00:00"
+  },
+  "species_list": [
+    "Barbet",
+    "Dove"
+  ],
+  "detection_counts": {
+    "Barbet": 6,
+    "Dove": 2
+  },
+  "confidence_levels": {
+    "Barbet": {
+      "avg_confidence": 0.7955,
+      "max_confidence": 0.995,
+      "min_confidence": 0.5852
+    },
+    "Dove": {
+      "avg_confidence": 0.8354,
+      "max_confidence": 0.8691,
+      "min_confidence": 0.8017
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 8,
+    "unique_species_detected": [
+      "dove",
+      "barbet"
+    ],
+    "species_richness": 2,
+    "shannon_diversity_index": 0.5623,
+    "simpson_diversity_index": 0.375,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 8,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 8
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 6214.453935623169,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Barbet (confidence: 59%)."
+  ]
+}

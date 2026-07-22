@@ -1,0 +1,70 @@
+{
+  "project_information": {
+    "project_name": "Wetland Aviary Survey 2026",
+    "description": "Automated regional surveillance program inside Keoladeo Wetland Zone.",
+    "site_id": 15,
+    "survey_id": 15
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 212738.png",
+    "stored_filename": "2e624dd8-63b1-4391-92d4-1c29ca3acf08.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-18T16:59:52.773239+00:00"
+  },
+  "species_list": [
+    "Asian Elephant"
+  ],
+  "detection_counts": {
+    "Asian Elephant": 1
+  },
+  "confidence_levels": {
+    "Asian Elephant": {
+      "avg_confidence": 0.73,
+      "max_confidence": 0.73,
+      "min_confidence": 0.73
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "asian elephant"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 1,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 1,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [
+      "Asian Elephant"
+    ],
+    "vulnerable_species": [],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 92,
+    "brightness": 159.5,
+    "contrast": 64.1,
+    "blur": "Low",
+    "sharpness": 1350.9,
+    "resolution": {
+      "width": 707,
+      "height": 507
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 73.0
+  },
+  "processing_time_ms": 4121.052503585815,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

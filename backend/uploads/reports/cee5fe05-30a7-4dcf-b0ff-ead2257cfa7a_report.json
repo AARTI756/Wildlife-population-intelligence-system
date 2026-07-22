@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Nilgiri Biosphere Monitoring",
+    "description": "Automated regional surveillance program inside Mudumalai Kargudi Area.",
+    "site_id": 13,
+    "survey_id": 13
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-19 144709.png",
+    "stored_filename": "cee5fe05-30a7-4dcf-b0ff-ead2257cfa7a.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-19T09:25:20.123143+00:00"
+  },
+  "species_list": [
+    "Deer"
+  ],
+  "detection_counts": {
+    "Deer": 2
+  },
+  "confidence_levels": {
+    "Deer": {
+      "avg_confidence": 0.7802,
+      "max_confidence": 0.8057,
+      "min_confidence": 0.7547
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 2,
+    "unique_species_detected": [
+      "deer"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 2,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 2
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 80,
+    "brightness": 115.9,
+    "contrast": 35.4,
+    "blur": "Low",
+    "sharpness": 381.2,
+    "resolution": {
+      "width": 576,
+      "height": 368
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 80.6
+  },
+  "processing_time_ms": 564.9998188018799,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

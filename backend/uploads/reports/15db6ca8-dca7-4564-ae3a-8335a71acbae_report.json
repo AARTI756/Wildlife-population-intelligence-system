@@ -1,0 +1,56 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "dragon-studio-horse-neigh-390297.mp3",
+    "stored_filename": "15db6ca8-dca7-4564-ae3a-8335a71acbae.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-22T08:25:51.381545+00:00"
+  },
+  "species_list": [
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Unknown Species": {
+      "avg_confidence": 0.3348,
+      "max_confidence": 0.3348,
+      "min_confidence": 0.3348
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 0,
+    "unique_species_detected": [],
+    "species_richness": 0,
+    "shannon_diversity_index": 0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 98.15597534179688,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 33%)."
+  ]
+}

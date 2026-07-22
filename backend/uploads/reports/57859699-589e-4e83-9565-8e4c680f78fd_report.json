@@ -1,0 +1,46 @@
+{
+  "project_information": {
+    "project_name": "Asiatic Lion Registry 2026",
+    "description": "Automated regional surveillance program inside Gir Sasan Sanctuary.",
+    "site_id": 8,
+    "survey_id": 8
+  },
+  "media_metadata": {
+    "original_filename": "mightuser-sound-of-growling-bear-hd-263159.mp3",
+    "stored_filename": "57859699-589e-4e83-9565-8e4c680f78fd.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-22T11:28:37.373767+00:00"
+  },
+  "species_list": [],
+  "detection_counts": {},
+  "confidence_levels": {},
+  "biodiversity_metrics": {
+    "total_animals_detected": 0,
+    "unique_species_detected": [],
+    "species_richness": 0,
+    "shannon_diversity_index": 0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 590.9543037414551,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

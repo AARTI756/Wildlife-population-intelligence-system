@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Western Ghats Monsoon Census",
+    "description": "Automated regional surveillance program inside Periyar Thekkady Lake.",
+    "site_id": 11,
+    "survey_id": 11
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-22 185433.png",
+    "stored_filename": "56e76c46-0b80-4f63-a575-47293fa22800.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-22T13:25:26.865358+00:00"
+  },
+  "species_list": [
+    "Ostrich"
+  ],
+  "detection_counts": {
+    "Ostrich": 1
+  },
+  "confidence_levels": {
+    "Ostrich": {
+      "avg_confidence": 0.9597,
+      "max_confidence": 0.9597,
+      "min_confidence": 0.9597
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "ostrich"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 85,
+    "brightness": 155.0,
+    "contrast": 47.6,
+    "blur": "Low",
+    "sharpness": 403.5,
+    "resolution": {
+      "width": 421,
+      "height": 548
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 96.0
+  },
+  "processing_time_ms": 1236.4730834960938,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}
