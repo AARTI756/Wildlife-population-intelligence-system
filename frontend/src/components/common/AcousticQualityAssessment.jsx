@@ -289,14 +289,16 @@ export const AudioMetadataCard = ({ sampleRate, channels, fileSize, encoding, du
 
 // 7. WaveformDetectionOverlay (Incorporates Playback cursor, markers, and click-to-seek)
 export const WaveformDetectionOverlay = ({ 
+  audioRef,
+  preview,
   waveformBars, 
   currentTime, 
   duration, 
-  isPlaying, 
-  onPlayPause, 
-  onStop, 
   onSeek, 
-  detections 
+  detections,
+  handleAudioTimeUpdate,
+  handleAudioMetadataLoad,
+  handleAudioEnded
 }) => {
   const progressRatio = duration > 0 ? currentTime / duration : 0;
   
@@ -396,25 +398,20 @@ export const WaveformDetectionOverlay = ({
           })}
         </div>
 
-        {/* Playback Controls */}
-        <div className="flex items-center justify-center gap-3">
-          <button
-            type="button"
-            onClick={onPlayPause}
-            className="p-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            title={isPlaying ? "Pause" : "Play"}
-          >
-            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
-          </button>
-          <button
-            type="button"
-            onClick={onStop}
-            className="p-3 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-500"
-            title="Stop"
-          >
-            <Square className="h-4 w-4 fill-current" />
-          </button>
-        </div>
+        {/* Playback Controls (Native HTML5 Player consolidated inside card) */}
+        {preview && (
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <audio 
+              ref={audioRef}
+              controls
+              src={preview}
+              onTimeUpdate={handleAudioTimeUpdate}
+              onLoadedMetadata={handleAudioMetadataLoad}
+              onEnded={handleAudioEnded}
+              className="w-full accent-emerald-500 rounded-lg animate-fade-in"
+            />
+          </div>
+        )}
 
       </div>
 

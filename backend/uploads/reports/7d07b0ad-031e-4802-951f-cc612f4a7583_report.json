@@ -1,0 +1,70 @@
+{
+  "project_information": {
+    "project_name": "Wetland Aviary Survey 2026",
+    "description": "Automated regional surveillance program inside Keoladeo Wetland Zone.",
+    "site_id": 15,
+    "survey_id": 15
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-17 060201.png",
+    "stored_filename": "7d07b0ad-031e-4802-951f-cc612f4a7583.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-23T13:17:48.885705+00:00"
+  },
+  "species_list": [
+    "Lion"
+  ],
+  "detection_counts": {
+    "Lion": 1
+  },
+  "confidence_levels": {
+    "Lion": {
+      "avg_confidence": 0.8686,
+      "max_confidence": 0.8686,
+      "min_confidence": 0.8686
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "lion"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 1,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 1,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [
+      "Lion"
+    ],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 93,
+    "brightness": 129.2,
+    "contrast": 66.2,
+    "blur": "Low",
+    "sharpness": 755.8,
+    "resolution": {
+      "width": 762,
+      "height": 607
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 86.9
+  },
+  "processing_time_ms": 659.4681739807129,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

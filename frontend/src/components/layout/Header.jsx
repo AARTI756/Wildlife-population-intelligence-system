@@ -42,6 +42,27 @@ const Header = () => {
     return () => clearInterval(id);
   }, []);
 
+  const [unreadCount, setUnreadCount] = useState(0);
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await api.get('/api/notifications/count');
+        setUnreadCount(res.data.unread);
+      } catch (err) {
+        console.error("Failed to fetch unread notifications count:", err);
+      }
+    };
+    
+    fetchUnreadCount();
+    // Setup event listener to refresh immediately when read/unread events are triggered
+    window.addEventListener('refresh-unread-count', fetchUnreadCount);
+    const intervalId = setInterval(fetchUnreadCount, 60000);
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('refresh-unread-count', fetchUnreadCount);
+    };
+  }, []);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -94,12 +115,17 @@ const Header = () => {
         </div>
 
         {/* Notifications Bell */}
-        <button className="relative p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all">
+        <button 
+          onClick={() => navigate('/notifications')}
+          className="relative p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all animate-fade-in"
+          title="Notification Center"
+        >
           <Bell className="h-4 w-4" />
-          <span className="absolute top-1.5 right-1.5 flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-500"></span>
-          </span>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-xs">
+              {unreadCount}
+            </span>
+          )}
         </button>
 
         {/* Settings Shortcut */}

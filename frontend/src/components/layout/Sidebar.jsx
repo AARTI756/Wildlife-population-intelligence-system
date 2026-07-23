@@ -21,7 +21,8 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Upload
+  Upload,
+  Activity
 } from 'lucide-react';
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
@@ -56,11 +57,13 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
       ]
     },
     {
-      title: 'Coming Soon',
+      title: 'AI Intelligence',
       items: [
-        { name: 'Population Estimation', path: '/ai/population-est', icon: TrendingUp, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'], isPlaceholder: true },
-        { name: 'Habitat Intelligence', path: '/ai/habitat', icon: Leaf, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'], isPlaceholder: true },
-        { name: 'Conservation Recommendations', path: '/ai/recommendations', icon: HeartHandshake, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'], isPlaceholder: true }
+        { name: 'Intelligence Dashboard', path: '/ai/intelligence-dashboard', icon: LayoutDashboard, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'] },
+        { name: 'Population Estimation', path: '/ai/population-est', icon: TrendingUp, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'] },
+        { name: 'Habitat Intelligence', path: '/ai/habitat', icon: Leaf, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'] },
+        { name: 'Wildlife Health Scoring', path: '/ai/health-scoring', icon: Activity, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'] },
+        { name: 'Conservation Recommendations', path: '/ai/recommendations', icon: HeartHandshake, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'] }
       ]
     },
     {

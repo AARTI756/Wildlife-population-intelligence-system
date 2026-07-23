@@ -1,0 +1,46 @@
+{
+  "project_information": {
+    "project_name": "Predator-Prey Interaction Study",
+    "description": "Automated regional surveillance program inside Kanha Meadow Circle.",
+    "site_id": 3,
+    "survey_id": 3
+  },
+  "media_metadata": {
+    "original_filename": "whale.mp3",
+    "stored_filename": "223311bd-e0dd-45f1-ad7b-02739aa4bdcc.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-23T13:31:35.981386+00:00"
+  },
+  "species_list": [],
+  "detection_counts": {},
+  "confidence_levels": {},
+  "biodiversity_metrics": {
+    "total_animals_detected": 0,
+    "unique_species_detected": [],
+    "species_richness": 0,
+    "shannon_diversity_index": 0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 394.20604705810547,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "project_information": {
+    "project_name": "Predator-Prey Interaction Study",
+    "description": "Automated regional surveillance program inside Kanha Meadow Circle.",
+    "site_id": 3,
+    "survey_id": 3
+  },
+  "media_metadata": {
+    "original_filename": "insect.mp3",
+    "stored_filename": "7d2f7d7b-110f-4e0e-ac2c-cb2d92721010.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-23T13:27:34.095843+00:00"
+  },
+  "species_list": [
+    "Generic Animal Vocalization"
+  ],
+  "detection_counts": {
+    "Generic Animal Vocalization": 1
+  },
+  "confidence_levels": {
+    "Generic Animal Vocalization": {
+      "avg_confidence": 0.6387,
+      "max_confidence": 0.6387,
+      "min_confidence": 0.6387
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "generic animal vocalization"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 1079.2243480682373,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

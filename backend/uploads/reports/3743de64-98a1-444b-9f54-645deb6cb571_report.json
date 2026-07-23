@@ -1,0 +1,58 @@
+{
+  "project_information": {
+    "project_name": "Predator-Prey Interaction Study",
+    "description": "Automated regional surveillance program inside Kanha Meadow Circle.",
+    "site_id": 3,
+    "survey_id": 3
+  },
+  "media_metadata": {
+    "original_filename": "spinopel-insect-chirping-393129.mp3",
+    "stored_filename": "3743de64-98a1-444b-9f54-645deb6cb571.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-23T13:29:44.956708+00:00"
+  },
+  "species_list": [
+    "Insect Sound"
+  ],
+  "detection_counts": {
+    "Insect Sound": 1
+  },
+  "confidence_levels": {
+    "Insect Sound": {
+      "avg_confidence": 0.714,
+      "max_confidence": 0.714,
+      "min_confidence": 0.714
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "insect sound"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 1086.519479751587,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

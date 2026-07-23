@@ -1,0 +1,58 @@
+{
+  "project_information": {
+    "project_name": "Mangrove Wildlife Survey",
+    "description": "Automated regional surveillance program inside Sundarbans Sajnekhali Range.",
+    "site_id": 12,
+    "survey_id": 12
+  },
+  "media_metadata": {
+    "original_filename": "lapwing bird.mp3",
+    "stored_filename": "6cf21dd6-8d05-4b1f-8d2d-9d2d20d6e7bc.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-23T14:28:14.354135+00:00"
+  },
+  "species_list": [
+    "Lapwing"
+  ],
+  "detection_counts": {
+    "Lapwing": 25
+  },
+  "confidence_levels": {
+    "Lapwing": {
+      "avg_confidence": 0.9698,
+      "max_confidence": 0.9967,
+      "min_confidence": 0.6481
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 25,
+    "unique_species_detected": [
+      "lapwing"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 25,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 25
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 7594.673633575439,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "project_information": {
+    "project_name": "Large Carnivore Assessment 2026",
+    "description": "Automated regional surveillance program inside Pench Riverside Zone.",
+    "site_id": 2,
+    "survey_id": 2
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-23 135902.png",
+    "stored_filename": "ddf6ad1d-f13a-4a80-9f38-282e67e0baee.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-23T13:23:21.887456+00:00"
+  },
+  "species_list": [
+    "Fox",
+    "Unknown Species"
+  ],
+  "detection_counts": {
+    "Fox": 1,
+    "Unknown Species": 1
+  },
+  "confidence_levels": {
+    "Fox": {
+      "avg_confidence": 0.5086,
+      "max_confidence": 0.5086,
+      "min_confidence": 0.5086
+    },
+    "Unknown Species": {
+      "avg_confidence": 0.3009,
+      "max_confidence": 0.3009,
+      "min_confidence": 0.3009
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "fox"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 80,
+    "brightness": 92.8,
+    "contrast": 34.9,
+    "blur": "Low",
+    "sharpness": 937.0,
+    "resolution": {
+      "width": 453,
+      "height": 297
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 50.9
+  },
+  "processing_time_ms": 515.0952339172363,
+  "manual_verification_recommendations": [
+    "Manual verification recommended for low confidence detection of Fox (confidence: 51%).",
+    "Manual verification recommended for low confidence detection of Unknown Species (confidence: 30%)."
+  ]
+}

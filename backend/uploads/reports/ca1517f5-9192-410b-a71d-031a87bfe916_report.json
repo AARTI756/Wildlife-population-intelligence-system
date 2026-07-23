@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Elephant Corridor Survey 2026",
+    "description": "Automated regional surveillance program inside Bandipur Moyar Gorge.",
+    "site_id": 4,
+    "survey_id": 4
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-23 005759.png",
+    "stored_filename": "ca1517f5-9192-410b-a71d-031a87bfe916.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-22T19:29:12.520923+00:00"
+  },
+  "species_list": [
+    "Monkey"
+  ],
+  "detection_counts": {
+    "Monkey": 1
+  },
+  "confidence_levels": {
+    "Monkey": {
+      "avg_confidence": 0.9301,
+      "max_confidence": 0.9301,
+      "min_confidence": 0.9301
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "monkey"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 93,
+    "brightness": 107.3,
+    "contrast": 65.6,
+    "blur": "Low",
+    "sharpness": 1013.9,
+    "resolution": {
+      "width": 547,
+      "height": 657
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 93.0
+  },
+  "processing_time_ms": 9316.848993301392,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

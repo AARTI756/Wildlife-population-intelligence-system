@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Ungulate Census 2026",
+    "description": "Automated regional surveillance program inside Nagarhole Kabini Riverbank.",
+    "site_id": 5,
+    "survey_id": 5
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-23 010932.png",
+    "stored_filename": "7d95f6e9-ad1e-4188-98fa-612c498da419.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-22T19:39:45.949199+00:00"
+  },
+  "species_list": [
+    "Raccoon"
+  ],
+  "detection_counts": {
+    "Raccoon": 1
+  },
+  "confidence_levels": {
+    "Raccoon": {
+      "avg_confidence": 0.9277,
+      "max_confidence": 0.9277,
+      "min_confidence": 0.9277
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "raccoon"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 85,
+    "brightness": 104.4,
+    "contrast": 45.8,
+    "blur": "Low",
+    "sharpness": 4272.3,
+    "resolution": {
+      "width": 727,
+      "height": 597
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 92.8
+  },
+  "processing_time_ms": 827.2228240966797,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

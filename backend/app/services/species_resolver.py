@@ -169,6 +169,29 @@ def resolve_species_profile(raw_species: str, db: Session):
             db.add(existing)
             db.commit()
             db.refresh(existing)
+        else:
+            # Stale record repair: update fields if they are missing or Data unavailable
+            updated = False
+            for field, tax_key in [
+                ("order", "order"),
+                ("family", "family"),
+                ("genus", "genus"),
+                ("scientific_name", "scientific_name"),
+                ("phylum", "phylum"),
+                ("class_name", "class"),
+                ("iucn_status", "iucn_status"),
+                ("habitat", "habitat"),
+                ("diet", "diet"),
+                ("distribution", "distribution")
+            ]:
+                current_val = getattr(existing, field)
+                if not current_val or current_val.strip().lower() in {"", "data unavailable", "n/a", "unknown", "none"}:
+                    setattr(existing, field, tax_profile[tax_key])
+                    updated = True
+            if updated:
+                db.add(existing)
+                db.commit()
+                db.refresh(existing)
         return existing
 
     # 2. Unsupported species or custom / BirdNET profiles
@@ -293,7 +316,7 @@ def build_empty_profile_data(raw_species: str):
     
     # 1. Deterministic lookup
     from app.data.taxonomy import lookup_taxonomy_profile
-    tax_profile = lookup_taxonomy_profile(common_name)
+    tax_profile = lookup_taxonomy_profile(raw_species)
     if tax_profile:
         return {
             "scientific_name": tax_profile["scientific_name"],
@@ -320,6 +343,35 @@ def build_empty_profile_data(raw_species: str):
             "behaviour_hints": "Most active during daytime.",
         }
 
+    # 2. Species Catalog lookup (fallback for BirdNET and other cataloged species)
+    catalog_entry = species_catalog.lookup(raw_species)
+    if catalog_entry:
+        return {
+            "scientific_name": catalog_entry.get("scientific_name") or "Data unavailable",
+            "common_name": catalog_entry.get("common_name") or common_name,
+            "taxonomy": {
+                "kingdom": catalog_entry.get("kingdom") or "Animalia",
+                "phylum": catalog_entry.get("phylum") or "Data unavailable",
+                "class": catalog_entry.get("class_name") or catalog_entry.get("class") or "Data unavailable",
+                "order": catalog_entry.get("order") or "Data unavailable",
+                "family": catalog_entry.get("family") or "Data unavailable",
+                "genus": catalog_entry.get("genus") or "Data unavailable",
+                "species": catalog_entry.get("species") or raw_species.lower().replace(" ", "_"),
+            },
+            "habitat": catalog_entry.get("habitat") or "Data unavailable",
+            "diet": catalog_entry.get("diet") or "Data unavailable",
+            "iucn_status": catalog_entry.get("iucn_status") or "Least Concern",
+            "distribution": catalog_entry.get("distribution") or "Data unavailable",
+            "description": catalog_entry.get("description") or "Data unavailable",
+            "conservation_priority": catalog_entry.get("conservation_priority") or "Routine Monitoring",
+            "threat_level": catalog_entry.get("threat_level") or "Low Risk",
+            "protection_recommendation": catalog_entry.get("protection_recommendation") or "Standard reserve surveillance.",
+            "human_wildlife_conflict_risk": catalog_entry.get("human_wildlife_conflict_risk") or "Low Risk",
+            "anti_poaching_recommendation": catalog_entry.get("anti_poaching_recommendation") or "Standard camera trap patrols.",
+            "behaviour_hints": catalog_entry.get("behaviour_hints") or "Most active during daytime.",
+        }
+
+    # 3. Minimal stub fallback for completely unknown species
     return {
         "scientific_name": "Data unavailable",
         "common_name": common_name,

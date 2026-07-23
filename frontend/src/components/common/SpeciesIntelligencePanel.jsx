@@ -14,14 +14,14 @@ const SpeciesIntelligencePanel = ({ profile = {}, profileAvailable }) => {
     );
   }
   const threatened = ['Vulnerable', 'Endangered', 'Critically Endangered'].includes(profile.iucn_status);
-  const priority = profile.iucn_status === 'Critically Endangered' ? 'Critical' : threatened ? 'High' : 'Routine';
+  const priority = profile.conservation_priority || (profile.iucn_status === 'Critically Endangered' ? 'Critical' : threatened ? 'High' : 'Routine');
   const rows = [
-    ['Threat Level', profile.iucn_status || 'Not Available'],
+    ['Threat Level', profile.threat_level || profile.iucn_status || 'Not Available'],
     ['Conservation Priority', priority],
-    ['Protection Recommendations', threatened ? 'Protect habitat, increase monitoring and notify conservation staff.' : 'Maintain monitoring and preserve habitat connectivity.'],
-    ['Habitat Suitability', profile.habitat ? `Requires: ${profile.habitat}` : 'Not Available'],
-    ['Human-Wildlife Conflict Risk', threatened ? 'Review local site conditions' : 'Assess from site observations'],
-    ['Anti-poaching Recommendations', threatened ? 'Prioritise patrol coverage and secure detection locations.' : 'Continue routine patrol coverage.'],
+    ['Protection Recommendations', profile.protection_recommendations || (threatened ? 'Protect habitat, increase monitoring and notify conservation staff.' : 'Maintain monitoring and preserve habitat connectivity.')],
+    ['Habitat Suitability', profile.habitat_suitability || (profile.habitat ? `Requires: ${profile.habitat}` : 'Not Available')],
+    ['Human-Wildlife Conflict Notes', profile.human_wildlife_conflict || (threatened ? 'Review local site conditions' : 'Assess from site observations')],
+    ['Anti-poaching Recommendations', profile.anti_poaching_recommendations || (threatened ? 'Prioritise patrol coverage and secure detection locations.' : 'Continue routine patrol coverage.')],
   ];
   return (
     <section className="rounded-xl border border-emerald-250/70 dark:border-emerald-900/40 p-4 space-y-3 bg-emerald-50/20 dark:bg-emerald-950/10 shadow-sm">

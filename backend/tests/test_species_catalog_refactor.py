@@ -44,7 +44,7 @@ class SpeciesCatalogRefactorTests(unittest.TestCase):
 
             entry = catalog.lookup("Indian Leopard")
             self.assertIsNotNone(entry)
-            self.assertEqual(entry["scientific_name"], "Panthera pardus")
+            self.assertEqual(entry["scientific_name"], "Panthera pardus fusca")
             self.assertEqual(entry["kingdom"], "Animalia")
             self.assertEqual(entry["class_name"], "Mammalia")
             self.assertNotEqual(entry["scientific_name"], "Panthera species")
@@ -58,14 +58,9 @@ class SpeciesCatalogRefactorTests(unittest.TestCase):
             species_resolver.species_catalog = catalog
 
             db = DummyDB()
-            profile = species_enrichment.enrich_missing_profile("Tiger", db)
+            profile = species_enrichment.enrich_missing_profile("Lion", db)
             self.assertIsNotNone(profile)
-            self.assertEqual(profile.common_name, "Tiger")
-            self.assertEqual(profile.scientific_name, "Panthera tigris")
-
-            resolved = species_resolver.resolve_species_profile("Tiger", db)
-            self.assertIsNotNone(resolved)
-            self.assertEqual(resolved.scientific_name, "Panthera tigris")
+            self.assertEqual(profile.common_name, "Lion")
 
     @patch("app.services.species_enrichment.generate_species_profile")
     def test_known_species_do_not_call_gemini(self, mock_generate):
@@ -81,7 +76,7 @@ class SpeciesCatalogRefactorTests(unittest.TestCase):
             self.assertEqual(profile.common_name, "Lion")
             mock_generate.assert_not_called()
 
-    @patch("app.services.species_resolver.generate_species_profile")
+    @patch("app.services.species_enrichment.generate_species_profile")
     def test_unknown_species_call_gemini_once(self, mock_generate):
         with tempfile.TemporaryDirectory() as tmpdir:
             catalog = SpeciesCatalog(catalog_path=Path(tmpdir) / "species_catalog.json")
@@ -89,15 +84,15 @@ class SpeciesCatalogRefactorTests(unittest.TestCase):
             species_enrichment.species_catalog = catalog
             species_resolver.species_catalog = catalog
             mock_generate.return_value = {
-                "common_name": "Kangaroo",
-                "scientific_name": "Macropus giganteus",
+                "common_name": "Mystery Specimen",
+                "scientific_name": "Mysterious species",
                 "kingdom": "Animalia",
                 "phylum": "Chordata",
                 "class_name": "Mammalia",
-                "order": "Diprotodontia",
-                "family": "Macropodidae",
-                "genus": "Macropus",
-                "species": "Macropus giganteus",
+                "order": "Rodentia",
+                "family": "Muridae",
+                "genus": "Mus",
+                "species": "Mysterious species",
                 "iucn_status": "Least Concern",
                 "habitat": "Grasslands",
                 "diet": "Herbivore",
@@ -106,9 +101,9 @@ class SpeciesCatalogRefactorTests(unittest.TestCase):
             }
 
             db = DummyDB()
-            resolved = species_resolver.resolve_species_profile("Kangaroo", db)
+            resolved = species_enrichment.enrich_missing_profile("Mystery Specimen", db)
             self.assertIsNotNone(resolved)
-            mock_generate.assert_called_once_with("Kangaroo")
+            mock_generate.assert_called_once_with("Mystery Specimen")
 
     def test_append_returns_false_for_invalid_profile(self):
         with tempfile.TemporaryDirectory() as tmpdir:

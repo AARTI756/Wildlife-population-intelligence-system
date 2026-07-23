@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
+import { getSpeciesKnowledge } from '../../services/speciesKnowledgeService';
 import BehaviourAnalysisPanel from '../../components/common/BehaviourAnalysisPanel';
 import SpeciesIntelligencePanel from '../../components/common/SpeciesIntelligencePanel';
 import ImageQualityAssessment from '../../components/common/ImageQualityAssessment';
@@ -602,47 +603,79 @@ const localEnrichment = {
 };
 
 const enrichSpeciesDetails = (det) => {
-  const nameKey = (det.raw_prediction || det.species || "").toLowerCase().trim();
-  const matched = localEnrichment[nameKey] || Object.values(localEnrichment).find(v => nameKey.includes(v.scientific_name.toLowerCase()));
+  const sName = det.scientific_name || "";
+  const cName = det.raw_prediction || det.species || "";
   
   const enrichedProfile = { ...(det.species_profile || {}) };
   
-  if (matched) {
-    if (!enrichedProfile.scientific_name || enrichedProfile.scientific_name === "Not Available") {
-      enrichedProfile.scientific_name = matched.scientific_name;
-    }
-    if (!enrichedProfile.kingdom || enrichedProfile.kingdom === "Not Available") {
-      enrichedProfile.kingdom = matched.kingdom;
-    }
-    if (!enrichedProfile.phylum || enrichedProfile.phylum === "Not Available") {
-      enrichedProfile.phylum = matched.phylum;
-    }
-    if (!enrichedProfile.class_name || enrichedProfile.class_name === "Not Available" || enrichedProfile.class === "Not Available") {
-      enrichedProfile.class_name = matched.class;
-    }
-    if (!enrichedProfile.order || enrichedProfile.order === "Not Available") {
-      enrichedProfile.order = matched.order;
-    }
-    if (!enrichedProfile.family || enrichedProfile.family === "Not Available") {
-      enrichedProfile.family = matched.family;
-    }
-    if (!enrichedProfile.genus || enrichedProfile.genus === "Not Available") {
-      enrichedProfile.genus = matched.genus;
-    }
-    if (!enrichedProfile.iucn_status || enrichedProfile.iucn_status === "Not Available") {
-      enrichedProfile.iucn_status = matched.iucn_status;
-    }
-    if (!enrichedProfile.habitat || enrichedProfile.habitat === "Not Available") {
-      enrichedProfile.habitat = matched.habitat;
-    }
-    if (!enrichedProfile.diet || enrichedProfile.diet === "Not Available") {
-      enrichedProfile.diet = matched.diet;
-    }
-    if (!enrichedProfile.distribution || enrichedProfile.distribution === "Not Available") {
-      enrichedProfile.distribution = matched.distribution;
-    }
-    if (!enrichedProfile.description || enrichedProfile.description.includes("profile not yet available")) {
-      enrichedProfile.description = matched.description;
+  const knowledge = getSpeciesKnowledge(sName) || getSpeciesKnowledge(cName);
+  
+  if (knowledge) {
+    det.profile_available = true; // Force true so SpeciesIntelligencePanel renders
+    
+    enrichedProfile.scientific_name = knowledge.scientific_name;
+    enrichedProfile.kingdom = knowledge.taxonomy.kingdom;
+    enrichedProfile.phylum = knowledge.taxonomy.phylum;
+    enrichedProfile.class_name = knowledge.taxonomy.class;
+    enrichedProfile.order = knowledge.taxonomy.order;
+    enrichedProfile.family = knowledge.taxonomy.family;
+    enrichedProfile.genus = knowledge.taxonomy.genus;
+    enrichedProfile.iucn_status = knowledge.iucn_status;
+    enrichedProfile.habitat = knowledge.habitat;
+    enrichedProfile.diet = knowledge.diet;
+    enrichedProfile.distribution = Array.isArray(knowledge.distribution) ? knowledge.distribution.join(", ") : knowledge.distribution;
+    enrichedProfile.description = knowledge.description;
+    
+    // Extended fields
+    enrichedProfile.threat_level = knowledge.threat_level;
+    enrichedProfile.conservation_priority = knowledge.conservation_priority;
+    enrichedProfile.protection_recommendations = knowledge.protection_recommendations;
+    enrichedProfile.habitat_suitability = knowledge.habitat_suitability;
+    enrichedProfile.human_wildlife_conflict = knowledge.human_wildlife_conflict;
+    enrichedProfile.anti_poaching_recommendations = knowledge.anti_poaching_recommendations;
+  } else {
+    // Fallback to localEnrichment dictionary
+    const nameKey = cName.toLowerCase().trim();
+    const matched = localEnrichment[nameKey] || Object.values(localEnrichment).find(v => nameKey.includes(v.scientific_name.toLowerCase()));
+    
+    if (matched) {
+      det.profile_available = true; // Force true so SpeciesIntelligencePanel renders
+      if (!enrichedProfile.scientific_name || enrichedProfile.scientific_name === "Not Available") {
+        enrichedProfile.scientific_name = matched.scientific_name;
+      }
+      if (!enrichedProfile.kingdom || enrichedProfile.kingdom === "Not Available") {
+        enrichedProfile.kingdom = matched.kingdom;
+      }
+      if (!enrichedProfile.phylum || enrichedProfile.phylum === "Not Available") {
+        enrichedProfile.phylum = matched.phylum;
+      }
+      if (!enrichedProfile.class_name || enrichedProfile.class_name === "Not Available" || enrichedProfile.class === "Not Available") {
+        enrichedProfile.class_name = matched.class;
+      }
+      if (!enrichedProfile.order || enrichedProfile.order === "Not Available") {
+        enrichedProfile.order = matched.order;
+      }
+      if (!enrichedProfile.family || enrichedProfile.family === "Not Available") {
+        enrichedProfile.family = matched.family;
+      }
+      if (!enrichedProfile.genus || enrichedProfile.genus === "Not Available") {
+        enrichedProfile.genus = matched.genus;
+      }
+      if (!enrichedProfile.iucn_status || enrichedProfile.iucn_status === "Not Available") {
+        enrichedProfile.iucn_status = matched.iucn_status;
+      }
+      if (!enrichedProfile.habitat || enrichedProfile.habitat === "Not Available") {
+        enrichedProfile.habitat = matched.habitat;
+      }
+      if (!enrichedProfile.diet || enrichedProfile.diet === "Not Available") {
+        enrichedProfile.diet = matched.diet;
+      }
+      if (!enrichedProfile.distribution || enrichedProfile.distribution === "Not Available") {
+        enrichedProfile.distribution = matched.distribution;
+      }
+      if (!enrichedProfile.description || enrichedProfile.description.includes("profile not yet available")) {
+        enrichedProfile.description = matched.description;
+      }
     }
   }
 

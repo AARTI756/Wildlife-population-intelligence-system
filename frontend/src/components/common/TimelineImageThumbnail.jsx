@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getSpeciesImage } from '../../services/speciesImageService';
-import { Volume2, Loader2 } from 'lucide-react';
+import { Volume2, Loader2, Bird } from 'lucide-react';
 
 const TimelineImageThumbnail = ({ scientificName, commonName, className = "h-10 w-10 rounded-lg object-cover shrink-0 border border-slate-100 dark:border-slate-800" }) => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -40,9 +40,8 @@ const TimelineImageThumbnail = ({ scientificName, commonName, className = "h-10 
 
   if (!imageUrl) {
     return (
-      <div className={`${className} bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col items-center justify-center text-center p-1 text-[8px] leading-tight text-slate-400 font-sans`}>
-        <span className="font-bold">Bird Image</span>
-        <span>Unavailable</span>
+      <div className={`${className} bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 flex items-center justify-center text-slate-400 dark:text-slate-500`} title="Illustration placeholder">
+        <Bird className="h-6 w-6 opacity-60" />
       </div>
     );
   }

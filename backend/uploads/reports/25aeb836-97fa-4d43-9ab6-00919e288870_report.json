@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Wetland Aviary Survey 2026",
+    "description": "Automated regional surveillance program inside Keoladeo Wetland Zone.",
+    "site_id": 15,
+    "survey_id": 15
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 163944.png",
+    "stored_filename": "25aeb836-97fa-4d43-9ab6-00919e288870.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-23T13:19:48.359501+00:00"
+  },
+  "species_list": [
+    "Deer"
+  ],
+  "detection_counts": {
+    "Deer": 1
+  },
+  "confidence_levels": {
+    "Deer": {
+      "avg_confidence": 0.8605,
+      "max_confidence": 0.8605,
+      "min_confidence": 0.8605
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "deer"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "Medium",
+    "overall_score": 72,
+    "brightness": 50.5,
+    "contrast": 52.0,
+    "blur": "Low",
+    "sharpness": 1078.1,
+    "resolution": {
+      "width": 651,
+      "height": 587
+    },
+    "exposure": "Underexposed",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 86.1
+  },
+  "processing_time_ms": 789.247989654541,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

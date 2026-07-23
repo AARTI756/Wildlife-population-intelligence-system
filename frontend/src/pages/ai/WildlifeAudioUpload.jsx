@@ -15,6 +15,7 @@ import {
   WaveformDetectionOverlay 
 } from '../../components/common/AcousticQualityAssessment';
 import { analyzeAudioQuality } from '../../services/audioQualityService';
+import { getSpeciesKnowledge } from '../../services/speciesKnowledgeService';
 import { 
   ResponsiveContainer, 
   LineChart, 
@@ -635,56 +636,88 @@ const localEnrichment = {
 };
 
 const enrichSpeciesDetails = (det) => {
-  const nameKey = (det.raw_prediction || det.species || "").toLowerCase().trim();
-  const matched = localEnrichment[nameKey] || Object.values(localEnrichment).find(v => nameKey.includes(v.scientific_name.toLowerCase()));
+  const sName = det.scientific_name || "";
+  const cName = det.species || det.raw_prediction || "";
   
   const enrichedProfile = { ...(det.species_profile || {}) };
   
-  if (matched) {
-    if (!enrichedProfile.scientific_name || enrichedProfile.scientific_name === "Not Available") {
-      enrichedProfile.scientific_name = matched.scientific_name;
-    }
-    if (!enrichedProfile.kingdom || enrichedProfile.kingdom === "Not Available") {
-      enrichedProfile.kingdom = matched.kingdom;
-    }
-    if (!enrichedProfile.phylum || enrichedProfile.phylum === "Not Available") {
-      enrichedProfile.phylum = matched.phylum;
-    }
-    if (!enrichedProfile.class_name || enrichedProfile.class_name === "Not Available" || enrichedProfile.class === "Not Available") {
-      enrichedProfile.class_name = matched.class;
-    }
-    if (!enrichedProfile.order || enrichedProfile.order === "Not Available") {
-      enrichedProfile.order = matched.order;
-    }
-    if (!enrichedProfile.family || enrichedProfile.family === "Not Available") {
-      enrichedProfile.family = matched.family;
-    }
-    if (!enrichedProfile.genus || enrichedProfile.genus === "Not Available") {
-      enrichedProfile.genus = matched.genus;
-    }
-    if (!enrichedProfile.iucn_status || enrichedProfile.iucn_status === "Not Available") {
-      enrichedProfile.iucn_status = matched.iucn_status;
-    }
-    if (!enrichedProfile.habitat || enrichedProfile.habitat === "Not Available") {
-      enrichedProfile.habitat = matched.habitat;
-    }
-    if (!enrichedProfile.diet || enrichedProfile.diet === "Not Available") {
-      enrichedProfile.diet = matched.diet;
-    }
-    if (!enrichedProfile.distribution || enrichedProfile.distribution === "Not Available") {
-      enrichedProfile.distribution = matched.distribution;
-    }
-    if (!enrichedProfile.description || enrichedProfile.description.includes("profile not yet available")) {
-      enrichedProfile.description = matched.description;
+  // Check curated database first
+  const knowledge = getSpeciesKnowledge(sName) || getSpeciesKnowledge(cName);
+  
+  if (knowledge) {
+    det.profile_available = true; // Force true so SpeciesIntelligencePanel renders
+    enrichedProfile.scientific_name = knowledge.scientific_name;
+    enrichedProfile.kingdom = knowledge.taxonomy.kingdom;
+    enrichedProfile.phylum = knowledge.taxonomy.phylum;
+    enrichedProfile.class_name = knowledge.taxonomy.class;
+    enrichedProfile.order = knowledge.taxonomy.order;
+    enrichedProfile.family = knowledge.taxonomy.family;
+    enrichedProfile.genus = knowledge.taxonomy.genus;
+    enrichedProfile.iucn_status = knowledge.iucn_status;
+    enrichedProfile.habitat = knowledge.habitat;
+    enrichedProfile.diet = knowledge.diet;
+    enrichedProfile.distribution = Array.isArray(knowledge.distribution) ? knowledge.distribution.join(", ") : knowledge.distribution;
+    enrichedProfile.description = knowledge.description;
+    
+    // Extended fields
+    enrichedProfile.threat_level = knowledge.threat_level;
+    enrichedProfile.conservation_priority = knowledge.conservation_priority;
+    enrichedProfile.protection_recommendations = knowledge.protection_recommendations;
+    enrichedProfile.habitat_suitability = knowledge.habitat_suitability;
+    enrichedProfile.human_wildlife_conflict = knowledge.human_wildlife_conflict;
+    enrichedProfile.anti_poaching_recommendations = knowledge.anti_poaching_recommendations;
+  } else {
+    // Fallback to localEnrichment dictionary
+    const nameKey = cName.toLowerCase().trim();
+    const matched = localEnrichment[nameKey] || Object.values(localEnrichment).find(v => nameKey.includes(v.scientific_name.toLowerCase()));
+    
+    if (matched) {
+      if (!enrichedProfile.scientific_name || enrichedProfile.scientific_name === "Not Available") {
+        enrichedProfile.scientific_name = matched.scientific_name;
+      }
+      if (!enrichedProfile.kingdom || enrichedProfile.kingdom === "Not Available") {
+        enrichedProfile.kingdom = matched.kingdom;
+      }
+      if (!enrichedProfile.phylum || enrichedProfile.phylum === "Not Available") {
+        enrichedProfile.phylum = matched.phylum;
+      }
+      if (!enrichedProfile.class_name || enrichedProfile.class_name === "Not Available" || enrichedProfile.class === "Not Available") {
+        enrichedProfile.class_name = matched.class;
+      }
+      if (!enrichedProfile.order || enrichedProfile.order === "Not Available") {
+        enrichedProfile.order = matched.order;
+      }
+      if (!enrichedProfile.family || enrichedProfile.family === "Not Available") {
+        enrichedProfile.family = matched.family;
+      }
+      if (!enrichedProfile.genus || enrichedProfile.genus === "Not Available") {
+        enrichedProfile.genus = matched.genus;
+      }
+      if (!enrichedProfile.iucn_status || enrichedProfile.iucn_status === "Not Available") {
+        enrichedProfile.iucn_status = matched.iucn_status;
+      }
+      if (!enrichedProfile.habitat || enrichedProfile.habitat === "Not Available") {
+        enrichedProfile.habitat = matched.habitat;
+      }
+      if (!enrichedProfile.diet || enrichedProfile.diet === "Not Available") {
+        enrichedProfile.diet = matched.diet;
+      }
+      if (!enrichedProfile.distribution || enrichedProfile.distribution === "Not Available") {
+        enrichedProfile.distribution = matched.distribution;
+      }
+      if (!enrichedProfile.description || enrichedProfile.description.includes("profile not yet available")) {
+        enrichedProfile.description = matched.description;
+      }
     }
   }
 
-  // Basic description fallback generator
-  if (!enrichedProfile.description || enrichedProfile.description.includes("profile not yet available")) {
-    const commonName = det.species || det.raw_prediction || "Wildlife";
-    enrichedProfile.description = `The ${commonName} is an important wildlife species observed and monitored within the local conservation zone. It plays a significant role in maintaining ecological balance and biodiversity.`;
-  }
-  
+  // Clean up "Not Available" or placeholders to be empty/Data unavailable
+  Object.keys(enrichedProfile).forEach(key => {
+    if (typeof enrichedProfile[key] === 'string' && (enrichedProfile[key].toLowerCase().includes("not available") || enrichedProfile[key].toLowerCase().includes("unavailable"))) {
+      enrichedProfile[key] = "Data unavailable";
+    }
+  });
+
   return enrichedProfile;
 };
 
@@ -1069,6 +1102,51 @@ const WildlifeAudioUpload = () => {
     return [...analysisResult.detections].sort((a, b) => a.start_time - b.start_time);
   }, [analysisResult]);
 
+  const hasBirdDetections = useMemo(() => {
+    if (!analysisResult?.detections) return false;
+    return analysisResult.detections.length > 0 && !analysisResult.detections.some(d => 
+      ["Mammal Vocalization", "Amphibian Call", "Insect Sound", "Generic Animal Vocalization", "Environmental Noise"].includes(d.species)
+    );
+  }, [analysisResult]);
+
+  const displayCategory = useMemo(() => {
+    if (!analysisResult) return "";
+    if (hasBirdDetections) return "Bird Vocalization";
+    return analysisResult.animal_call_category || "Environmental Noise";
+  }, [analysisResult, hasBirdDetections]);
+
+  const groupedDetections = useMemo(() => {
+    if (!analysisResult?.detections) return [];
+    const groups = {};
+    analysisResult.detections.forEach(det => {
+      const name = detectionName(det);
+      const isFallback = ["Mammal Vocalization", "Amphibian Call", "Insect Sound", "Generic Animal Vocalization", "Environmental Noise"].includes(name);
+      if (hasBirdDetections && isFallback) {
+        return;
+      }
+      if (!groups[name]) {
+        groups[name] = {
+          name,
+          detections: [],
+          primaryDet: det
+        };
+      }
+      groups[name].detections.push(det);
+    });
+
+    return Object.values(groups).map((g, idx) => {
+      const avgConfidence = g.detections.reduce((acc, d) => acc + d.confidence, 0) / g.detections.length;
+      const sortedDets = [...g.detections].sort((a, b) => a.start_time - b.start_time);
+      return {
+        id: idx,
+        name: g.name,
+        detections: sortedDets,
+        primaryDet: g.primaryDet,
+        avgConfidence
+      };
+    });
+  }, [analysisResult, hasBirdDetections]);
+
   const averageConfidence = useMemo(() => {
     if (!analysisResult?.detections || analysisResult.detections.length === 0) return 0;
     const sum = analysisResult.detections.reduce((acc, d) => acc + d.confidence, 0);
@@ -1447,7 +1525,7 @@ const WildlifeAudioUpload = () => {
               <div className="glass-card p-6 border-slate-205 dark:border-slate-805 space-y-3">
                 <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <Volume2 className="h-4.5 w-4.5 text-emerald-500" />
-                  Animal Call Detection
+                  Bioacoustic Call Detection
                 </h3>
                 <div className="space-y-2 text-xs">
                   <div>
@@ -1463,7 +1541,7 @@ const WildlifeAudioUpload = () => {
                   <div>
                     <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Call Category</span>
                     <span className="text-slate-900 dark:text-white font-extrabold text-xs">
-                      {analysisResult.animal_call_category || "Environmental Noise"}
+                      {displayCategory}
                     </span>
                   </div>
                 </div>
@@ -1473,29 +1551,17 @@ const WildlifeAudioUpload = () => {
             {/* 3. Interactive Waveform & Playback Controls */}
             <div className="space-y-4">
               <WaveformDetectionOverlay 
+                audioRef={audioRef}
+                preview={preview}
                 waveformBars={waveformBars}
                 currentTime={currentTime}
                 duration={audioDuration}
-                isPlaying={isPlaying}
-                onPlayPause={handlePlayPause}
-                onStop={handleStop}
                 onSeek={handleSeek}
                 detections={analysisResult.detections || []}
+                handleAudioTimeUpdate={handleAudioTimeUpdate}
+                handleAudioMetadataLoad={handleAudioMetadataLoad}
+                handleAudioEnded={handleAudioEnded}
               />
-              {preview && (
-                <div className="glass-card p-4 flex flex-col gap-2 border-slate-205 dark:border-slate-805">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-500 font-extrabold block">Audio Player Controls</span>
-                  <audio 
-                    ref={audioRef}
-                    controls
-                    src={preview}
-                    onTimeUpdate={handleAudioTimeUpdate}
-                    onLoadedMetadata={handleAudioMetadataLoad}
-                    onEnded={handleAudioEnded}
-                    className="w-full accent-emerald-500 rounded-lg animate-fade-in"
-                  />
-                </div>
-              )}
             </div>
 
             {/* Empty Results State */}
@@ -1577,7 +1643,8 @@ const WildlifeAudioUpload = () => {
                 </h3>
 
                 <div className="space-y-4">
-                  {analysisResult.detections.map((det, index) => {
+                  {groupedDetections.map((group, index) => {
+                    const det = group.primaryDet;
                     const profile = enrichSpeciesDetails(det);
                     const tax = {
                       kingdom: profile.kingdom || "Animalia",
@@ -1587,8 +1654,8 @@ const WildlifeAudioUpload = () => {
                       family: profile.family || "Data unavailable",
                       genus: profile.genus || "Data unavailable"
                     };
-                    const name = detectionName(det);
-                    const isExpanded = expandedCards[index] === true;
+                    const name = group.name;
+                    const isExpanded = expandedCards[group.name] === true;
                     
                     // Map IUCN status to colors
                     const iucn = profile.iucn_status || "Least Concern";
@@ -1600,7 +1667,7 @@ const WildlifeAudioUpload = () => {
                     }
 
                     // Map confidence colors
-                    const confPct = Math.round(det.confidence * 100);
+                    const confPct = Math.round(group.avgConfidence * 100);
                     let confBarColor = "bg-rose-500";
                     let confBadgeColor = "bg-rose-600 text-white border-transparent font-sans";
                     if (confPct >= 80) {
@@ -1617,19 +1684,19 @@ const WildlifeAudioUpload = () => {
                     const isYamnetCategory = ["Mammal Vocalization", "Amphibian Call", "Insect Sound", "Generic Animal Vocalization"].includes(det.species);
 
                     return (
-                      <React.Fragment key={index}>
+                      <React.Fragment key={`${group.name}-${index}`}>
                         {index > 0 && <div className="border-t border-slate-200 dark:border-slate-800 my-6 opacity-60" />}
                         <div 
                           className="glass-card overflow-hidden border-slate-205 dark:border-slate-805 shadow-sm transition-all duration-200"
                         >
                         {/* Expandable Header */}
                         <div 
-                          onClick={() => toggleCard(index)}
+                          onClick={() => toggleCard(group.name)}
                           className="p-5 flex items-center justify-between cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-900/10 border-b border-slate-100 dark:border-slate-800"
                         >
                           <div className="flex items-center gap-3">
                             <span className="text-3xs font-extrabold text-slate-400 uppercase tracking-widest font-mono">
-                              Detection #{index + 1}
+                              {group.detections.length} {group.detections.length === 1 ? 'Detection' : 'Detections'}
                             </span>
                             <span className="h-1.5 w-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
                             <span className="font-extrabold text-sm text-slate-900 dark:text-white">
@@ -1644,10 +1711,10 @@ const WildlifeAudioUpload = () => {
 
                           <div className="flex items-center gap-3">
                             <span className="text-4xs font-mono font-bold text-slate-400">
-                              Time: {formatSecsToMinSec(det.start_time)}
+                              Timeline: {group.detections.map(d => formatSecsToMinSec(d.start_time)).join(", ")}
                             </span>
                             <span className={`px-2 py-0.5 rounded-full text-5xs font-bold border uppercase tracking-wider font-mono ${confBadgeColor}`}>
-                              {confPct}% Conf
+                              {confPct}% Avg Conf
                             </span>
                             {isExpanded ? (
                               <ChevronUp className="h-4.5 w-4.5 text-slate-400" />
@@ -1741,7 +1808,7 @@ const WildlifeAudioUpload = () => {
                                         This animal is classified as <span className="font-bold underline">{profile.iucn_status}</span>. Immediate protection actions are recommended.
                                       </p>
                                       <div className="pt-1.5 flex flex-wrap gap-4 text-3xs font-bold text-slate-500 dark:text-slate-400">
-                                        <span>Priority Level: <span className="text-rose-600 dark:text-rose-450">{profile.iucn_status === 'Critically Endangered' ? 'High Priority (Critical)' : (profile.iucn_status === 'Endangered' ? 'High Priority' : 'Medium-High Priority')}</span></span>
+                                        <span>Priority Level: <span className="text-rose-600 dark:text-rose-455">{profile.iucn_status === 'Critically Endangered' ? 'High Priority (Critical)' : (profile.iucn_status === 'Endangered' ? 'High Priority' : 'Medium-High Priority')}</span></span>
                                         <span>Recommended Actions: Enable continuous camera surveillance & restrict zone entry.</span>
                                       </div>
                                     </div>
@@ -1764,39 +1831,33 @@ const WildlifeAudioUpload = () => {
                                         </div>
                                       </div>
                                     )}
-                                    <div className="flex items-center gap-3">
+                                    
+                                    <div className="flex items-start gap-4">
                                       {/* Bird Thumbnail */}
                                       <TimelineImageThumbnail 
+                                        key={`${profile.scientific_name}-${name}`}
                                         scientificName={profile.scientific_name} 
                                         commonName={name} 
-                                        className="h-14 w-14 rounded-xl object-cover border border-slate-200 dark:border-slate-800 shadow-sm"
+                                        className="h-20 w-20 rounded-xl object-cover shrink-0 border border-slate-200 dark:border-slate-800 shadow-sm"
                                       />
-                                      <div>
-                                        <h2 className="text-2xl font-black text-slate-900 dark:text-white">
-                                          {name}
-                                        </h2>
-                                        <p className="text-xs italic text-slate-500 mt-0.5">
-                                          {profile.scientific_name || "Unknown scientific name"}
-                                        </p>
-                                      </div>
-                                    </div>
-
-                                    {/* Confidence Progress Bar */}
-                                    <div className="space-y-2">
-                                      <div className="flex justify-between items-center text-xs sm:text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 font-extrabold">
-                                        <span>Classification Confidence</span>
-                                        <span className="font-mono">{confPct}%</span>
-                                      </div>
-                                      <div className="h-3 w-full bg-slate-100 dark:bg-slate-900 rounded-full overflow-hidden border border-slate-200 dark:border-slate-800">
-                                        <div 
-                                          className={`h-full rounded-full transition-all duration-300 ${confBarColor}`}
-                                          style={{ width: `${confPct}%` }}
-                                        />
+                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2.5 text-xs font-semibold">
+                                        <div>
+                                          <span className="block text-4xs uppercase tracking-wider text-slate-400 font-bold mb-0.5">Common Name</span>
+                                          <span className="text-slate-900 dark:text-white font-extrabold text-sm">{name}</span>
+                                        </div>
+                                        <div>
+                                          <span className="block text-4xs uppercase tracking-wider text-slate-400 font-bold mb-0.5">Scientific Name</span>
+                                          <span className="text-slate-900 dark:text-white font-extrabold italic text-sm">{profile.scientific_name || "Unknown"}</span>
+                                        </div>
+                                        <div>
+                                          <span className="block text-4xs uppercase tracking-wider text-slate-400 font-bold mb-0.5">Confidence</span>
+                                          <span className="text-slate-900 dark:text-white font-extrabold text-sm">{confPct}% Avg Conf</span>
+                                        </div>
                                       </div>
                                     </div>
 
                                     {/* Description — hidden if empty */}
-                                    {(profile.description && !profile.description.includes('profile not yet available')) && (
+                                    {(profile.description && !profile.description.includes('profile not yet available') && profile.description !== 'Data unavailable') && (
                                     <div className="space-y-1">
                                       <span className="block text-xs sm:text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 font-extrabold">Description</span>
                                       <p className="text-xs text-slate-655 dark:text-slate-350 leading-relaxed font-semibold">
@@ -1804,6 +1865,25 @@ const WildlifeAudioUpload = () => {
                                       </p>
                                     </div>
                                     )}
+
+                                    {/* Group timeline segment click-to-seeks */}
+                                    <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/20 dark:bg-slate-950/20">
+                                      <span className="block text-4xs uppercase tracking-wider text-slate-400 font-bold mb-1.5">
+                                        Detection Timeline
+                                      </span>
+                                      <div className="flex flex-wrap gap-2">
+                                        {group.detections.map((d, dIdx) => (
+                                          <div 
+                                            key={dIdx} 
+                                            onClick={() => handleSeek(d.start_time)}
+                                            className="px-2.5 py-1 rounded-lg border border-emerald-500/10 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 text-3xs font-mono font-bold text-emerald-600 dark:text-emerald-455 cursor-pointer transition-all flex items-center gap-1"
+                                            title="Click to seek to this offset"
+                                          >
+                                            <span>{formatSecsToMinSec(d.start_time)} - {formatSecsToMinSec(d.end_time)}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
                                   </div>
                                   
                                   <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-950/5 shadow-xs">
@@ -1858,9 +1938,9 @@ const WildlifeAudioUpload = () => {
                                         <p className="text-3xs text-slate-900 dark:text-white font-extrabold">🔵 AI Audio</p>
                                       </div>
                                       <div className="sm:col-span-2">
-                                        <span className="text-slate-400 font-medium uppercase text-[9px] block mb-0.5">Timestamp</span>
+                                        <span className="text-slate-400 font-medium uppercase text-[9px] block mb-0.5">Upload Timestamp</span>
                                         <p className="text-3xs text-slate-900 dark:text-white font-extrabold font-mono">
-                                          {analysisResult.created_at ? new Date(analysisResult.created_at).toLocaleTimeString() : 'Data unavailable'}
+                                          {analysisResult.uploaded_at ? new Date(analysisResult.uploaded_at).toLocaleString() : new Date().toLocaleString()}
                                         </p>
                                       </div>
                                     </div>
@@ -1896,7 +1976,7 @@ const WildlifeAudioUpload = () => {
                   <div className="md:col-span-1 space-y-3 max-h-[350px] overflow-y-auto pr-2">
                     {chronologicalDetections.map((det, idx) => (
                       <div 
-                        key={idx} 
+                        key={`${detectionName(det)}-${det.start_time}-${idx}`} 
                         className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-900 bg-slate-50/20 dark:bg-slate-900/10 gap-3 shadow-3xs"
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -1910,6 +1990,7 @@ const WildlifeAudioUpload = () => {
                             </div>
                           ) : (
                             <TimelineImageThumbnail 
+                              key={`${det.scientific_name}-${detectionName(det)}`}
                               scientificName={det.scientific_name} 
                               commonName={detectionName(det)} 
                               className="h-10 w-10 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-slate-800 shadow-sm"

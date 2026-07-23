@@ -1,0 +1,58 @@
+{
+  "project_information": {
+    "project_name": "Canopy & Soil Bioacoustics",
+    "description": "Automated regional surveillance program inside Satpura Madhai Range.",
+    "site_id": 9,
+    "survey_id": 9
+  },
+  "media_metadata": {
+    "original_filename": "dragon-studio-goat-sound-390298.mp3",
+    "stored_filename": "3a8a6170-f041-4d6b-a4d2-752d622b1e11.mp3",
+    "media_type": "Audio",
+    "analyzed_at": "2026-07-22T19:16:23.126411+00:00"
+  },
+  "species_list": [
+    "Mammal Vocalization"
+  ],
+  "detection_counts": {
+    "Mammal Vocalization": 1
+  },
+  "confidence_levels": {
+    "Mammal Vocalization": {
+      "avg_confidence": 0.6596,
+      "max_confidence": 0.6596,
+      "min_confidence": 0.6596
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "mammal vocalization"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "quality": "N/A",
+    "blurriness": 0.0,
+    "exposure": 0.0
+  },
+  "processing_time_ms": 130.19156455993652,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

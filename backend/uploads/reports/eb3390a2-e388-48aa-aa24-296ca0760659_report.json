@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Elephant Corridor Survey 2026",
+    "description": "Automated regional surveillance program inside Bandipur Moyar Gorge.",
+    "site_id": 4,
+    "survey_id": 4
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-23 010230.png",
+    "stored_filename": "eb3390a2-e388-48aa-aa24-296ca0760659.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-22T19:32:51.059605+00:00"
+  },
+  "species_list": [
+    "Butterfly"
+  ],
+  "detection_counts": {
+    "Butterfly": 1
+  },
+  "confidence_levels": {
+    "Butterfly": {
+      "avg_confidence": 0.8084,
+      "max_confidence": 0.8084,
+      "min_confidence": 0.8084
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "butterfly"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 89,
+    "brightness": 111.8,
+    "contrast": 56.2,
+    "blur": "Low",
+    "sharpness": 575.0,
+    "resolution": {
+      "width": 450,
+      "height": 283
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 80.8
+  },
+  "processing_time_ms": 1000.4556179046631,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

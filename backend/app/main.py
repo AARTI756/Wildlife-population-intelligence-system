@@ -7,7 +7,7 @@ from app.database.connection import engine, Base, SessionLocal
 from app.database.schema import verify_milestone2_schema
 from app.models.user import Role, User
 from app.auth.security import get_password_hash
-from app.routers import auth, users, surveys, sites, camera_traps, audio_sensors, observations, dashboard, uploads, admin, audio, biodiversity, species
+from app.routers import auth, users, surveys, sites, camera_traps, audio_sensors, observations, dashboard, uploads, admin, audio, biodiversity, species, population, habitat, conservation, health, intelligence, notification, reports
 from fastapi.staticfiles import StaticFiles
 import os
 
@@ -213,6 +213,13 @@ app.include_router(admin.router)
 app.include_router(audio.router)
 app.include_router(biodiversity.router)
 app.include_router(species.router)
+app.include_router(population.router)
+app.include_router(habitat.router)
+app.include_router(conservation.router)
+app.include_router(health.router)
+app.include_router(intelligence.router)
+app.include_router(notification.router)
+app.include_router(reports.router)
 
 # Mount StaticFiles for uploaded media serving
 os.makedirs("uploads", exist_ok=True)

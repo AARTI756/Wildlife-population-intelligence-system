@@ -1,0 +1,70 @@
+{
+  "project_information": {
+    "project_name": "Large Carnivore Assessment 2026",
+    "description": "Automated regional surveillance program inside Pench Riverside Zone.",
+    "site_id": 2,
+    "survey_id": 2
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-22 185227.png",
+    "stored_filename": "39f22fec-8ae3-43a3-9173-6c8071807640.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-23T13:24:46.011083+00:00"
+  },
+  "species_list": [
+    "Zebra"
+  ],
+  "detection_counts": {
+    "Zebra": 1
+  },
+  "confidence_levels": {
+    "Zebra": {
+      "avg_confidence": 0.9168,
+      "max_confidence": 0.9168,
+      "min_confidence": 0.9168
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "zebra"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 1,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 0,
+    "conservation_priority_summary": {
+      "endangered": 1,
+      "vulnerable": 0,
+      "least_concern": 0
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [
+      "Zebra"
+    ],
+    "vulnerable_species": [],
+    "total_threatened_count": 1
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 86,
+    "brightness": 134.0,
+    "contrast": 47.8,
+    "blur": "Low",
+    "sharpness": 1757.6,
+    "resolution": {
+      "width": 341,
+      "height": 263
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 91.7
+  },
+  "processing_time_ms": 522.075891494751,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}

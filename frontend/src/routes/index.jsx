@@ -25,8 +25,11 @@ import PopulationEstimation from '../pages/ai/PopulationEstimation';
 import BiodiversityAnalytics from '../pages/ai/BiodiversityAnalytics';
 import HabitatIntelligence from '../pages/ai/HabitatIntelligence';
 import ConservationRecommendations from '../pages/ai/ConservationRecommendations';
-import Reports from '../pages/Reports';
+import WildlifeHealthScoring from '../pages/ai/WildlifeHealthScoring';
+import IntelligenceDashboard from '../pages/ai/IntelligenceDashboard';
+import ReportsCenter from '../pages/ReportsCenter';
 import Settings from '../pages/Settings';
+import NotificationCenter from '../pages/NotificationCenter';
 
 const AppRoutes = () => {
   const allRoles = ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'];
@@ -194,13 +197,46 @@ const AppRoutes = () => {
         }
       />
 
+      <Route
+        path="/ai/health-scoring"
+        element={
+          <ProtectedRoute allowedRoles={allRoles}>
+            <Layout>
+              <WildlifeHealthScoring />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/ai/intelligence-dashboard"
+        element={
+          <ProtectedRoute allowedRoles={allRoles}>
+            <Layout>
+              <IntelligenceDashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
       {/* Management placeholders */}
       <Route
         path="/reports"
         element={
-          <ProtectedRoute allowedRoles={['Administrator', 'Wildlife Researcher']}>
+          <ProtectedRoute allowedRoles={allRoles}>
             <Layout>
-              <Reports />
+              <ReportsCenter />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute allowedRoles={allRoles}>
+            <Layout>
+              <NotificationCenter />
             </Layout>
           </ProtectedRoute>
         }

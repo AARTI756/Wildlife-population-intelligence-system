@@ -5,6 +5,8 @@ from app.models.observation import Observation
 from app.models.upload import UploadedImage, UploadedAudio
 from app.models.species import SpeciesProfile
 from app.models.prediction_history import PredictionHistory
+from app.models.notification import Notification, NotificationAuditLog
+from app.models.report import ReportHistory, ReportAuditLog
 
 __all__ = [
     "Base",
@@ -19,5 +21,9 @@ __all__ = [
     "UploadedImage",
     "UploadedAudio",
     "SpeciesProfile",
-    "PredictionHistory"
+    "PredictionHistory",
+    "Notification",
+    "NotificationAuditLog",
+    "ReportHistory",
+    "ReportAuditLog"
 ]

@@ -1,0 +1,68 @@
+{
+  "project_information": {
+    "project_name": "Wetland Aviary Survey 2026",
+    "description": "Automated regional surveillance program inside Keoladeo Wetland Zone.",
+    "site_id": 15,
+    "survey_id": 15
+  },
+  "media_metadata": {
+    "original_filename": "Screenshot 2026-07-18 150237.png",
+    "stored_filename": "e398903a-ca05-463d-b8ee-60c15ae81a33.png",
+    "media_type": "Image",
+    "analyzed_at": "2026-07-23T13:19:09.875047+00:00"
+  },
+  "species_list": [
+    "Snake"
+  ],
+  "detection_counts": {
+    "Snake": 1
+  },
+  "confidence_levels": {
+    "Snake": {
+      "avg_confidence": 0.9011,
+      "max_confidence": 0.9011,
+      "min_confidence": 0.9011
+    }
+  },
+  "biodiversity_metrics": {
+    "total_animals_detected": 1,
+    "unique_species_detected": [
+      "snake"
+    ],
+    "species_richness": 1,
+    "shannon_diversity_index": -0.0,
+    "simpson_diversity_index": 0.0,
+    "endangered_species_count": 0,
+    "vulnerable_species_count": 0,
+    "least_concern_count": 1,
+    "conservation_priority_summary": {
+      "endangered": 0,
+      "vulnerable": 0,
+      "least_concern": 1
+    }
+  },
+  "conservation_summary": {
+    "endangered_species": [],
+    "vulnerable_species": [],
+    "total_threatened_count": 0
+  },
+  "image_quality_assessment": {
+    "image_quality": "High",
+    "overall_score": 90,
+    "brightness": 138.0,
+    "contrast": 59.4,
+    "blur": "Low",
+    "sharpness": 2611.0,
+    "resolution": {
+      "width": 470,
+      "height": 285
+    },
+    "exposure": "Balanced",
+    "occlusion_estimate": "Low evidence",
+    "inference_confidence_impact": 90.1
+  },
+  "processing_time_ms": 490.9210205078125,
+  "manual_verification_recommendations": [
+    "All detections classified with acceptable confidence. No manual verification required."
+  ]
+}
