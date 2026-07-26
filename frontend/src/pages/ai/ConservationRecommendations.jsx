@@ -8,6 +8,7 @@ import { BarChart, Bar, Cell, LineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import api from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
 import MetricCard from '../../components/common/MetricCard';
+import { localizeSpeciesName } from '../../utils/india';
 import DashboardSection from '../../components/common/DashboardSection';
 import ChartCard from '../../components/common/ChartCard';
 import RecommendationCard from '../../components/common/RecommendationCard';
@@ -34,9 +35,8 @@ const ConservationRecommendations = () => {
   // Sandbox Override States for reviewer testing
   const [sandboxState, setSandboxState] = useState('live'); // 'live', 'loading', 'error', 'empty'
 
-  // Table Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 5;
+  const [pageSize, setPageSize] = useState(5);
 
   // Helper to compile Axios query parameters from filter object
   const buildQueryParams = (filterObj) => {
@@ -266,7 +266,7 @@ const ConservationRecommendations = () => {
       <FilterBar filters={filters} onChange={setFilters} disabled={loading && sandboxState === 'live'} />
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
         <div className="relative">
           <MetricCard 
             title="Priority Species" 
@@ -401,8 +401,8 @@ const ConservationRecommendations = () => {
             actions.map((rec) => (
               <RecommendationCard
                 key={rec.id}
-                title={rec.title}
-                description={rec.description}
+                title={localizeSpeciesName(rec.title)}
+                description={localizeSpeciesName(rec.description)}
                 priority={rec.priority}
                 category={rec.category}
                 impact={rec.impact}
@@ -410,7 +410,7 @@ const ConservationRecommendations = () => {
                 actionText={rec.actionText}
                 completion_time={rec.completion_time}
                 department={rec.department}
-                expected_impact={rec.expected_impact}
+                expected_impact={localizeSpeciesName(rec.expected_impact)}
                 estimated_cost={rec.estimated_cost}
                 priority_score={rec.priority_score}
                 onAction={() => handleAction(rec.title)}
@@ -580,7 +580,7 @@ const ConservationRecommendations = () => {
                 ) : (
                   currentPriorities.map((item) => (
                     <tr key={item.species_name} className="hover:bg-slate-55/40 dark:hover:bg-slate-900/10 transition-colors odd:bg-slate-50/10 dark:odd:bg-slate-950/5 even:bg-transparent">
-                      <td className="px-6 py-4 whitespace-nowrap font-extrabold text-slate-900 dark:text-white">{item.species_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-extrabold text-slate-900 dark:text-white">{localizeSpeciesName(item.species_name)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-indigo-650 dark:text-indigo-400 font-extrabold">{item.conservation_priority_score}%</td>
                       <td className="px-6 py-4 whitespace-nowrap">{item.restoration_priority}%</td>
                       <td className="px-6 py-4 whitespace-nowrap">{item.monitoring_priority}%</td>
@@ -596,37 +596,54 @@ const ConservationRecommendations = () => {
               </tbody>
             </table>
           </div>
-
           {/* Pagination Controls */}
-          {!loading && !error && !isEmpty && totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-405">
-              <div>
-                Showing <span className="font-bold text-slate-900 dark:text-white">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {Math.min(currentPage * pageSize, priorities.length)}
-                </span>{' '}
-                of <span className="font-bold text-slate-900 dark:text-white">{priorities.length}</span> species indicators
-              </div>
+          {!loading && !error && !isEmpty && (
+            <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 dark:border-slate-800/80 px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-405 gap-4">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                  className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Previous page"
+                <span className="text-3xs font-black uppercase text-slate-400 dark:text-slate-500">Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(parseInt(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="py-1 px-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none text-slate-705 dark:text-slate-200 font-semibold"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="px-2">
-                  Page <span className="font-bold text-slate-900 dark:text-white">{currentPage}</span> of {totalPages}
-                </span>
-                <button
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                  className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div>
+                  Showing <span className="font-bold text-slate-900 dark:text-white">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {Math.min(currentPage * pageSize, priorities.length)}
+                  </span>{' '}
+                  of <span className="font-bold text-slate-900 dark:text-white">{priorities.length}</span> species indicators
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 hover:bg-slate-55 dark:hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="px-2">
+                    Page <span className="font-bold text-slate-900 dark:text-white">{currentPage}</span> of {totalPages}
+                  </span>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-955 hover:bg-slate-55 dark:hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
           )}

@@ -169,3 +169,11 @@ def get_richness(
         date_from=date_from_dt,
         date_to=date_to_dt
     )
+
+@router.get("/analytics")
+def get_population_analytics(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    from app.services import population_service as ps
+    return ps.calculate_population_analytics(db)

@@ -24,6 +24,7 @@ class UploadedImageOut(UploadedImageBase):
     image_quality: Optional[dict] = None
     biodiversity_metrics: Optional[dict] = None
     monitoring_report: Optional[dict] = None
+    ecosystem_health_score: Optional[dict] = None
 
     class Config:
         from_attributes = True
@@ -50,6 +51,7 @@ class UploadedAudioOut(UploadedAudioBase):
     detections: Optional[List[Any]] = []
     biodiversity_metrics: Optional[dict] = None
     monitoring_report: Optional[dict] = None
+    ecosystem_health_score: Optional[dict] = None
     animal_call_detected: Optional[bool] = False
     animal_call_category: Optional[str] = None
 

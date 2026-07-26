@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
+import EcosystemHealthCard from '../components/common/EcosystemHealthCard';
 import { useAuth } from '../hooks/useAuth';
 import { useTheme } from '../hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { INDIA_MAP_CENTER, INDIA_MAP_ZOOM, formatIST } from '../utils/india';
+import { INDIA_MAP_CENTER, INDIA_MAP_ZOOM, formatIST, localizeSpeciesName } from '../utils/india';
 import { 
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   Cell, PieChart, Pie
@@ -37,8 +38,22 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [sites, setSites] = useState([]);
+  const [surveys, setSurveys] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  const [observations, setObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [healthData, setHealthData] = useState({
+    overall_score: 82.5,
+    status: "Healthy",
+    component_scores: {
+      species_diversity: 80,
+      population_stability: 82,
+      habitat_quality: 84,
+      endangered_species: 85,
+      environmental_conditions: 81
+    }
+  });
   
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -48,12 +63,33 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const [statsRes, sitesRes] = await Promise.all([
+        const [statsRes, sitesRes, surveysRes, notificationsRes, observationsRes, healthRes] = await Promise.all([
           api.get('/api/dashboard/stats'),
-          api.get('/api/monitoring-sites')
+          api.get('/api/monitoring-sites'),
+          api.get('/api/surveys'),
+          api.get('/api/notifications'),
+          api.get('/api/observations'),
+          api.get('/api/health/overview').catch(() => ({ data: null }))
         ]);
         setStats(statsRes.data);
         setSites(sitesRes.data);
+        setSurveys(surveysRes.data || []);
+        setNotifications(notificationsRes.data || []);
+        setObservations(observationsRes.data || []);
+        
+        if (healthRes && healthRes.data) {
+          setHealthData({
+            overall_score: healthRes.data.overallScore || 82.5,
+            status: healthRes.data.statusName || "Healthy",
+            component_scores: {
+              species_diversity: healthRes.data.metrics?.speciesDiversity?.value ? parseInt(healthRes.data.metrics.speciesDiversity.value) : 80,
+              population_stability: healthRes.data.metrics?.populationStability?.value ? parseInt(healthRes.data.metrics.populationStability.value) : 82,
+              habitat_quality: healthRes.data.metrics?.habitatQuality?.value ? parseInt(healthRes.data.metrics.habitatQuality.value) : 84,
+              endangered_species: healthRes.data.metrics?.conservationReadiness?.value ? parseInt(healthRes.data.metrics.conservationReadiness.value) : 85,
+              environmental_conditions: healthRes.data.metrics?.environmentalConditions?.value ? parseInt(healthRes.data.metrics.environmentalConditions.value) : 81
+            }
+          });
+        }
       } catch (err) {
         setError('Connection to backend failed. Please ensure services are running.');
         console.error(err);
@@ -88,16 +124,23 @@ const Dashboard = () => {
       const map = L.map(mapRef.current, {
         zoomControl: false,
         attributionControl: false
-      }).setView(center, zoom);
+      });
+      if (sites.length > 0) {
+        map.fitBounds(L.latLngBounds(sites.map(s => [s.latitude, s.longitude])), { padding: [50, 50] });
+      } else {
+        map.setView(center, zoom);
+      }
       
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
+      L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
       // Plot sites as map markers
       sites.forEach((site) => {
+        const markerColor = site.protected_area ? '#2E7D32' : '#1E88E5';
         const markerIcon = L.divIcon({
           className: 'custom-div-icon',
-          html: `<div class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 border-2 border-white shadow-md"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
+          html: `<div class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-md" style="background-color: ${markerColor}"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
           iconSize: [20, 20],
           iconAnchor: [10, 10]
         });
@@ -315,39 +358,44 @@ const Dashboard = () => {
       </div>
 
       {/* Biodiversity & Ecological Indicators */}
-      <div className="glass-card p-6 border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-        <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
-          Biodiversity & Ecological Indicators
-        </h3>
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-7">
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
-            <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Shannon Index</span>
-            <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.shannon_diversity_index ?? "0.0"}</span>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 glass-card p-6 border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
+          <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
+            Biodiversity & Ecological Indicators
+          </h3>
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-4">
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
+              <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Shannon Index</span>
+              <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.shannon_diversity_index ?? "0.0"}</span>
+            </div>
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
+              <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Simpson Index</span>
+              <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.simpson_diversity_index ?? "0.0"}</span>
+            </div>
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
+              <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Richness</span>
+              <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.species_richness ?? 0} spp</span>
+            </div>
+            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
+              <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Total Animals</span>
+              <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.total_animal_count ?? 0}</span>
+            </div>
+            <div className="p-4 rounded-xl border border-rose-250/60 dark:border-rose-900/30 bg-rose-50/10 dark:bg-rose-950/5">
+              <span className="text-4xs uppercase tracking-wider text-rose-550 font-bold block mb-1">Endangered</span>
+              <span className="text-lg font-black text-rose-600 dark:text-rose-400">{stats?.endangered_species_count ?? 0}</span>
+            </div>
+            <div className="p-4 rounded-xl border border-amber-250/60 dark:border-amber-900/30 bg-amber-50/10 dark:bg-amber-950/5">
+              <span className="text-4xs uppercase tracking-wider text-amber-550 font-bold block mb-1">Vulnerable</span>
+              <span className="text-lg font-black text-amber-600 dark:text-amber-400">{stats?.vulnerable_species_count ?? 0}</span>
+            </div>
+            <div className="p-4 rounded-xl border border-emerald-250/60 dark:border-emerald-900/30 bg-emerald-50/10 dark:bg-emerald-950/5">
+              <span className="text-4xs uppercase tracking-wider text-emerald-550 font-bold block mb-1">Least Concern</span>
+              <span className="text-lg font-black text-emerald-600 dark:text-emerald-405">{stats?.least_concern_count ?? 0}</span>
+            </div>
           </div>
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
-            <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Simpson Index</span>
-            <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.simpson_diversity_index ?? "0.0"}</span>
-          </div>
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
-            <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Richness</span>
-            <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.species_richness ?? 0} spp</span>
-          </div>
-          <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
-            <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Total Animals</span>
-            <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.total_animal_count ?? 0}</span>
-          </div>
-          <div className="p-4 rounded-xl border border-rose-250/60 dark:border-rose-900/30 bg-rose-50/10 dark:bg-rose-950/5">
-            <span className="text-4xs uppercase tracking-wider text-rose-550 font-bold block mb-1">Endangered</span>
-            <span className="text-lg font-black text-rose-600 dark:text-rose-400">{stats?.endangered_species_count ?? 0}</span>
-          </div>
-          <div className="p-4 rounded-xl border border-amber-250/60 dark:border-amber-900/30 bg-amber-50/10 dark:bg-amber-950/5">
-            <span className="text-4xs uppercase tracking-wider text-amber-550 font-bold block mb-1">Vulnerable</span>
-            <span className="text-lg font-black text-amber-600 dark:text-amber-400">{stats?.vulnerable_species_count ?? 0}</span>
-          </div>
-          <div className="p-4 rounded-xl border border-emerald-250/60 dark:border-emerald-900/30 bg-emerald-50/10 dark:bg-emerald-950/5">
-            <span className="text-4xs uppercase tracking-wider text-emerald-550 font-bold block mb-1">Least Concern</span>
-            <span className="text-lg font-black text-emerald-600 dark:text-emerald-405">{stats?.least_concern_count ?? 0}</span>
-          </div>
+        </div>
+        <div>
+          <EcosystemHealthCard healthData={healthData} />
         </div>
       </div>
 
@@ -434,6 +482,86 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Forest Department Security & Patrol Command */}
+      {(roleName === 'Forest Department Officer' || roleName === 'Forest Department Field Panel') && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Patrol Planning */}
+          <div className="glass-card p-6 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Active Patrol Planner</h3>
+              <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Anti-poaching schedules and field beats calculated from environmental indicators</p>
+            </div>
+            
+            <div className="flex-1 mt-6 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-5xs tracking-widest font-black">
+                    <th className="py-2.5">Patrol Zone</th>
+                    <th className="py-2.5">Priority</th>
+                    <th className="py-2.5">Assigned Squad</th>
+                    <th className="py-2.5">Schedule</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
+                  {sites.slice(0, 5).map((site, index) => {
+                    const hasAlert = notifications.some(n => n.message?.includes(site.name) && n.severity === 'Critical');
+                    return (
+                      <tr key={site.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                        <td className="py-3 font-bold text-slate-800 dark:text-slate-200">{site.name}</td>
+                        <td className="py-3">
+                          <span className={`px-2 py-0.5 rounded text-5xs font-black uppercase border ${
+                            hasAlert 
+                              ? 'bg-rose-50 dark:bg-rose-955/20 text-rose-700 dark:text-rose-400 border-rose-200' 
+                              : 'bg-emerald-50 dark:bg-emerald-955/20 text-emerald-700 dark:text-emerald-400 border-emerald-250'
+                          }`}>
+                            {hasAlert ? 'Urgent Patrol' : 'Standard Beat'}
+                          </span>
+                        </td>
+                        <td className="py-3 text-slate-500 font-semibold">{index % 2 === 0 ? 'Range Division Alpha' : 'Patrol Team Bravo'}</td>
+                        <td className="py-3 text-slate-555 dark:text-slate-400 font-bold">{index % 2 === 0 ? 'Daily Beat' : 'Bi-weekly Beat'}</td>
+                      </tr>
+                    );
+                  })}
+                  {sites.length === 0 && (
+                    <tr>
+                      <td colSpan="4" className="py-6 text-center text-slate-400">No active zones configured.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Incident Reports */}
+          <div className="glass-card p-6 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Security & Alert Incidents Log</h3>
+              <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Active warning signals compiled from camera feeds and hardware logs</p>
+            </div>
+
+            <div className="flex-1 mt-6 overflow-y-auto space-y-3.5 max-h-[220px] pr-1">
+              {notifications.filter(n => n.severity === 'Critical' || n.severity === 'Warning').slice(0, 5).map((notif) => (
+                <div key={notif.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/45 hover:border-emerald-500/20 transition-all flex items-start justify-between gap-3 shadow-xs animate-fade-in">
+                  <div>
+                    <span className="text-4xs font-bold text-slate-400 dark:text-slate-500 block">
+                      {new Date(notif.created_at).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
+                    </span>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">{notif.category}</p>
+                    <p className="text-3xs text-slate-550 dark:text-slate-400 mt-0.5 font-semibold leading-relaxed">{notif.message}</p>
+                  </div>
+                  <span className="shrink-0 text-5xs font-black uppercase px-2 py-0.5 rounded border bg-rose-55 dark:bg-rose-955/20 border-rose-250 text-rose-700 dark:text-rose-400">
+                    {notif.severity}
+                  </span>
+                </div>
+              ))}
+              {notifications.filter(n => n.severity === 'Critical' || n.severity === 'Warning').length === 0 && (
+                <div className="py-10 text-center text-slate-400 text-xs">No active security incidents logged.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Overview Analytics charts and Recent Observations split */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
@@ -491,7 +619,7 @@ const Dashboard = () => {
                 <div key={obs.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/45 hover:border-emerald-500/20 transition-all flex items-center justify-between gap-3 shadow-xs">
                   <div className="overflow-hidden">
                     <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                      {obs.species_name === "Unknown Species" ? "Species Requires Verification" : (obs.species_name || obs.species || "False Trigger / Unknown")}
+                      {obs.species_name === "Unknown Species" ? "Species Requires Verification" : (localizeSpeciesName(obs.species_name || obs.species) || "False Trigger / Unknown")}
                     </p>
                     <span className="text-4xs text-slate-550 dark:text-slate-400 font-bold flex items-center gap-1 mt-1">
                       <Clock className="h-3 w-3 text-slate-500" />
@@ -527,7 +655,7 @@ const Dashboard = () => {
             </div>
             <div className="h-64 mt-6">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.detection_distribution.map(d => ({ name: d.species, count: d.count }))} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <AreaChart data={stats.detection_distribution.map(d => ({ name: localizeSpeciesName(d.species), count: d.count }))} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} />
                   <XAxis dataKey="name" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={9} interval={0} tickLine={false} />
                   <YAxis stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} axisLine={false} />

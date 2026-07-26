@@ -1069,7 +1069,11 @@ const WildlifeAudioUpload = () => {
       // setPreview(null);
     } catch (err) {
       console.error(err);
-      setAnalysisError(err.response?.data?.detail || 'Audio analysis failed. Please verify backend server state.');
+      const detail = err.response?.data?.detail;
+      const errorMsg = typeof detail === 'object'
+        ? (detail.message || JSON.stringify(detail))
+        : detail;
+      setAnalysisError(errorMsg || 'Audio analysis failed. Please verify backend server state.');
     } finally {
       setUploading(false);
     }

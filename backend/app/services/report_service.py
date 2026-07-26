@@ -592,3 +592,41 @@ def run_report_generation(db: Session, report_id: int, user_id: int):
         print(f"Report Generation Failed: {e}")
         report.status = "Failed"
         db.commit()
+
+
+def generate_wildlife_monitoring_report(
+    filename: str,
+    stored_filename: str,
+    detections: List[Dict[str, Any]],
+    biodiversity_metrics: Dict[str, Any],
+    image_quality: Optional[Dict[str, Any]],
+    processing_time_ms: float,
+    survey_info: Dict[str, Any],
+    prediction_type: str = "Image"
+) -> Dict[str, Any]:
+    """
+    Compatibility helper generating structured monitoring report metadata for image/audio uploads.
+    """
+    total_detections = len(detections)
+    high_confidence_detections = len([d for d in detections if d.get("confidence", 0) >= 0.70])
+    
+    report = {
+        "report_type": "Telemetry Sighting Report",
+        "format": "JSON",
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "prediction_type": prediction_type,
+        "input_file": filename,
+        "stored_file": stored_filename,
+        "processing_time_ms": round(processing_time_ms, 2),
+        "survey_details": survey_info,
+        "metrics": {
+            "total_detections_count": total_detections,
+            "high_confidence_count": high_confidence_detections,
+            "biodiversity": biodiversity_metrics
+        }
+    }
+    
+    if image_quality:
+        report["image_quality_metrics"] = image_quality
+        
+    return report

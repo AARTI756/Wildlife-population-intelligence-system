@@ -7,6 +7,7 @@ import {
 import api from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import MetricCard from '../components/common/MetricCard';
+import { localizeSpeciesName } from '../utils/india';
 
 const REPORT_TYPES = [
   "Wildlife Survey Report",
@@ -55,7 +56,7 @@ const ReportsCenter = () => {
   const [historyError, setHistoryError] = useState(null);
   const [historyPage, setHistoryPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const historyLimit = 10;
+  const [historyLimit, setHistoryLimit] = useState(10);
 
   // Filters for history query
   const [typeFilter, setTypeFilter] = useState("All");
@@ -124,7 +125,7 @@ const ReportsCenter = () => {
 
   useEffect(() => {
     fetchHistory();
-  }, [historyPage, typeFilter, formatFilter, statusFilter, searchQuery]);
+  }, [historyPage, historyLimit, typeFilter, formatFilter, statusFilter, searchQuery]);
 
   // Handle report generation with asynchronous polling
   const handleGenerate = async () => {
@@ -258,7 +259,7 @@ const ReportsCenter = () => {
       </div>
 
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
         <MetricCard title="Total Reports" value={stats.total} subtext="Generated reports" icon={FilePieChart} />
         <MetricCard title="Generated Today" value={stats.today} subtext="Ecosystem documents today" icon={Clock} colorClass="text-blue-650 dark:text-blue-450 bg-blue-50 dark:bg-blue-955/30 border-blue-200" />
         <MetricCard title="PDF Documents" value={stats.pdf} subtext="Vector formatted PDFs" icon={FileText} colorClass="text-rose-650 dark:text-rose-455 bg-rose-50 dark:bg-rose-955/30 border-rose-200" />
@@ -361,7 +362,7 @@ const ReportsCenter = () => {
                   className="py-1.5 px-2 text-xs w-full rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none"
                 >
                   <option value="">All Species</option>
-                  {speciesList.map(s => <option key={s.id} value={s.common_name}>{s.common_name}</option>)}
+                  {speciesList.map(s => <option key={s.id} value={s.common_name}>{localizeSpeciesName(s.common_name)}</option>)}
                 </select>
               </div>
             </div>
@@ -468,7 +469,7 @@ const ReportsCenter = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-850 text-slate-700 dark:text-slate-355 font-semibold">
                   {history.map(item => (
-                    <tr key={item.id} className="hover:bg-slate-50/30 dark:hover:bg-slate-900/5 transition-colors">
+                    <tr key={item.id} className="odd:bg-white even:bg-slate-50/40 dark:odd:bg-transparent dark:even:bg-slate-900/10 hover:bg-slate-100/40 dark:hover:bg-slate-800/40 transition-colors">
                       <td className="p-4 text-slate-905 dark:text-white font-extrabold">{item.report_name}</td>
                       <td className="p-4">
                         <span className="px-2 py-0.5 rounded text-4xs font-black uppercase bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-400">
@@ -490,7 +491,7 @@ const ReportsCenter = () => {
                         {item.status === 'Completed' && (
                           <button
                             onClick={() => handleDownload(item.id, item.download_filename)}
-                            className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 text-[10px] font-bold text-emerald-650 dark:text-emerald-450 transition-all shadow-3xs"
+                            className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 text-[10px] font-bold text-emerald-650 dark:text-emerald-450 transition-all shadow-3xs cursor-pointer"
                           >
                             <FileDown className="h-3.5 w-3.5" />
                             <span>Download</span>
@@ -498,7 +499,7 @@ const ReportsCenter = () => {
                         )}
                         <button
                           onClick={() => handleRegenerate(item)}
-                          className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 text-[10px] font-bold text-slate-655 dark:text-slate-300 transition-all shadow-3xs"
+                          className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 text-[10px] font-bold text-slate-655 dark:text-slate-300 transition-all shadow-3xs cursor-pointer"
                           title="Re-run Report with Same Config"
                         >
                           <RefreshCw className="h-3 w-3" />
@@ -507,7 +508,7 @@ const ReportsCenter = () => {
                         {isAdmin && (
                           <button
                             onClick={() => handleDelete(item.id)}
-                            className="p-1.5 rounded-lg border border-rose-200 dark:border-rose-900/30 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-955/20 transition-all"
+                            className="p-1.5 rounded-lg border border-rose-200 dark:border-rose-900/30 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-955/20 transition-all cursor-pointer"
                             title="Permanently Delete Run Log"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -520,23 +521,42 @@ const ReportsCenter = () => {
               </table>
             </div>
 
-            {/* Pagination */}
-            <div className="flex justify-between items-center px-1">
-              <button 
-                onClick={() => setHistoryPage(p => Math.max(p - 1, 1))}
-                disabled={historyPage === 1}
-                className="py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="text-3xs font-black uppercase text-slate-500 dark:text-slate-400">Page {historyPage}</span>
-              <button 
-                onClick={() => setHistoryPage(p => p + 1)}
-                disabled={history.length < historyLimit}
-                className="py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold disabled:opacity-50"
-              >
-                Next
-              </button>
+            {/* Pagination & Rows per page */}
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-1">
+              <div className="flex items-center gap-2">
+                <span className="text-3xs font-black uppercase text-slate-400 dark:text-slate-500">Rows per page:</span>
+                <select
+                  value={historyLimit}
+                  onChange={(e) => {
+                    setHistoryLimit(parseInt(e.target.value));
+                    setHistoryPage(1);
+                  }}
+                  className="py-1 px-1.5 text-xs rounded-lg border border-slate-250 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none text-slate-705 dark:text-slate-200 font-semibold"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setHistoryPage(p => Math.max(p - 1, 1))}
+                  disabled={historyPage === 1}
+                  className="py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold disabled:opacity-50 cursor-pointer"
+                >
+                  Previous
+                </button>
+                <span className="text-3xs font-black uppercase text-slate-500 dark:text-slate-400 font-mono">Page {historyPage}</span>
+                <button 
+                  onClick={() => setHistoryPage(p => p + 1)}
+                  disabled={history.length < historyLimit}
+                  className="py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-xs font-bold disabled:opacity-50 cursor-pointer"
+                >
+                  Next
+                </button>
+              </div>
             </div>
           </div>
         )}

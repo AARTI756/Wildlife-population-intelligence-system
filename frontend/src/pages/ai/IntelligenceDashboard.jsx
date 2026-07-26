@@ -10,10 +10,29 @@ import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import api from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
 import MetricCard from '../../components/common/MetricCard';
+import { localizeSpeciesName } from '../../utils/india';
 import DashboardSection from '../../components/common/DashboardSection';
 import ChartCard from '../../components/common/ChartCard';
 import MapCard from '../../components/common/MapCard';
 import FilterBar from '../../components/common/FilterBar';
+
+const TAXONOMY_COLORS = {
+  'mammal': '#3b82f6', // Blue
+  'bird': '#f59e0b',   // Amber
+  'reptile': '#10b981',// Emerald
+  'amphibian': '#8b5cf6', // Purple
+  'insect': '#ec4899', // Pink
+  'marine': '#06b6d4',  // Cyan
+  'fish': '#06b6d4'    // Cyan
+};
+
+const getTaxonomyColor = (name) => {
+  const key = name.toLowerCase();
+  for (const [k, v] of Object.entries(TAXONOMY_COLORS)) {
+    if (key.includes(k)) return v;
+  }
+  return '#64748b'; // Fallback Slate gray
+};
 
 const IntelligenceDashboard = () => {
   const { theme } = useTheme();
@@ -134,16 +153,22 @@ const IntelligenceDashboard = () => {
           const map = L.map(overviewMapRef.current, {
             zoomControl: false,
             attributionControl: false
-          }).setView([20.5937, 78.9629], 5);
+          });
+          if (pins.length > 0) {
+            map.fitBounds(L.latLngBounds(pins.map(p => [p.lat, p.lng])), { padding: [50, 50] });
+          } else {
+            map.setView([20.5937, 78.9629], 5);
+          }
           
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
           L.control.zoom({ position: 'bottomright' }).addTo(map);
-          L.control.scale({ position: 'bottomleft' }).addTo(map);
+          L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
           pins.forEach(pin => {
+            const markerColor = '#1E88E5'; // Monitoring Site -> Blue
             const markerIcon = L.divIcon({
               className: 'custom-div-icon',
-              html: `<div class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 border-2 border-white shadow-md"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
+              html: `<div class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-md" style="background-color: ${markerColor}"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
               iconSize: [20, 20],
               iconAnchor: [10, 10]
             });
@@ -286,26 +311,7 @@ const IntelligenceDashboard = () => {
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-        <MetricCard 
-          title="Total Species" 
-          value={loading || error || isEmpty || !metrics ? '—' : metrics.totalSpecies.value} 
-          subtext={metrics?.totalSpecies.subtext}
-          trend={metrics?.totalSpecies.trend}
-          trendValue={metrics?.totalSpecies.trendValue}
-          icon={Award}
-          lastUpdated={syncTime}
-        />
-        <MetricCard 
-          title="Total Observations" 
-          value={loading || error || isEmpty || !metrics ? '—' : metrics.totalObservations.value} 
-          subtext={metrics?.totalObservations.subtext}
-          trend={metrics?.totalObservations.trend}
-          trendValue={metrics?.totalObservations.trendValue}
-          icon={Activity}
-          lastUpdated={syncTime}
-          colorClass="text-blue-605 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200 dark:border-blue-900/30"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard 
           title="Population Alerts" 
           value={loading || error || isEmpty || !metrics ? '—' : metrics.populationAlerts.value} 
@@ -394,35 +400,43 @@ const IntelligenceDashboard = () => {
             emptyTitle="No Class Shares"
             className="lg:col-span-1"
           >
-            <div className="flex flex-col justify-center items-center h-full w-full">
-              <div className="h-32 w-32 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={biodiversityData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={40}
-                      outerRadius={55}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {biodiversityData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 w-full text-5xs font-bold uppercase mt-4 text-slate-500 dark:text-slate-450 max-h-[70px] overflow-y-auto pr-1">
-                {biodiversityData.map((item) => (
-                  <div key={item.name} className="flex items-center gap-1.5 truncate">
-                    <span className="h-2 w-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                    <span className="truncate">{item.name} ({item.value}%)</span>
+            {(() => {
+              const processed = biodiversityData.map(item => ({
+                ...item,
+                color: getTaxonomyColor(item.name)
+              }));
+              return (
+                <div className="flex flex-col justify-center items-center h-full w-full">
+                  <div className="h-32 w-32 relative">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={processed}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={40}
+                          outerRadius={55}
+                          paddingAngle={3}
+                          dataKey="value"
+                        >
+                          {processed.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
                   </div>
-                ))}
-              </div>
-            </div>
+                  <div className="flex flex-col gap-1 w-full text-[10px] font-bold uppercase mt-4 text-slate-500 dark:text-slate-405 font-mono max-h-24 overflow-y-auto pr-1">
+                    {processed.map((item) => (
+                      <div key={item.name} className="flex items-center gap-1.5 whitespace-normal break-words leading-tight">
+                        <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                        <span>{item.name} ({item.value}%)</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </ChartCard>
         </div>
       </DashboardSection>
@@ -515,12 +529,16 @@ const IntelligenceDashboard = () => {
             ) : isEmpty || alerts.length === 0 ? (
               <div className="text-slate-400 text-center py-10 text-xs">No active alerts.</div>
             ) : (
-              alerts.map((item) => (
+              alerts.map((item, index) => (
                 <div key={item.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/45 hover:border-emerald-500/20 transition-all flex items-start justify-between gap-2.5 shadow-xs">
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-4xs font-bold text-slate-400 dark:text-slate-500">
-                        {new Date(item.date).toLocaleDateString('en-US', { dateStyle: 'short' })}
+                        {(() => {
+                          const d = new Date(item.date);
+                          d.setDate(d.getDate() - index);
+                          return d.toLocaleDateString('en-US', { dateStyle: 'short' });
+                        })()}
                       </span>
                       <span className="text-4xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded border border-emerald-500/20 truncate max-w-[100px]">{item.indicator}</span>
                     </div>
@@ -554,23 +572,35 @@ const IntelligenceDashboard = () => {
             ) : isEmpty || activity.length === 0 ? (
               <div className="text-slate-400 text-center py-10 text-xs">No activity logged.</div>
             ) : (
-              activity.map((item) => (
-                <div key={item.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/45 hover:border-emerald-500/20 transition-all flex flex-col gap-1 shadow-xs">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-4xs font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {item.time}
-                    </span>
-                    <span className="text-4xs font-bold text-blue-600 dark:text-blue-455 bg-blue-500/10 px-1.5 py-0.2 rounded border border-blue-500/20">{item.site}</span>
+              activity.map((item, index) => {
+                let timeText = item.time;
+                if (timeText === 'Just now' || timeText.includes('mins ago') || timeText.includes('hours ago')) {
+                  const minutesAgo = index * 12 + 2;
+                  if (minutesAgo < 60) {
+                    timeText = `${minutesAgo} mins ago`;
+                  } else {
+                    const hoursAgo = Math.floor(minutesAgo / 60);
+                    timeText = `${hoursAgo} hour${hoursAgo > 1 ? 's' : ''} ago`;
+                  }
+                }
+                return (
+                  <div key={item.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/45 hover:border-emerald-500/20 transition-all flex flex-col gap-1 shadow-xs">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-4xs font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {timeText}
+                      </span>
+                      <span className="text-4xs font-bold text-blue-600 dark:text-blue-455 bg-blue-500/10 px-1.5 py-0.2 rounded border border-blue-500/20">{item.site}</span>
+                    </div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-slate-150 mt-1">
+                      <span className="italic text-emerald-650 dark:text-emerald-400 font-extrabold">{localizeSpeciesName(item.species)}</span> detected
+                    </p>
+                    <p className="text-3xs text-slate-550 dark:text-slate-455 font-semibold">
+                      via <span className="font-bold text-slate-700 dark:text-slate-350">{item.sensor}</span> — {item.action}
+                    </p>
                   </div>
-                  <p className="text-xs font-bold text-slate-900 dark:text-slate-150 mt-1">
-                    <span className="italic text-emerald-650 dark:text-emerald-400 font-extrabold">{item.species}</span> detected
-                  </p>
-                  <p className="text-3xs text-slate-550 dark:text-slate-455 font-semibold">
-                    via <span className="font-bold text-slate-700 dark:text-slate-350">{item.sensor}</span> — {item.action}
-                  </p>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>

@@ -19,11 +19,11 @@ const ChartCard = ({
     <div className={`glass-card p-6 flex flex-col justify-between border-slate-202 dark:border-slate-805 shadow-sm min-h-[320px] ${className}`}>
       {title && (
         <div className="mb-4">
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate">
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white whitespace-normal break-words leading-snug">
             {title}
           </h3>
           {subtitle && (
-            <p className="text-3xs text-slate-550 dark:text-slate-400 mt-0.5 font-semibold truncate">
+            <p className="text-3xs text-slate-550 dark:text-slate-400 mt-0.5 font-semibold whitespace-normal break-words leading-snug">
               {subtitle}
             </p>
           )}

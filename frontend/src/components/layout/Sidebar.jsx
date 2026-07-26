@@ -22,7 +22,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Upload,
-  Activity
+  Activity,
+  Map
 } from 'lucide-react';
 
 const Sidebar = ({ collapsed, setCollapsed }) => {
@@ -33,7 +34,8 @@ const Sidebar = ({ collapsed, setCollapsed }) => {
     {
       title: 'Dashboard',
       items: [
-        { name: 'Overview', path: '/', icon: LayoutDashboard, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'] }
+        { name: 'Overview', path: '/', icon: LayoutDashboard, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'] },
+        { name: 'GIS Map', path: '/dashboard/map', icon: Map, roles: ['Administrator', 'Wildlife Researcher', 'Conservation Officer', 'Forest Department Officer'] }
       ]
     },
     {

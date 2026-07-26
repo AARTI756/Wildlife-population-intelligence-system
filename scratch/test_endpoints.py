@@ -1,60 +1,105 @@
+import requests
 import os
-import sys
 
-# Add backend app directory to sys.path to allow imports
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
+BASE_URL = "http://localhost:8000"
 
-from fastapi.testclient import TestClient
-from app.main import app
-from app.auth.dependencies import get_current_user
-from app.models.user import User
-
-def main():
-    # Mock authentication to allow database read testing without JWT headers
-    dummy_user = User(id=1, username="test_researcher")
-    app.dependency_overrides[get_current_user] = lambda: dummy_user
-
-    client = TestClient(app)
+def test_pipeline():
+    print("LOG: Starting API pipeline tests...")
     
-    endpoints = [
-        "/api/population/overview",
-        "/api/population/species",
-        "/api/population/trends",
-        "/api/population/distribution",
-        "/api/population/density",
-        "/api/population/richness"
-    ]
+    # 1. Login
+    login_data = {
+        "username": "admin",
+        "password": "Admin@123"
+    }
+    r_login = requests.post(f"{BASE_URL}/api/auth/login", data=login_data)
+    if r_login.status_code != 200:
+        print(f"ERROR: Login failed (Status: {r_login.status_code}): {r_login.text}")
+        return
+        
+    token = r_login.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+    print("LOG: Login successful. Token received.")
     
-    print("--------------------------------------------------")
-    print("LOG: Initiating Population Estimation API Audits...")
-    print("--------------------------------------------------")
-    
-    all_ok = True
-    for endpoint in endpoints:
-        try:
-            res = client.get(endpoint)
-            print(f"Endpoint: {endpoint}")
-            print(f"Status  : {res.status_code}")
-            if res.status_code == 200:
-                data = res.json()
-                if isinstance(data, dict):
-                    print(f"Summary : Keys: {list(data.keys())}")
-                elif isinstance(data, list):
-                    print(f"Summary : List size: {len(data)} items")
-            else:
-                print(f"FAIL    : Response content: {res.text}")
-                all_ok = False
-            print("--------------------------------------------------")
-        except Exception as e:
-            print(f"EXCEPTION on {endpoint}: {e}")
-            all_ok = False
-            print("--------------------------------------------------")
-            
-    if all_ok:
-        print("LOG: All API validation audits PASSED successfully.")
+    # 2. Get Surveys
+    r_surveys = requests.get(f"{BASE_URL}/api/surveys", headers=headers)
+    if r_surveys.status_code != 200:
+        print(f"ERROR: Failed to retrieve active surveys (Status: {r_surveys.status_code}): {r_surveys.text}")
+        return
+    surveys_data = r_surveys.json()
+    if not surveys_data:
+        print("LOG: No surveys found. Seeding a test survey...")
+        survey_payload = {
+            "name": "Validation Test Survey",
+            "date": "2026-07-26",
+            "monitoring_location": "Ranthambore National Park",
+            "latitude": 26.0173,
+            "longitude": 76.5026,
+            "habitat_type": "Forest",
+            "monitoring_device": "Camera Trap",
+            "protected_area": True,
+            "description": "Integration test survey"
+        }
+        r_create = requests.post(f"{BASE_URL}/api/surveys", headers=headers, json=survey_payload)
+        if r_create.status_code not in [200, 201]:
+            print(f"ERROR: Failed to create test survey (Status: {r_create.status_code}): {r_create.text}")
+            return
+        survey_data = r_create.json()
+        survey_id = survey_data["id"]
+        site_id = survey_data.get("monitoring_site_id")
     else:
-        print("ERROR: Some API validation audits failed.")
-        sys.exit(1)
+        survey = surveys_data[0]
+        survey_id = survey["id"]
+        site_id = survey.get("monitoring_site_id")
+        
+    print(f"LOG: Mapped Active Survey: ID {survey_id}, Site ID {site_id}")
 
-if __name__ == '__main__':
-    main()
+    # 3. Test Image Upload
+    image_path = r"c:\Users\spa\OneDrive\Desktop\Wildlife_Population_AI\backend\uploads\images\03a82b7e-d5cc-43da-a3f9-81aff01c8a8b.png"
+    if not os.path.exists(image_path):
+        print(f"ERROR: Sample image not found at {image_path}")
+        return
+        
+    print("LOG: Triggering image upload pipeline...")
+    with open(image_path, "rb") as img_file:
+        files = {"file": ("sighting.png", img_file, "image/png")}
+        data = {
+            "survey_id": str(survey_id),
+            "confidence_threshold": "0.10"
+        }
+        if site_id:
+            data["monitoring_site_id"] = str(site_id)
+            
+        r_img = requests.post(f"{BASE_URL}/api/uploads/image", headers=headers, files=files, data=data)
+        
+    if r_img.status_code in [200, 201]:
+        print("SUCCESS: Image upload and YOLO inference pipeline completed successfully!")
+        print(f"Response: {r_img.json()}")
+    else:
+        print(f"ERROR: Image pipeline failed (Status: {r_img.status_code}): {r_img.text}")
+        
+    # 4. Test Audio Upload
+    audio_path = r"c:\Users\spa\OneDrive\Desktop\Wildlife_Population_AI\backend\tests\test_calls\sample_bird.wav"
+    if not os.path.exists(audio_path):
+        print(f"ERROR: Sample audio not found at {audio_path}")
+        return
+        
+    print("LOG: Triggering audio upload pipeline...")
+    with open(audio_path, "rb") as aud_file:
+        files = {"file": ("vocalisation.wav", aud_file, "audio/wav")}
+        data = {
+            "survey_id": str(survey_id),
+            "confidence_threshold": "0.10"
+        }
+        if site_id:
+            data["monitoring_site_id"] = str(site_id)
+            
+        r_aud = requests.post(f"{BASE_URL}/api/audio/analyze", headers=headers, files=files, data=data)
+        
+    if r_aud.status_code in [200, 201]:
+        print("SUCCESS: Audio upload and BirdNET inference pipeline completed successfully!")
+        print(f"Response: {r_aud.json()}")
+    else:
+        print(f"ERROR: Audio pipeline failed (Status: {r_aud.status_code}): {r_aud.text}")
+
+if __name__ == "__main__":
+    test_pipeline()

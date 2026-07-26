@@ -376,7 +376,7 @@ const NotificationCenter = () => {
       </div>
 
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
         <MetricCard title="Total Alerts" value={counts.total} subtext="Lifetime logged events" icon={Bell} />
         <MetricCard title="Unread Actions" value={counts.unread} subtext="Requires attention" icon={Activity} colorClass="text-blue-600 dark:text-blue-450 bg-blue-50 dark:bg-blue-955/30 border-blue-200 dark:border-blue-900/30" />
         <MetricCard title="Critical Warnings" value={counts.critical} subtext="Ecosystem severity drops" icon={ShieldAlert} colorClass="text-rose-600 dark:text-rose-455 bg-rose-50 dark:bg-rose-955/30 border-rose-200 dark:border-rose-900/30" />

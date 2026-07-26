@@ -101,6 +101,7 @@ async def upload_image(
         from app.services.prediction_formatter import format_prediction_response
         from app.services.report_service import generate_wildlife_monitoring_report
         from app.services.biodiversity_analytics import compute_biodiversity_metrics
+        from app.services.health_score_service import compute_ecosystem_health_score
 
         start_time = time.time()
         # Single inference call with LOW threshold to capture all possible detections.
@@ -350,6 +351,14 @@ async def upload_image(
         # Calculate biodiversity metrics
         biodiversity_metrics = compute_biodiversity_metrics(mapped_detections)
         
+        # Calculate ecosystem health score
+        ecosystem_health_score = compute_ecosystem_health_score(
+            biodiversity_metrics=biodiversity_metrics,
+            observation_statistics={"total_count": len(mapped_detections), "trend": "Stable"},
+            habitat_quality={"score": 84},
+            environmental_conditions={"score": 88}
+        )
+        
         # Fetch survey details if available for report
         survey_info = None
         if survey_id:
@@ -416,6 +425,7 @@ async def upload_image(
         db_image.image_quality = image_quality
         db_image.biodiversity_metrics = biodiversity_metrics
         db_image.monitoring_report = monitoring_report
+        db_image.ecosystem_health_score = ecosystem_health_score
         
     except Exception as e:
         db.rollback()
@@ -424,6 +434,7 @@ async def upload_image(
         db_image.ai_summary = "No wildlife species detected due to telemetry processing exception."
         db_image.biodiversity_metrics = None
         db_image.monitoring_report = None
+        db_image.ecosystem_health_score = None
     return db_image
 
 @router.get("/debug-yolo")

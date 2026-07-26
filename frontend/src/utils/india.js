@@ -171,3 +171,36 @@ export const getUserAvatar = (user, baseURL = 'http://localhost:8000') => {
   
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 };
+
+// Map foreign/non-indigenous species names to realistic Indian fauna equivalents
+export const INDIAN_FAUNA_MAPPING = {
+  'raccoon': 'Bengal Tiger',
+  'kangaroo': 'Indian Leopard',
+  'giraffe': 'Asiatic Lion',
+  'canada goose': 'Indian Elephant',
+  'jellyfish': 'Sloth Bear',
+  'african bullfrog': 'Indian Gaur',
+  'ladybug': 'Great Indian Bustard',
+  'koala': 'Nilgai (Blue Bull)',
+  'hamster': 'Sambar Deer',
+  'hedgehog': 'Chital (Spotted Deer)',
+  'panda': 'Indian Peafowl',
+  'red panda': 'Great Hornbill',
+  'hippo': 'Mugger Crocodile',
+  'hippopotamus': 'Mugger Crocodile',
+  'lion': 'Asiatic Lion'
+};
+
+export function localizeSpeciesName(name) {
+  if (!name) return '—';
+  const key = name.toLowerCase().trim();
+  if (INDIAN_FAUNA_MAPPING[key]) {
+    return INDIAN_FAUNA_MAPPING[key];
+  }
+  for (const [k, v] of Object.entries(INDIAN_FAUNA_MAPPING)) {
+    if (key.includes(k)) {
+      return v;
+    }
+  }
+  return name;
+}

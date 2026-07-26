@@ -10,6 +10,7 @@ import { AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tool
 import api from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
 import MetricCard from '../../components/common/MetricCard';
+import { localizeSpeciesName } from '../../utils/india';
 import DashboardSection from '../../components/common/DashboardSection';
 import ChartCard from '../../components/common/ChartCard';
 import MapCard from '../../components/common/MapCard';
@@ -36,9 +37,8 @@ const PopulationEstimation = () => {
   // Sandbox Override States for reviewer testing
   const [sandboxState, setSandboxState] = useState('live'); // 'live', 'loading', 'error', 'empty'
 
-  // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 8;
+  const [pageSize, setPageSize] = useState(8);
 
   // Map refs and instances
   const densityMapRef = useRef(null);
@@ -178,16 +178,22 @@ const PopulationEstimation = () => {
           const map = L.map(densityMapRef.current, {
             zoomControl: false,
             attributionControl: false
-          }).setView(mapCenter, mapZoom);
+          });
+          if (densitySites.length > 0) {
+            map.fitBounds(L.latLngBounds(densitySites.map(s => [s.latitude, s.longitude])), { padding: [50, 50] });
+          } else {
+            map.setView([29.5300, 78.7758], 8);
+          }
           
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
           L.control.zoom({ position: 'bottomright' }).addTo(map);
-          L.control.scale({ position: 'bottomleft' }).addTo(map);
+          L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
           densitySites.forEach(site => {
+            const markerColor = '#1E88E5'; // Monitoring Site -> Blue
             const markerIcon = L.divIcon({
               className: 'custom-div-icon',
-              html: `<div class="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500 border-2 border-white shadow-md"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
+              html: `<div class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-md" style="background-color: ${markerColor}"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
               iconSize: [20, 20],
               iconAnchor: [10, 10]
             });
@@ -213,11 +219,16 @@ const PopulationEstimation = () => {
           const map = L.map(migrationMapRef.current, {
             zoomControl: false,
             attributionControl: false
-          }).setView(mapCenter, mapZoom);
+          });
+          if (densitySites.length > 0) {
+            map.fitBounds(L.latLngBounds(densitySites.map(s => [s.latitude, s.longitude])), { padding: [50, 50] });
+          } else {
+            map.setView([29.5300, 78.7758], 8);
+          }
           
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
           L.control.zoom({ position: 'bottomright' }).addTo(map);
-          L.control.scale({ position: 'bottomleft' }).addTo(map);
+          L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
           if (densitySites.length >= 2) {
             const sortedSites = [...densitySites].sort((a, b) => b.density - a.density).slice(0, 3);
@@ -226,9 +237,10 @@ const PopulationEstimation = () => {
             L.polyline(pathCoords, { color: '#06b6d4', weight: 4, dashArray: '5, 10' }).addTo(map);
 
             sortedSites.forEach((site, idx) => {
+              const markerColor = '#1E88E5'; // Monitoring Site -> Blue
               const markerIcon = L.divIcon({
                 className: 'custom-div-icon',
-                html: `<div class="flex h-5 w-5 items-center justify-center rounded-full bg-cyan-500 border-2 border-white shadow-md"><div class="h-2 w-2 rounded-full bg-slate-900 animate-ping"></div></div>`,
+                html: `<div class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-md" style="background-color: ${markerColor}"><div class="h-2 w-2 rounded-full bg-slate-900 animate-ping"></div></div>`,
                 iconSize: [20, 20],
                 iconAnchor: [10, 10]
               });
@@ -253,16 +265,21 @@ const PopulationEstimation = () => {
           const map = L.map(distributionMapRef.current, {
             zoomControl: false,
             attributionControl: false
-          }).setView(mapCenter, mapZoom);
+          });
+          if (densitySites.length > 0) {
+            map.fitBounds(L.latLngBounds(densitySites.map(s => [s.latitude, s.longitude])), { padding: [50, 50] });
+          } else {
+            map.setView([29.5300, 78.7758], 8);
+          }
           
           L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
           L.control.zoom({ position: 'bottomright' }).addTo(map);
-          L.control.scale({ position: 'bottomleft' }).addTo(map);
+          L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
           densitySites.forEach(site => {
             L.circle([site.latitude, site.longitude], {
-              color: '#10b981',
-              fillColor: '#10b981',
+              color: '#1E88E5',
+              fillColor: '#1E88E5',
               fillOpacity: Math.min(site.density * 0.08, 0.45) + 0.1,
               radius: 1800
             }).addTo(map).bindPopup(`
@@ -395,7 +412,7 @@ const PopulationEstimation = () => {
       <FilterBar filters={filters} onChange={setFilters} disabled={loading && sandboxState === 'live'} />
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6 gap-4">
         <div className="relative">
           <MetricCard 
             title="Estimated Population" 
@@ -502,7 +519,7 @@ const PopulationEstimation = () => {
             emptyTitle="No Species Distribution Data"
           >
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={distribution.by_species} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
+              <BarChart data={distribution.by_species.map(item => ({ ...item, name: localizeSpeciesName(item.name) }))} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} />
                 <XAxis dataKey="name" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={9} tickLine={false} label={{ value: 'Species', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 10 }} />
                 <YAxis stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} axisLine={false} label={{ value: 'Individual Count', angle: -90, position: 'insideLeft', offset: 5, fill: '#64748b', fontSize: 10 }} />
@@ -632,7 +649,7 @@ const PopulationEstimation = () => {
                     <tr key={item.species_name} className="hover:bg-slate-55/40 dark:hover:bg-slate-900/10 transition-colors odd:bg-slate-50/10 dark:odd:bg-slate-950/5 even:bg-transparent">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col">
-                          <span className="font-extrabold text-slate-900 dark:text-white">{item.species_name}</span>
+                          <span className="font-extrabold text-slate-900 dark:text-white">{localizeSpeciesName(item.species_name)}</span>
                           {item.scientific_name && (
                             <span className="text-4xs italic text-slate-500 dark:text-slate-400 mt-0.5">{item.scientific_name}</span>
                           )}
@@ -655,35 +672,53 @@ const PopulationEstimation = () => {
           </div>
 
           {/* Pagination Controls */}
-          {!loading && !error && !isEmpty && totalPages > 1 && (
-            <div className="flex items-center justify-between border-t border-slate-100 dark:border-slate-800/80 px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-405">
-              <div>
-                Showing <span className="font-bold text-slate-900 dark:text-white">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {Math.min(currentPage * pageSize, speciesMetrics.length)}
-                </span>{' '}
-                of <span className="font-bold text-slate-900 dark:text-white">{speciesMetrics.length}</span> species profiles
-              </div>
+          {!loading && !error && !isEmpty && (
+            <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 dark:border-slate-800/80 px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-405 gap-4">
               <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrevPage}
-                  disabled={currentPage === 1}
-                  className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Previous page"
+                <span className="text-3xs font-black uppercase text-slate-400 dark:text-slate-500">Rows per page:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPageSize(parseInt(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="py-1 px-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none text-slate-705 dark:text-slate-200 font-semibold"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                </button>
-                <span className="px-2">
-                  Page <span className="font-bold text-slate-900 dark:text-white">{currentPage}</span> of {totalPages}
-                </span>
-                <button
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                  className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  aria-label="Next page"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </button>
+                  <option value={4}>4</option>
+                  <option value={8}>8</option>
+                  <option value={15}>15</option>
+                  <option value={30}>30</option>
+                </select>
+              </div>
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div>
+                  Showing <span className="font-bold text-slate-900 dark:text-white">{((currentPage - 1) * pageSize) + 1}</span> to{' '}
+                  <span className="font-bold text-slate-900 dark:text-white">
+                    {Math.min(currentPage * pageSize, speciesMetrics.length)}
+                  </span>{' '}
+                  of <span className="font-bold text-slate-900 dark:text-white">{speciesMetrics.length}</span> species profiles
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    aria-label="Previous page"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="px-2">
+                    Page <span className="font-bold text-slate-900 dark:text-white">{currentPage}</span> of {totalPages}
+                  </span>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    aria-label="Next page"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
           )}

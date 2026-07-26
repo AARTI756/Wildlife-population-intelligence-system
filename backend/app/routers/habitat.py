@@ -194,3 +194,11 @@ def get_timeline(
         date_from=date_from_dt,
         date_to=date_to_dt
     )
+
+@router.get("/intelligence")
+def get_habitat_intelligence(
+    db: Session = Depends(get_db),
+    current_user = Depends(get_current_user)
+):
+    from app.services import habitat_service as hs
+    return hs.calculate_habitat_intelligence(db)

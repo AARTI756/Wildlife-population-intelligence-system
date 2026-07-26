@@ -16,6 +16,7 @@ import UserProfile from '../pages/UserProfile';
 import UsersAndRoles from '../pages/UsersAndRoles';
 import Unauthorized from '../pages/Unauthorized';
 import NotFound from '../pages/NotFound';
+import InteractiveGisMap from '../pages/InteractiveGisMap';
 
 // Future AI & Management Placeholders
 import WildlifeImageUpload from '../pages/ai/WildlifeImageUpload';
@@ -48,6 +49,17 @@ const AppRoutes = () => {
           <ProtectedRoute allowedRoles={allRoles}>
             <Layout>
               <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      
+      <Route
+        path="/dashboard/map"
+        element={
+          <ProtectedRoute allowedRoles={allRoles}>
+            <Layout>
+              <InteractiveGisMap />
             </Layout>
           </ProtectedRoute>
         }

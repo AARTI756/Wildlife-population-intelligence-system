@@ -4,12 +4,21 @@ import json
 import os
 from pathlib import Path
 
+from typing import List
 from app.database.connection import get_db
 from app.models.species import SpeciesProfile
 from app.models.user import User
 from app.auth.dependencies import get_current_user
+from app.schemas.species import SpeciesProfileOut
 
 router = APIRouter(prefix="/api/species", tags=["species"])
+
+@router.get("", response_model=List[SpeciesProfileOut])
+def get_species_profiles(db: Session = Depends(get_db)):
+    """
+    Get all species profiles from the database.
+    """
+    return db.query(SpeciesProfile).all()
 
 @router.post("/sync", status_code=status.HTTP_200_OK)
 def sync_species_catalog(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):

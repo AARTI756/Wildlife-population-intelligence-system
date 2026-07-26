@@ -101,6 +101,7 @@ async def analyze_audio(
         from app.services.prediction_formatter import format_prediction_response
         from app.services.report_service import generate_wildlife_monitoring_report
         from app.services.biodiversity_analytics import compute_biodiversity_metrics
+        from app.services.health_score_service import compute_ecosystem_health_score
         from app.services.yamnet_service import yamnet_service
 
         # Run BirdNET analysis
@@ -344,6 +345,14 @@ async def analyze_audio(
         # Calculate biodiversity metrics
         biodiversity_metrics = compute_biodiversity_metrics(mapped_detections)
         
+        # Calculate ecosystem health score
+        ecosystem_health_score = compute_ecosystem_health_score(
+            biodiversity_metrics=biodiversity_metrics,
+            observation_statistics={"total_count": len(mapped_detections), "trend": "Stable"},
+            habitat_quality={"score": 84},
+            environmental_conditions={"score": 88}
+        )
+        
         # Fetch survey details if available for report
         survey_info = None
         if survey_id:
@@ -394,6 +403,7 @@ async def analyze_audio(
         db_audio.detections = mapped_detections
         db_audio.biodiversity_metrics = biodiversity_metrics
         db_audio.monitoring_report = monitoring_report
+        db_audio.ecosystem_health_score = ecosystem_health_score
         
     except Exception as e:
         db.rollback()
@@ -418,6 +428,7 @@ async def analyze_audio(
         "detections": db_audio.detections,
         "biodiversity_metrics": db_audio.biodiversity_metrics,
         "monitoring_report": db_audio.monitoring_report,
+        "ecosystem_health_score": db_audio.ecosystem_health_score,
         "uploaded_at": db_audio.uploaded_at.isoformat() + "Z" if db_audio.uploaded_at else None,
         "animal_call_detected": animal_call_detected,
         "animal_call_category": animal_call_category

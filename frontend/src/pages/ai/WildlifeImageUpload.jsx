@@ -6,6 +6,7 @@ import { getSpeciesKnowledge } from '../../services/speciesKnowledgeService';
 import BehaviourAnalysisPanel from '../../components/common/BehaviourAnalysisPanel';
 import SpeciesIntelligencePanel from '../../components/common/SpeciesIntelligencePanel';
 import ImageQualityAssessment from '../../components/common/ImageQualityAssessment';
+import EcosystemHealthCard from '../../components/common/EcosystemHealthCard';
 import { 
   Upload, 
   Sparkles, 
@@ -971,7 +972,11 @@ const WildlifeImageUpload = () => {
       setResolution('');
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'Image analysis failed. Please verify backend server state.');
+      const detail = err.response?.data?.detail;
+      const errorMsg = typeof detail === 'object'
+        ? (detail.message || JSON.stringify(detail))
+        : detail;
+      setError(errorMsg || 'Image analysis failed. Please verify backend server state.');
     } finally {
       setUploading(false);
     }
@@ -1386,6 +1391,10 @@ const WildlifeImageUpload = () => {
               confidence={uploadedAsset.detections?.length ? Math.max(...uploadedAsset.detections.map((d) => d.confidence)) : null}
               quality={uploadedAsset.image_quality}
             />
+
+            {uploadedAsset.ecosystem_health_score && (
+              <EcosystemHealthCard healthData={uploadedAsset.ecosystem_health_score} />
+            )}
 
             {/* Predictions Details (Expandable Cards List) */}
             <div className="space-y-4">

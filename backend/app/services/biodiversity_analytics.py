@@ -395,3 +395,53 @@ def get_biodiversity_heatmap(db, **filters) -> List[Dict[str, Any]]:
             "protected_area": site.protected_area
         })
     return results
+
+
+def compute_biodiversity_metrics(detections: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """
+    Compute biodiversity metrics (Richness, Shannon Index, Simpson Index, Evenness) from a list of detections.
+    """
+    if not detections:
+        return {
+            "species_richness": 0,
+            "shannon_index": 0.0,
+            "simpson_index": 0.0,
+            "species_evenness": 0.0,
+            "status": "No detections to calculate metrics"
+        }
+        
+    # Count frequency of each species
+    species_counts = {}
+    for d in detections:
+        species_name = d.get("species") or d.get("species_name") or "Unknown"
+        species_counts[species_name] = species_counts.get(species_name, 0) + 1
+        
+    total_count = sum(species_counts.values())
+    richness = len(species_counts)
+    
+    # Calculate Shannon and Simpson indices
+    shannon = 0.0
+    simpson_sum = 0.0
+    for count in species_counts.values():
+        p = count / total_count
+        if p > 0:
+            shannon -= p * math.log(p)
+        simpson_sum += p * p
+        
+    simpson = 1.0 - simpson_sum
+    
+    # Calculate Evenness
+    evenness = 0.0
+    if richness > 1:
+        evenness = shannon / math.log(richness)
+    elif richness == 1:
+        evenness = 1.0
+        
+    return {
+        "species_richness": richness,
+        "shannon_index": round(shannon, 3),
+        "simpson_index": round(simpson, 3),
+        "species_evenness": round(evenness, 3),
+        "status": "Calculated successfully"
+    }
+

@@ -122,8 +122,8 @@ const Header = () => {
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[9px] font-black text-white shadow-xs">
-              {unreadCount}
+            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[8px] font-black text-white shadow-xs leading-none">
+              {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
         </button>
