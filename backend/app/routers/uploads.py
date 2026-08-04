@@ -101,7 +101,6 @@ async def upload_image(
         from app.services.prediction_formatter import format_prediction_response
         from app.services.report_service import generate_wildlife_monitoring_report
         from app.services.biodiversity_analytics import compute_biodiversity_metrics
-        from app.services.health_score_service import compute_ecosystem_health_score
 
         start_time = time.time()
         # Single inference call with LOW threshold to capture all possible detections.
@@ -351,13 +350,8 @@ async def upload_image(
         # Calculate biodiversity metrics
         biodiversity_metrics = compute_biodiversity_metrics(mapped_detections)
         
-        # Calculate ecosystem health score
-        ecosystem_health_score = compute_ecosystem_health_score(
-            biodiversity_metrics=biodiversity_metrics,
-            observation_statistics={"total_count": len(mapped_detections), "trend": "Stable"},
-            habitat_quality={"score": 84},
-            environmental_conditions={"score": 88}
-        )
+        # Ecosystem health score belongs exclusively to the Wildlife Health Scoring Engine
+        ecosystem_health_score = None
         
         # Fetch survey details if available for report
         survey_info = None

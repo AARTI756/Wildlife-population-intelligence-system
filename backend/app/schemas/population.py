@@ -65,8 +65,39 @@ class SiteDensity(BaseModel):
     estimated_population: int
     density: float
     protected_area: bool
+    species_count: Optional[int] = 0
+    individuals: Optional[int] = 0
+    latest_observation: Optional[str] = "None"
+    site_area: Optional[float] = None
+    population_count: Optional[int] = None
+    survey_name: Optional[str] = "No Active Survey"
+    observation_count: Optional[int] = 0
 
 class SiteRichness(BaseModel):
     site_id: int
     site_name: str
     richness: int
+
+class MigrationVector(BaseModel):
+    species: str
+    first_site: str
+    first_lat: float
+    first_lng: float
+    second_site: str
+    second_lat: float
+    second_lng: float
+    distance_km: float
+    travel_time_hours: float
+    confidence: float
+    days_between: float
+    observation_count: int
+
+class DistributionMapPoint(BaseModel):
+    lat: float
+    lng: float
+    species: str
+    confidence: float
+    date: str
+    site_name: str
+    survey_name: str
+    count: int

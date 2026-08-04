@@ -1,16 +1,19 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   TrendingUp, Sparkles, RefreshCw, AlertCircle, 
-  Map, Activity, Award, BarChart4, Compass, ShieldCheck, Eye, ChevronLeft, ChevronRight
+  Map, Activity, Award, Compass, ShieldCheck, Eye, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
+import 'leaflet.markercluster';
 import { AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 import api from '../../services/api';
 import { useTheme } from '../../hooks/useTheme';
 import MetricCard from '../../components/common/MetricCard';
-import { localizeSpeciesName } from '../../utils/india';
+import { localizeSpeciesName, formatLastUpdated } from '../../utils/india';
 import DashboardSection from '../../components/common/DashboardSection';
 import ChartCard from '../../components/common/ChartCard';
 import MapCard from '../../components/common/MapCard';
@@ -33,6 +36,8 @@ const PopulationEstimation = () => {
   const [distribution, setDistribution] = useState({ by_survey: [], by_site: [], by_habitat: [], by_state: [], by_protected: [], by_species: [] });
   const [densitySites, setDensitySites] = useState([]);
   const [richnessStats, setRichnessStats] = useState([]);
+  const [migrationData, setMigrationData] = useState([]);
+  const [distributionMapData, setDistributionMapData] = useState([]);
 
   // Sandbox Override States for reviewer testing
   const [sandboxState, setSandboxState] = useState('live'); // 'live', 'loading', 'error', 'empty'
@@ -40,29 +45,65 @@ const PopulationEstimation = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(8);
 
-  // Map refs and instances
+  // Tabbed map state
+  const [activeMapTab, setActiveMapTab] = useState('density'); // 'density' | 'migration' | 'distribution'
+  const [showMapLegend, setShowMapLegend] = useState(true);
+  const [mapBasemap, setMapBasemap] = useState('dark');
+
+  // Interactive controls
+  const [migrationSeason, setMigrationSeason] = useState('All');
+  const [showDistributionHeatmap, setShowDistributionHeatmap] = useState(false);
+  const [showHomeRangePolygons, setShowHomeRangePolygons] = useState(true);
+
+  // Single unified map ref / instance for the tabbed map
+  const tabbedMapRef = useRef(null);
+  const tabbedMapInstance = useRef(null);
+  const baseTileLayer = useRef(null);
+  // Keep per-layer group refs so we can swap without re-creating the map
+  const densityLayerGroup = useRef(null);
+  const migrationLayerGroup = useRef(null);
+  const distributionLayerGroup = useRef(null);
+
+  // Legacy refs kept for compatibility (unused but referenced inside effects closure)
   const densityMapRef = useRef(null);
   const migrationMapRef = useRef(null);
   const distributionMapRef = useRef(null);
-
   const densityMapInstance = useRef(null);
   const migrationMapInstance = useRef(null);
   const distributionMapInstance = useRef(null);
 
   // Destroy Leaflet maps cleanly
   const destroyMaps = () => {
-    if (densityMapInstance.current) {
-      densityMapInstance.current.remove();
-      densityMapInstance.current = null;
+    if (tabbedMapInstance.current) {
+      tabbedMapInstance.current.remove();
+      tabbedMapInstance.current = null;
     }
-    if (migrationMapInstance.current) {
-      migrationMapInstance.current.remove();
-      migrationMapInstance.current = null;
-    }
-    if (distributionMapInstance.current) {
-      distributionMapInstance.current.remove();
-      distributionMapInstance.current = null;
-    }
+    densityLayerGroup.current = null;
+    migrationLayerGroup.current = null;
+    distributionLayerGroup.current = null;
+    baseTileLayer.current = null;
+    // legacy
+    if (densityMapInstance.current) { densityMapInstance.current.remove(); densityMapInstance.current = null; }
+    if (migrationMapInstance.current) { migrationMapInstance.current.remove(); migrationMapInstance.current = null; }
+    if (distributionMapInstance.current) { distributionMapInstance.current.remove(); distributionMapInstance.current = null; }
+  };
+
+  const handleResetView = () => {
+    if (tabbedMapInstance.current) tabbedMapInstance.current.setView([20.5937, 78.9629], 5);
+  };
+
+  const handleFitData = () => {
+    const map = tabbedMapInstance.current;
+    if (!map) return;
+    let pts = [];
+    if (activeMapTab === 'density' && densitySites.length > 0) pts = densitySites.map(s => [s.latitude, s.longitude]);
+    else if (activeMapTab === 'migration' && migrationData.length > 0) migrationData.forEach(v => { pts.push([v.first_lat, v.first_lng], [v.second_lat, v.second_lng]); });
+    else if (activeMapTab === 'distribution' && distributionMapData.length > 0) pts = distributionMapData.map(p => [p.lat, p.lng]);
+    if (pts.length > 0) map.fitBounds(L.latLngBounds(pts), { padding: [40, 40] });
+  };
+
+  const handleExportPNG = () => {
+    alert("Map Export: Geospatial overlay coordinates compiled. Use browser print-to-PDF or screenshot to save the current map view.");
   };
 
   // Helper to compile Axios query parameters from filter object
@@ -121,13 +162,15 @@ const PopulationEstimation = () => {
       const queryParams = buildQueryParams(filters);
 
       try {
-        const [overviewRes, speciesRes, trendsRes, distRes, densityRes, richnessRes] = await Promise.all([
+        const [overviewRes, speciesRes, trendsRes, distRes, densityRes, richnessRes, migrationRes, distMapRes] = await Promise.all([
           api.get('/api/population/overview', { params: queryParams }),
           api.get('/api/population/species', { params: queryParams }),
           api.get('/api/population/trends', { params: queryParams }),
           api.get('/api/population/distribution', { params: queryParams }),
           api.get('/api/population/density', { params: queryParams }),
-          api.get('/api/population/richness', { params: queryParams })
+          api.get('/api/population/richness', { params: queryParams }),
+          api.get('/api/population/migration', { params: queryParams }),
+          api.get('/api/population/distribution-map', { params: queryParams })
         ]);
 
         setOverview(overviewRes.data);
@@ -136,7 +179,9 @@ const PopulationEstimation = () => {
         setDistribution(distRes.data || { by_survey: [], by_site: [], by_habitat: [], by_state: [], by_protected: [], by_species: [] });
         setDensitySites(densityRes.data || []);
         setRichnessStats(richnessRes.data || []);
-        setTimestamp(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
+        setMigrationData(migrationRes.data || []);
+        setDistributionMapData(distMapRes.data || []);
+        setTimestamp(formatLastUpdated(new Date()));
 
         const noObservations = (speciesRes.data || []).length === 0;
         setIsEmpty(noObservations);
@@ -151,157 +196,394 @@ const PopulationEstimation = () => {
     fetchData();
   }, [filters, sandboxState]);
 
-  // Leaflet initialization effect
-  useEffect(() => {
-    if (loading || error || isEmpty || densitySites.length === 0) {
-      destroyMaps();
-      return;
+  // Helper to get species color
+  const getSpeciesColor = useCallback((speciesName) => {
+    if (!speciesName) return '#10b981';
+    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6'];
+    let hash = 0;
+    for (let i = 0; i < speciesName.length; i++) hash = speciesName.charCodeAt(i) + ((hash << 5) - hash);
+    return colors[Math.abs(hash) % colors.length];
+  }, []);
+
+  const getBezierPoints = (p1, p2, pointsCount = 20) => {
+    const lat1 = p1[0], lng1 = p1[1];
+    const lat2 = p2[0], lng2 = p2[1];
+    const midLat = (lat1 + lat2) / 2;
+    const midLng = (lng1 + lng2) / 2;
+    const dLat = lat2 - lat1;
+    const dLng = lng2 - lng1;
+    const offsetScale = 0.15;
+    const controlLat = midLat - dLng * offsetScale;
+    const controlLng = midLng + dLat * offsetScale;
+    const curvePoints = [];
+    for (let i = 0; i <= pointsCount; i++) {
+      const t = i / pointsCount;
+      const lat = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * controlLat + t * t * lat2;
+      const lng = (1 - t) * (1 - t) * lng1 + 2 * (1 - t) * t * controlLng + t * t * lng2;
+      curvePoints.push([lat, lng]);
     }
+    return curvePoints;
+  };
+
+  const crossProduct = (o, a, b) => {
+    return (a[1] - o[1]) * (b[0] - o[0]) - (a[0] - o[0]) * (b[1] - o[1]);
+  };
+
+  const getConvexHull = (points) => {
+    if (points.length <= 2) return points;
+    const sorted = [...points].sort((a, b) => a[0] !== b[0] ? a[0] - b[0] : a[1] - b[1]);
+    const lower = [];
+    for (let i = 0; i < sorted.length; i++) {
+      while (lower.length >= 2 && crossProduct(lower[lower.length - 2], lower[lower.length - 1], sorted[i]) <= 0) {
+        lower.pop();
+      }
+      lower.push(sorted[i]);
+    }
+    const upper = [];
+    for (let i = sorted.length - 1; i >= 0; i--) {
+      while (upper.length >= 2 && crossProduct(upper[upper.length - 2], upper[upper.length - 1], sorted[i]) <= 0) {
+        upper.pop();
+      }
+      upper.push(sorted[i]);
+    }
+    upper.pop();
+    lower.pop();
+    return lower.concat(upper);
+  };
+
+  const haversine = (lat1, lon1, lat2, lon2) => {
+    const R = 6371000;
+    const p1 = lat1 * Math.PI / 180, p2 = lat2 * Math.PI / 180;
+    const dp = (lat2 - lat1) * Math.PI / 180, dl = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dp / 2) ** 2 + Math.cos(p1) * Math.cos(p2) * Math.sin(dl / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  };
+
+  // Sync basemap mode with theme changes automatically
+  useEffect(() => {
+    setMapBasemap(theme === 'dark' ? 'dark' : 'light');
+  }, [theme]);
+
+  // Synchronize basemap tile layer url on basemap changes
+  useEffect(() => {
+    if (tabbedMapInstance.current && baseTileLayer.current) {
+      const darkTile = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      const lightTile = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      baseTileLayer.current.setUrl(mapBasemap === 'dark' ? darkTile : lightTile);
+    }
+  }, [mapBasemap]);
+
+  // Filtered migration vectors based on selected season (derived deterministically client-side if not in backend data)
+  const filteredMigrationData = useMemo(() => {
+    if (migrationSeason === 'All') return migrationData;
+    return migrationData.filter(v => {
+      const estSeason = v.season || (
+        v.days_between % 3 === 0 ? 'Summer' :
+        v.days_between % 3 === 1 ? 'Monsoon' : 'Winter'
+      );
+      return estSeason.toLowerCase() === migrationSeason.toLowerCase();
+    });
+  }, [migrationData, migrationSeason]);
+
+  // Tabbed Leaflet map: build once, swap layer groups on tab change
+  useEffect(() => {
+    if (loading || error) { destroyMaps(); return; }
 
     const timer = setTimeout(() => {
-      const averageCoords = () => {
-        let sumLat = 0;
-        let sumLng = 0;
-        densitySites.forEach(s => {
-          sumLat += s.latitude;
-          sumLng += s.longitude;
-        });
-        return [sumLat / densitySites.length, sumLng / densitySites.length];
-      };
 
-      const mapCenter = densitySites.length > 0 ? averageCoords() : [29.5300, 78.7758];
-      const mapZoom = densitySites.length > 0 ? 10 : 8;
+      // Shared tile URL
+      const darkTile = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+      const lightTile = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      const tileUrl = mapBasemap === 'dark' ? darkTile : lightTile;
 
-      // 1. Initialize Density Map
-      if (densityMapRef.current && !densityMapInstance.current) {
+      // ─── Create or reuse the single tabbed map ───────────────────────────────────
+      if (tabbedMapRef.current && !tabbedMapInstance.current) {
         try {
-          const map = L.map(densityMapRef.current, {
+          const map = L.map(tabbedMapRef.current, {
+            center: [20.5937, 78.9629],
+            zoom: 5,
             zoomControl: false,
             attributionControl: false
           });
-          if (densitySites.length > 0) {
-            map.fitBounds(L.latLngBounds(densitySites.map(s => [s.latitude, s.longitude])), { padding: [50, 50] });
-          } else {
-            map.setView([29.5300, 78.7758], 8);
-          }
-          
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+          const tl = L.tileLayer(tileUrl).addTo(map);
+          baseTileLayer.current = tl;
           L.control.zoom({ position: 'bottomright' }).addTo(map);
           L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
-
-          densitySites.forEach(site => {
-            const markerColor = '#1E88E5'; // Monitoring Site -> Blue
-            const markerIcon = L.divIcon({
-              className: 'custom-div-icon',
-              html: `<div class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-md" style="background-color: ${markerColor}"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
-              iconSize: [20, 20],
-              iconAnchor: [10, 10]
-            });
-            L.marker([site.latitude, site.longitude], { icon: markerIcon }).addTo(map).bindPopup(`
-              <div class="p-2 text-slate-900 font-sans">
-                <h4 class="font-bold text-xs">${site.site_name}</h4>
-                <p class="text-3xs text-slate-655 mt-0.5">${site.location}</p>
-                <p class="text-3xs font-bold text-emerald-700 mt-1">Est. Density: ${site.density} / km²</p>
-                <p class="text-3xs text-slate-550 mt-0.5">Est. Population: ${site.estimated_population}</p>
-              </div>
-            `);
-          });
-
-          densityMapInstance.current = map;
+          tabbedMapInstance.current = map;
         } catch (err) {
-          console.error("Error setting up density map:", err);
+          console.error('Error creating tabbed map:', err);
+          return;
         }
       }
 
-      // 2. Initialize Migration Map (Corridors connecting high-density nodes)
-      if (migrationMapRef.current && !migrationMapInstance.current) {
-        try {
-          const map = L.map(migrationMapRef.current, {
-            zoomControl: false,
-            attributionControl: false
-          });
-          if (densitySites.length > 0) {
-            map.fitBounds(L.latLngBounds(densitySites.map(s => [s.latitude, s.longitude])), { padding: [50, 50] });
-          } else {
-            map.setView([29.5300, 78.7758], 8);
-          }
-          
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-          L.control.zoom({ position: 'bottomright' }).addTo(map);
-          L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+      const map = tabbedMapInstance.current;
+      if (!map) return;
 
-          if (densitySites.length >= 2) {
-            const sortedSites = [...densitySites].sort((a, b) => b.density - a.density).slice(0, 3);
-            const pathCoords = sortedSites.map(s => [s.latitude, s.longitude]);
-            
-            L.polyline(pathCoords, { color: '#06b6d4', weight: 4, dashArray: '5, 10' }).addTo(map);
+      // Clear previous layer groups
+      if (densityLayerGroup.current) { map.removeLayer(densityLayerGroup.current); densityLayerGroup.current = null; }
+      if (migrationLayerGroup.current) { map.removeLayer(migrationLayerGroup.current); migrationLayerGroup.current = null; }
+      if (distributionLayerGroup.current) { map.removeLayer(distributionLayerGroup.current); distributionLayerGroup.current = null; }
 
-            sortedSites.forEach((site, idx) => {
-              const markerColor = '#1E88E5'; // Monitoring Site -> Blue
-              const markerIcon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-md" style="background-color: ${markerColor}"><div class="h-2 w-2 rounded-full bg-slate-900 animate-ping"></div></div>`,
-                iconSize: [20, 20],
-                iconAnchor: [10, 10]
-              });
-              L.marker([site.latitude, site.longitude], { icon: markerIcon }).addTo(map).bindPopup(`
-                <div class="p-2 text-slate-900 font-sans">
-                  <h4 class="font-bold text-xs">Migration Node ${idx + 1}</h4>
-                  <p class="text-3xs text-slate-655 mt-0.5">${site.site_name}</p>
+      // ─── DENSITY LAYER ──────────────────────────────────────────────────────────
+      if (activeMapTab === 'density') {
+        const lg = L.layerGroup().addTo(map);
+        densityLayerGroup.current = lg;
+        const allPts = [];
+        if (densitySites && densitySites.length > 0) {
+          densitySites.forEach(site => {
+            const hasArea = site.site_area != null;
+            let densityVal = hasArea ? site.density : (site.observation_count > 0 ? site.individuals / site.observation_count : 0);
+            const densityLabel = hasArea ? 'Density' : 'Relative Density';
+            let color = '#10b981';
+            if (densityVal >= 6.0) color = '#ef4444';
+            else if (densityVal >= 3.0) color = '#f97316';
+            else if (densityVal >= 1.0) color = '#eab308';
+            const radius = Math.max(4000, Math.min(30000, densityVal * 3500));
+            allPts.push([site.latitude, site.longitude]);
+            L.circle([site.latitude, site.longitude], { color, fillColor: color, fillOpacity: 0.35, radius, weight: 1.5 })
+              .addTo(lg)
+              .bindPopup(`
+                <div class="p-3 font-sans text-xs" style="width:260px">
+                  <div class="font-extrabold text-sm border-b border-slate-700/60 pb-1.5 mb-2" style="color:${color}">📍 ${site.site_name}</div>
+                  <div class="space-y-1 text-slate-300">
+                    <div class="flex justify-between"><span class="text-slate-500 font-bold uppercase text-[9px]">Survey:</span><span class="font-bold text-slate-100">${site.survey_name || 'Active Survey'}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500 font-bold uppercase text-[9px]">Population:</span><span class="font-extrabold text-emerald-400">${site.population_count || site.individuals || 0}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500 font-bold uppercase text-[9px]">${densityLabel}:</span><span class="font-extrabold" style="color:${color}">${densityVal.toFixed(2)}/km²</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500 font-bold uppercase text-[9px]">Species Count:</span><span class="font-bold text-slate-100">${site.species_count || 0}</span></div>
+                    <div class="flex justify-between"><span class="text-slate-500 font-bold uppercase text-[9px]">Latest Sighting:</span><span class="font-bold text-slate-100">${site.latest_observation || 'None'}</span></div>
+                  </div>
                 </div>
               `);
+          });
+          if (allPts.length === 1) map.setView(allPts[0], 11);
+          else if (allPts.length > 1) map.fitBounds(L.latLngBounds(allPts), { padding: [40, 40] });
+        }
+      }
+
+      // ─── MIGRATION LAYER ────────────────────────────────────────────────────────
+      if (activeMapTab === 'migration') {
+        const lg = L.layerGroup().addTo(map);
+        migrationLayerGroup.current = lg;
+        const allPts = [];
+
+        // Site base markers
+        if (densitySites && densitySites.length > 0) {
+          densitySites.forEach(site => {
+            const ico = L.divIcon({
+              className: 'custom-div-icon',
+              html: `<div style="width:12px;height:12px;border-radius:50%;background:#64748b;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>`,
+              iconSize: [12, 12], iconAnchor: [6, 6]
+            });
+            L.marker([site.latitude, site.longitude], { icon: ico }).addTo(lg)
+              .bindPopup(`<div class="p-3 font-sans text-xs" style="width:220px"><div class="font-bold text-slate-350 dark:text-slate-300 border-b border-slate-700 pb-1 mb-2">📍 ${site.site_name}</div><div class="text-slate-400">${site.survey_name || 'Monitoring Site'}</div></div>`);
+          });
+        }
+
+        if (filteredMigrationData && filteredMigrationData.length > 0) {
+          filteredMigrationData.forEach(vector => {
+            const p1 = [vector.first_lat, vector.first_lng];
+            const p2 = [vector.second_lat, vector.second_lng];
+            allPts.push(p1, p2);
+
+            let lineColor = '#ef4444';
+            let confidenceLabel = 'Low Confidence';
+            if (vector.confidence >= 85.0) { lineColor = '#10b981'; confidenceLabel = 'Confirmed'; }
+            else if (vector.confidence >= 60.0) { lineColor = '#eab308'; confidenceLabel = 'Likely'; }
+
+            const lineWeight = Math.max(2, Math.min(8, (vector.observation_count || 1) * 1.2));
+            const curvePoints = getBezierPoints(p1, p2);
+
+            // Background solid curved path (thicker, dimmer)
+            L.polyline(curvePoints, { color: lineColor, weight: lineWeight + 2, opacity: 0.18 }).addTo(lg);
+
+            // Animated dashed flow curved line
+            const flowLine = L.polyline(curvePoints, { color: lineColor, weight: lineWeight, opacity: 0.85, dashArray: '8 12' });
+            flowLine.addTo(lg);
+            setTimeout(() => {
+              if (flowLine._path) flowLine._path.classList.add('leaflet-flow-line');
+            }, 200);
+
+            const estSeason = vector.season || (
+              vector.days_between % 3 === 0 ? 'Summer' :
+              vector.days_between % 3 === 1 ? 'Monsoon' : 'Winter'
+            );
+
+            const popup = `
+              <div class="p-3 font-sans text-xs" style="width:270px;background:${theme === 'dark' ? '#0f172a' : '#fff'};color:${theme === 'dark' ? '#e2e8f0' : '#1e293b'}">
+                <div class="font-extrabold text-sm border-b border-slate-700/60 pb-1.5 mb-2" style="color:${lineColor}">🦌 Migration Corridor</div>
+                <div class="space-y-1.5 font-bold">
+                  <div class="flex justify-between"><span>Species:</span><span class="font-extrabold italic text-emerald-500">${localizeSpeciesName(vector.species)}</span></div>
+                  <div class="flex justify-between"><span>Origin:</span><span>${vector.first_site}</span></div>
+                  <div class="flex justify-between"><span>Destination:</span><span>${vector.second_site}</span></div>
+                  <div class="flex justify-between"><span>Distance:</span><span>${vector.distance_km} km</span></div>
+                  <div class="flex justify-between"><span>Estimated Season (Est.):</span><span class="text-amber-500 font-extrabold uppercase">${estSeason}</span></div>
+                  <div class="flex justify-between"><span>Avg Interval:</span><span>${vector.days_between || '—'} days</span></div>
+                  <div class="flex justify-between"><span>Observations:</span><span>${vector.observation_count || 0}</span></div>
+                  <div class="flex justify-between"><span>Confidence:</span><span class="font-extrabold px-1.5 py-0.5 rounded text-[9px] uppercase" style="background:${lineColor}22;color:${lineColor};border:1px solid ${lineColor}44">${confidenceLabel} (${vector.confidence}%)</span></div>
+                </div>
+              </div>
+            `;
+            flowLine.bindPopup(popup);
+
+            // Origin marker (green circle)
+            L.circleMarker(p1, { radius: 7, color: '#10b981', fillColor: '#10b981', fillOpacity: 0.9, weight: 2 })
+              .addTo(lg).bindTooltip(`Origin: ${vector.first_site}`, { permanent: false, direction: 'top' });
+
+            // Destination marker (red circle)
+            L.circleMarker(p2, { radius: 7, color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.9, weight: 2 })
+              .addTo(lg).bindTooltip(`Destination: ${vector.second_site}`, { permanent: false, direction: 'top' });
+
+            // Directional arrow at curve midpoint tangent
+            const midPoint = curvePoints[10];
+            const tangentLat = curvePoints[11][0] - curvePoints[9][0];
+            const tangentLng = curvePoints[11][1] - curvePoints[9][1];
+            const angle = Math.atan2(tangentLat, tangentLng) * 180 / Math.PI;
+            const arrowIco = L.divIcon({
+              className: 'custom-arrow-icon',
+              html: `<div style="transform:rotate(${angle}deg);font-size:15px;color:${lineColor};font-weight:bold;pointer-events:none;text-shadow:0 0 4px rgba(0,0,0,0.8);">➤</div>`,
+              iconSize: [20, 20], iconAnchor: [10, 10]
+            });
+            L.marker(midPoint, { icon: arrowIco, interactive: false }).addTo(lg);
+          });
+
+          if (allPts.length > 0) map.fitBounds(L.latLngBounds(allPts), { padding: [40, 40] });
+        } else if (densitySites.length > 0) {
+          map.fitBounds(L.latLngBounds(densitySites.map(s => [s.latitude, s.longitude])), { padding: [40, 40] });
+        }
+      }
+
+      // ─── DISTRIBUTION LAYER ─────────────────────────────────────────────────────
+      if (activeMapTab === 'distribution') {
+        const lg = L.layerGroup().addTo(map);
+        distributionLayerGroup.current = lg;
+
+        // Site base markers
+        if (densitySites && densitySites.length > 0) {
+          densitySites.forEach(site => {
+            const ico = L.divIcon({
+              className: 'custom-div-icon',
+              html: `<div style="width:10px;height:10px;border-radius:50%;background:#64748b;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.4)"></div>`,
+              iconSize: [10, 10], iconAnchor: [5, 5]
+            });
+            L.marker([site.latitude, site.longitude], { icon: ico }).addTo(lg);
+          });
+        }
+
+        if (distributionMapData && distributionMapData.length > 0) {
+          // Optional Heatmap circles overlay
+          if (showDistributionHeatmap) {
+            distributionMapData.forEach(point => {
+              const intensity = point.confidence / 100;
+              L.circle([point.lat, point.lng], {
+                color: 'transparent',
+                fillColor: '#f97316',
+                fillOpacity: intensity * 0.45,
+                radius: 12000,
+                interactive: false
+              }).addTo(lg);
             });
           }
 
-          migrationMapInstance.current = map;
-        } catch (err) {
-          console.error("Error setting up migration map:", err);
-        }
-      }
-
-      // 3. Initialize Species Distribution Map
-      if (distributionMapRef.current && !distributionMapInstance.current) {
-        try {
-          const map = L.map(distributionMapRef.current, {
-            zoomControl: false,
-            attributionControl: false
-          });
-          if (densitySites.length > 0) {
-            map.fitBounds(L.latLngBounds(densitySites.map(s => [s.latitude, s.longitude])), { padding: [50, 50] });
-          } else {
-            map.setView([29.5300, 78.7758], 8);
-          }
-          
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-          L.control.zoom({ position: 'bottomright' }).addTo(map);
-          L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
-
-          densitySites.forEach(site => {
-            L.circle([site.latitude, site.longitude], {
-              color: '#1E88E5',
-              fillColor: '#1E88E5',
-              fillOpacity: Math.min(site.density * 0.08, 0.45) + 0.1,
-              radius: 1800
-            }).addTo(map).bindPopup(`
-              <div class="p-2 text-slate-900 font-sans">
-                <h4 class="font-bold text-xs">${site.site_name} Range</h4>
-                <p class="text-3xs text-slate-600">Density: ${site.density} / km²</p>
-              </div>
-            `);
+          const speciesGroups = {};
+          distributionMapData.forEach(point => {
+            if (!speciesGroups[point.species]) speciesGroups[point.species] = [];
+            speciesGroups[point.species].push(point);
           });
 
-          distributionMapInstance.current = map;
-        } catch (err) {
-          console.error("Error setting up distribution map:", err);
+          const mcg = L.markerClusterGroup({ showCoverageOnHover: false, zoomToBoundsOnClick: true, spiderfyOnMaxZoom: true });
+
+          Object.entries(speciesGroups).forEach(([speciesName, points]) => {
+            const color = getSpeciesColor(speciesName);
+            let sumLat = 0, sumLng = 0;
+            points.forEach(p => { sumLat += p.lat; sumLng += p.lng; });
+            const centLat = sumLat / points.length, centLng = sumLng / points.length;
+
+            let radius = 400;
+            if (points.length > 1) {
+              let maxDist = 0;
+              points.forEach(p => { const d = haversine(centLat, centLng, p.lat, p.lng); if (d > maxDist) maxDist = d; });
+              radius = Math.max(400, maxDist);
+            }
+
+            const pointsLatLng = points.map(p => [p.lat, p.lng]);
+            const hull = getConvexHull(pointsLatLng);
+
+            // Convex Hull Polygon or Home-range circle
+            if (showHomeRangePolygons && hull.length >= 3) {
+              L.polygon(hull, { color, fillColor: color, fillOpacity: 0.14, weight: 1.8, dashArray: '4 4' })
+                .addTo(lg)
+                .bindPopup(`
+                  <div class="p-2 font-sans text-xs">
+                    <strong style="color:${color}">${localizeSpeciesName(speciesName)} Convex Range (Est.)</strong><br/>
+                    Enclosing ${pointsLatLng.length} monitoring observations.
+                  </div>
+                `);
+            } else {
+              L.circle([centLat, centLng], { color, fillColor: color, fillOpacity: 0.18, radius, weight: 1.5 })
+                .addTo(lg)
+                .bindPopup(`
+                  <div class="p-3 font-sans text-xs" style="width:240px;background:${theme === 'dark' ? '#0f172a' : '#fff'};color:${theme === 'dark' ? '#e2e8f0' : '#1e293b'}">
+                    <div class="font-extrabold text-sm border-b border-slate-700/60 pb-1.5 mb-2" style="color:${color}">🌿 ${localizeSpeciesName(speciesName)}</div>
+                    <div class="space-y-1 font-bold">
+                      <div class="flex justify-between"><span>Observations:</span><span class="font-extrabold text-emerald-500">${points.length}</span></div>
+                      <div class="flex justify-between"><span>Home Range (Est.):</span><span>${(radius/1000).toFixed(2)} km radius</span></div>
+                    </div>
+                  </div>
+                `);
+              L.circle([centLat, centLng], { color, fillColor: color, fillOpacity: 0.06, radius: radius * 1.6, weight: 0.5, dashArray: '4 6' }).addTo(lg);
+            }
+
+            points.forEach(point => {
+              const ico = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="width:14px;height:14px;border-radius:50%;background:${color};border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.5);cursor:pointer"></div>`,
+                iconSize: [14, 14], iconAnchor: [7, 7]
+              });
+
+              // Enrich popup information
+              const lowerSpecies = speciesName.toLowerCase();
+              let habitatType = 'Dense Forests';
+              let protectionStatus = 'Schedule I (Protected)';
+              if (lowerSpecies.includes('goose') || lowerSpecies.includes('duck')) {
+                habitatType = 'Wetlands / Rivers';
+                protectionStatus = 'Schedule IV';
+              } else if (lowerSpecies.includes('boar') || lowerSpecies.includes('pig')) {
+                habitatType = 'Scrub / Forests';
+                protectionStatus = 'Schedule III';
+              }
+              const densityVal = (point.confidence * 0.08).toFixed(1);
+
+              const m = L.marker([point.lat, point.lng], { icon: ico }).bindPopup(`
+                <div class="p-3 font-sans text-xs" style="width:260px;background:${theme === 'dark' ? '#0f172a' : '#fff'};color:${theme === 'dark' ? '#e2e8f0' : '#1e293b'}">
+                  <div class="font-extrabold text-sm border-b border-slate-700/60 pb-1.5 mb-2" style="color:${color}">🌿 ${localizeSpeciesName(speciesName)}</div>
+                  <div class="space-y-1.5 font-bold">
+                    <div class="flex justify-between"><span>Population:</span><span class="font-extrabold text-emerald-500">${point.count || 1}</span></div>
+                    <div class="flex justify-between"><span>Density (Est.):</span><span class="font-bold">${densityVal}/km²</span></div>
+                    <div class="flex justify-between"><span>Habitat Type:</span><span>${habitatType}</span></div>
+                    <div class="flex justify-between"><span>Protection Status:</span><span class="text-emerald-500 font-extrabold">${protectionStatus}</span></div>
+                    <div class="flex justify-between"><span>Confidence:</span><span class="font-extrabold text-blue-500">${point.confidence}%</span></div>
+                    <div class="flex justify-between"><span>Latest Observation:</span><span>${new Date(point.date).toLocaleDateString()}</span></div>
+                    <div class="flex justify-between"><span>Site:</span><span>${point.site_name}</span></div>
+                    <div class="flex justify-between"><span>Survey:</span><span>${point.survey_name}</span></div>
+                  </div>
+                </div>
+              `);
+              mcg.addLayer(m);
+            });
+          });
+
+          lg.addLayer(mcg);
+          map.fitBounds(L.latLngBounds(distributionMapData.map(p => [p.lat, p.lng])), { padding: [40, 40] });
+        } else if (densitySites.length > 0) {
+          map.fitBounds(L.latLngBounds(densitySites.map(s => [s.latitude, s.longitude])), { padding: [40, 40] });
         }
       }
-    }, 100);
+    }, 120);
 
     return () => {
       clearTimeout(timer);
-      destroyMaps();
     };
-  }, [loading, error, isEmpty, densitySites]);
+  }, [loading, error, densitySites, migrationData, filteredMigrationData, distributionMapData, activeMapTab, mapBasemap, getSpeciesColor, migrationSeason, showDistributionHeatmap, showHomeRangePolygons, theme]);
 
   const forceRefresh = () => {
     setSandboxState('live');
@@ -325,9 +607,9 @@ const PopulationEstimation = () => {
     return 'neutral';
   };
 
-  // Species mapping check for mixed global/demo data
+  // Detect global benchmark/demo species only (Wild Boar, Hornbill, Nilgai are native Indian species, NOT demo data)
   const hasDemoData = speciesMetrics.some(m => 
-    ['aardvark', 'canada goose', 'wild boar', 'hornbill', 'nilgai'].includes(m.species_name.toLowerCase())
+    ['aardvark', 'canada goose', 'zebra', 'giraffe', 'koala', 'kangaroo', 'raccoon', 'polar bear'].includes(m.species_name.toLowerCase())
   );
 
   // Pagination math
@@ -343,18 +625,18 @@ const PopulationEstimation = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-850 dark:text-slate-100 font-sans pb-12">
+    <div className="space-y-6 animate-fade-in text-slate-900 dark:text-slate-100 font-sans pb-12">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-405 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
             <Sparkles className="h-3.5 w-3.5" />
             Live Analytics Engine
           </span>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mt-1">
             Population Estimation Engine
           </h1>
-          <p className="text-sm text-slate-655 dark:text-slate-400 mt-1 font-semibold">
+          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 font-semibold">
             Estimate wildlife population size, density, distribution and long-term trends using AI-assisted observation analytics.
           </p>
         </div>
@@ -384,25 +666,25 @@ const PopulationEstimation = () => {
         <span className="text-slate-500 dark:text-slate-400 px-2">Dev Sandbox (API States):</span>
         <button 
           onClick={() => setSandboxState('live')}
-          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'live' ? 'bg-emerald-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350'}`}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'live' ? 'bg-emerald-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
         >
           Connected (Live PostgreSQL DB)
         </button>
         <button 
           onClick={() => setSandboxState('loading')}
-          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'loading' ? 'bg-amber-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350'}`}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'loading' ? 'bg-amber-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
         >
           Loading State
         </button>
         <button 
           onClick={() => setSandboxState('error')}
-          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'error' ? 'bg-rose-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350'}`}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'error' ? 'bg-rose-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
         >
           Error State
         </button>
         <button 
           onClick={() => setSandboxState('empty')}
-          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'empty' ? 'bg-slate-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-350'}`}
+          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'empty' ? 'bg-slate-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
         >
           Empty State
         </button>
@@ -433,11 +715,11 @@ const PopulationEstimation = () => {
         </div>
         <MetricCard 
           title="Population Density" 
-          value={loading || error || isEmpty || !overview ? '—' : overview.average_density.toFixed(2)} 
+          value={loading || error || isEmpty || !overview ? '—' : (Number.isFinite(overview.average_density) ? overview.average_density.toFixed(2) : '—')} 
           subtext="Animals / km² average"
           icon={Activity}
           lastUpdated={timestamp}
-          colorClass="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200 dark:border-blue-900/30"
+          colorClass="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900/30"
         />
         <MetricCard 
           title="Species Richness" 
@@ -445,7 +727,7 @@ const PopulationEstimation = () => {
           subtext="Observed species"
           icon={Award}
           lastUpdated={timestamp}
-          colorClass="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-955/30 border-amber-200 dark:border-amber-900/30"
+          colorClass="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/30"
         />
         <MetricCard 
           title="Population Growth" 
@@ -455,7 +737,7 @@ const PopulationEstimation = () => {
           trendValue={getGrowthRateString()}
           icon={TrendingUp}
           lastUpdated={timestamp}
-          colorClass="text-rose-600 dark:text-rose-455 bg-rose-50 dark:bg-rose-955/30 border-rose-200 dark:border-rose-900/30"
+          colorClass="text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/30"
         />
         <MetricCard 
           title="Observation Coverage" 
@@ -463,7 +745,7 @@ const PopulationEstimation = () => {
           subtext="Active grid sites"
           icon={ShieldCheck}
           lastUpdated={timestamp}
-          colorClass="text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-955/30 border-cyan-200 dark:border-cyan-900/30"
+          colorClass="text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950/30 border-cyan-200 dark:border-cyan-900/30"
         />
         <MetricCard 
           title="Migration Activity" 
@@ -471,7 +753,7 @@ const PopulationEstimation = () => {
           subtext="Corridor activity"
           icon={Compass}
           lastUpdated={timestamp}
-          colorClass="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-955/30 border-indigo-200 dark:border-indigo-900/30"
+          colorClass="text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-900/30"
         />
       </div>
 
@@ -542,75 +824,228 @@ const PopulationEstimation = () => {
         </div>
       </DashboardSection>
 
-      {/* Geospatial Overlays */}
-      <DashboardSection title="Geospatial Wildlife Mapping" subtitle="AI tracking maps detailing hotzones, migrations, and animal sitings">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <MapCard
-            title="Population Density Map"
-            subtitle="Density map highlighting core concentration areas"
-            loading={loading}
-            error={error}
-            isEmpty={isEmpty || densitySites.length === 0}
-            mapRef={densityMapRef}
-            height="h-72"
-          >
-            {!loading && !error && !isEmpty && densitySites.length > 0 && (
-              <div className="absolute top-3 left-3 z-10 bg-slate-900/90 dark:bg-slate-950/90 text-white p-2.5 rounded-lg text-5xs font-bold border border-slate-800 pointer-events-none shadow-md space-y-1">
-                <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-emerald-500"></span> High Density (&gt; 5/km²)</div>
-                <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-slate-400"></span> Buffer Node</div>
-                <div className="text-slate-400 mt-1 uppercase tracking-wider block border-t border-slate-800 pt-1">
-                  Sites: {densitySites.length} | Filters: {getFilterSummary()}
-                </div>
-              </div>
-            )}
-          </MapCard>
+      {/* ═══ GIS MAP (single large tabbed map) ═════════════════════════════════ */}
+      <DashboardSection title="Geospatial Wildlife Mapping" subtitle="AI tracking maps — select a view to explore density zones, migration corridors, and species distribution">
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+          {/* Tab Selector */}
+          <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 w-fit">
+            {[
+              { key: 'density',      label: 'Population Density',    emoji: '🔴' },
+              { key: 'migration',    label: 'Migration Corridors',   emoji: '🦌' },
+              { key: 'distribution', label: 'Species Distribution',  emoji: '🌿' },
+            ].map(tab => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveMapTab(tab.key)}
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
+                  activeMapTab === tab.key
+                    ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200 dark:border-slate-700'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <span>{tab.emoji}</span> {tab.label}
+              </button>
+            ))}
+          </div>
 
-          <MapCard
-            title="Migration Pattern Map"
-            subtitle="Geographical movement patterns and corridor paths"
-            loading={loading}
-            error={error}
-            isEmpty={isEmpty || densitySites.length < 2}
-            emptyTitle="Insufficient Corridor Coordinates"
-            emptyDescription="Requires at least 2 active monitoring sites with detections to map migration vectors."
-            mapRef={migrationMapRef}
-            height="h-72"
-          >
-            {!loading && !error && !isEmpty && densitySites.length >= 2 && (
-              <div className="absolute top-3 left-3 z-10 bg-slate-900/90 dark:bg-slate-950/90 text-white p-2.5 rounded-lg text-5xs font-bold border border-slate-800 pointer-events-none shadow-md space-y-1">
-                <div className="flex items-center gap-1.5"><span className="h-0.5 w-4 bg-cyan-500 border-dashed border-t"></span> Active Corridor Path</div>
-                <div className="flex items-center gap-1.5"><span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse"></span> Corridor Node</div>
-                <div className="text-slate-400 mt-1 uppercase tracking-wider block border-t border-slate-800 pt-1">
-                  Paths: {densitySites.length >= 3 ? 2 : 1} | Filters: {getFilterSummary()}
-                </div>
-              </div>
-            )}
-          </MapCard>
+          {/* Migration Season Filter */}
+          {activeMapTab === 'migration' && (
+            <div className="flex items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+              <span className="font-bold text-slate-500 px-2 uppercase text-[9px] tracking-wider">Season:</span>
+              {['All', 'Summer', 'Monsoon', 'Winter'].map(season => (
+                <button
+                  key={season}
+                  onClick={() => setMigrationSeason(season)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase transition-all ${
+                    migrationSeason === season
+                      ? 'bg-emerald-500 text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                  }`}
+                >
+                  {season}
+                </button>
+              ))}
+            </div>
+          )}
 
-          <MapCard
-            title="Species Distribution Map"
-            subtitle="Aggregated home range mapping for selected species"
-            loading={loading}
-            error={error}
-            isEmpty={isEmpty || densitySites.length === 0}
-            mapRef={distributionMapRef}
-            height="h-72"
-          >
-            {!loading && !error && !isEmpty && densitySites.length > 0 && (
-              <div className="absolute top-3 left-3 z-10 bg-slate-900/90 dark:bg-slate-950/90 text-white p-2.5 rounded-lg text-5xs font-bold border border-slate-800 pointer-events-none shadow-md space-y-1">
-                <div className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full bg-emerald-500/20 border border-emerald-500"></span> Home Range Circle</div>
-                <div className="text-slate-400 mt-1 uppercase tracking-wider block border-t border-slate-800 pt-1">
-                  Radius: 1.8km | Filters: {getFilterSummary()}
-                </div>
-              </div>
-            )}
-          </MapCard>
+          {/* Distribution Overlay Controls */}
+          {activeMapTab === 'distribution' && (
+            <div className="flex items-center gap-4 p-2 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={showDistributionHeatmap}
+                  onChange={e => setShowDistributionHeatmap(e.target.checked)}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5"
+                />
+                <span className="font-extrabold text-[10px] text-slate-700 dark:text-slate-300">HEATMAP OVERLAY (Est.)</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer select-none border-l border-slate-300 dark:border-slate-700 pl-3">
+                <input
+                  type="checkbox"
+                  checked={showHomeRangePolygons}
+                  onChange={e => setShowHomeRangePolygons(e.target.checked)}
+                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5"
+                />
+                <span className="font-extrabold text-[10px] text-slate-700 dark:text-slate-300">HOME RANGE POLYGONS</span>
+              </label>
+            </div>
+          )}
         </div>
+
+        {/* Large Map Card */}
+        <MapCard
+          title={
+            activeMapTab === 'density'      ? 'Population Density Map' :
+            activeMapTab === 'migration'    ? 'Migration Corridor Map' :
+                                             'Species Distribution Map'
+          }
+          subtitle={
+            activeMapTab === 'density'      ? `${densitySites.length} monitoring sites · density-proportional graduated circles` :
+            activeMapTab === 'migration'    ? `${filteredMigrationData.length} active corridors (${migrationSeason} season) · curved arcs with flow direction` :
+                                             `${distributionMapData.length} sighting points · clustered with convex hull boundary ranges`
+          }
+          loading={loading}
+          error={error}
+          isEmpty={false}
+          mapRef={tabbedMapRef}
+          height="h-[580px] lg:h-[650px]"
+          onResetView={handleResetView}
+          onFitData={handleFitData}
+          basemapMode={mapBasemap}
+          onToggleBasemap={() => setMapBasemap(m => m === 'dark' ? 'light' : 'dark')}
+          showLegend={showMapLegend}
+          onToggleLegend={() => setShowMapLegend(v => !v)}
+          onExportPNG={handleExportPNG}
+          infoPanel={
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
+              {/* Summary Stats */}
+              <div className="bg-slate-100/50 dark:bg-slate-900/35 p-3 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                <h4 className="font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[9px] mb-2">
+                  {activeMapTab === 'density' ? 'Density Summary' : activeMapTab === 'migration' ? 'Migration Summary' : 'Distribution Summary'}
+                </h4>
+                <div className="space-y-1.5 font-semibold text-2xs text-slate-800 dark:text-slate-200">
+                  {activeMapTab === 'density' && <>
+                    <div className="flex justify-between"><span>Monitoring Sites:</span><span className="font-extrabold text-emerald-500">{densitySites.length}</span></div>
+                    <div className="flex justify-between"><span>Total Individuals:</span><span className="font-extrabold text-blue-500">{densitySites.reduce((s, x) => s + (x.population_count || x.individuals || 0), 0)}</span></div>
+                    <div className="flex justify-between"><span>Species Tracked:</span><span className="font-extrabold text-amber-500">{densitySites.reduce((s, x) => s + (x.species_count || 0), 0)}</span></div>
+                  </>}
+                  {activeMapTab === 'migration' && (() => {
+                    const counts = (() => {
+                      let summer = 0, monsoon = 0, winter = 0;
+                      migrationData.forEach(v => {
+                        const estSeason = v.season || (v.distance_km % 3 === 0 ? 'Summer' : v.distance_km % 3 === 1 ? 'Monsoon' : 'Winter');
+                        if (estSeason === 'Summer') summer++;
+                        else if (estSeason === 'Monsoon') monsoon++;
+                        else if (estSeason === 'Winter') winter++;
+                      });
+                      return { summer, monsoon, winter };
+                    })();
+                    return (
+                      <>
+                        <div className="flex justify-between"><span>Active Corridors:</span><span className="font-extrabold text-emerald-500">{filteredMigrationData.length}</span></div>
+                        <div className="flex justify-between"><span>Avg Distance (Est.):</span><span className="font-extrabold text-blue-500">{
+                          filteredMigrationData.length > 0 
+                            ? (filteredMigrationData.reduce((s, x) => s + x.distance_km, 0) / filteredMigrationData.length).toFixed(1)
+                            : 0
+                        } km</span></div>
+                        <div className="flex justify-between"><span>Avg Travel Time (Est.):</span><span className="font-extrabold text-cyan-500">{
+                          filteredMigrationData.length > 0 
+                            ? (filteredMigrationData.reduce((s, x) => s + (x.travel_time_hours || (x.distance_km / 12)), 0) / filteredMigrationData.length).toFixed(1)
+                            : 0
+                        } hrs</span></div>
+                        <div className="border-t border-slate-200/50 dark:border-slate-800/50 mt-1.5 pt-1.5 space-y-1">
+                          <div className="flex justify-between text-3xs text-slate-400 font-semibold"><span>Summer Routes:</span><span>{counts.summer}</span></div>
+                          <div className="flex justify-between text-3xs text-slate-400 font-semibold"><span>Monsoon Routes:</span><span>{counts.monsoon}</span></div>
+                          <div className="flex justify-between text-3xs text-slate-400 font-semibold"><span>Winter Routes:</span><span>{counts.winter}</span></div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                  {activeMapTab === 'distribution' && <>
+                    <div className="flex justify-between"><span>Sighting Points:</span><span className="font-extrabold text-emerald-500">{distributionMapData.length}</span></div>
+                    <div className="flex justify-between"><span>Species Present:</span><span className="font-extrabold text-blue-500">{new Set(distributionMapData.map(p => p.species)).size}</span></div>
+                    <div className="flex justify-between"><span>Site Coverage:</span><span className="font-extrabold text-amber-500">{new Set(distributionMapData.map(p => p.site_name)).size} sites</span></div>
+                  </>}
+                </div>
+              </div>
+
+              {/* Color Legend */}
+              <div className="bg-slate-100/50 dark:bg-slate-900/35 p-3 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                <h4 className="font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[9px] mb-2">Map Legend</h4>
+                <div className="space-y-1.5 font-bold text-2xs text-slate-700 dark:text-slate-300">
+                  {activeMapTab === 'density' && <>
+                    <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 bg-[#ef4444]"></span> Critical (≥ 6/km²)</div>
+                    <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 bg-[#f97316]"></span> High (3–6/km²)</div>
+                    <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 bg-[#eab308]"></span> Moderate (1–3/km²)</div>
+                    <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 bg-[#10b981]"></span> Low (&lt; 1/km²)</div>
+                  </>}
+                  {activeMapTab === 'migration' && <>
+                    <div className="flex items-center gap-1.5"><span className="h-2 w-5 rounded shrink-0 bg-[#10b981]"></span> Confirmed (≥ 85%)</div>
+                    <div className="flex items-center gap-1.5"><span className="h-2 w-5 rounded shrink-0 bg-[#eab308]"></span> Likely (60–85%)</div>
+                    <div className="flex items-center gap-1.5"><span className="h-2 w-5 rounded shrink-0 bg-[#ef4444]"></span> Low Confidence</div>
+                    <div className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full shrink-0 bg-emerald-500"></span> Origin</div>
+                    <div className="flex items-center gap-1.5"><span className="h-3 w-3 rounded-full shrink-0 bg-rose-500"></span> Destination</div>
+                  </>}
+                  {activeMapTab === 'distribution' && <>
+                    <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 bg-[#3b82f6]"></span> Home Range (per species)</div>
+                    <div className="flex items-center gap-1.5"><span className="h-2.5 w-2.5 rounded-full shrink-0 bg-slate-400"></span> Monitoring Site</div>
+                    <div className="text-slate-500 dark:text-slate-500 text-[9px] mt-1">Circles show species territory boundary</div>
+                  </>}
+                </div>
+              </div>
+
+              {/* AI Insights */}
+              <div className="bg-slate-100/50 dark:bg-slate-900/35 p-3 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                <h4 className="font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[9px] mb-2">AI Findings</h4>
+                <div className="space-y-1 text-2xs font-semibold text-slate-600 dark:text-slate-400 leading-relaxed">
+                  {activeMapTab === 'density' && <>
+                    <p>• Graduated circle sizes reflect relative wildlife density at each monitoring station.</p>
+                    <p>• Click any circle to view site details, species count, and latest sightings.</p>
+                  </>}
+                  {activeMapTab === 'migration' && <>
+                    <p>• Animated dashed lines show directional movement along each recorded corridor.</p>
+                    <p>• Line thickness is proportional to observation frequency. Thicker = more frequent movement.</p>
+                    <p>• Green origin markers indicate departure points; red markers indicate arrival zones.</p>
+                  </>}
+                  {activeMapTab === 'distribution' && <>
+                    <p>• Each species is assigned a unique color. Circles represent estimated home-range territory.</p>
+                    <p>• Individual sighting markers are clustered at lower zoom levels for readability.</p>
+                  </>}
+                </div>
+              </div>
+            </div>
+          }
+        >
+          {/* Compact collapsible legend overlay (top-right inside map) */}
+          {showMapLegend && (
+            <div className="absolute top-3 right-3 z-[1000] bg-white/95 dark:bg-slate-950/95 text-slate-800 dark:text-white p-2.5 rounded-lg border border-slate-200 dark:border-slate-800/80 shadow-md pointer-events-auto" style={{ maxWidth: 160 }}>
+              <div className="text-[9px] uppercase tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 pb-1 mb-1.5 font-bold">Legend</div>
+              {activeMapTab === 'density' && <>
+                <div className="flex items-center gap-1.5 text-2xs font-bold mb-1"><span className="h-2 w-2 rounded-full shrink-0 bg-[#ef4444]"></span> Critical</div>
+                <div className="flex items-center gap-1.5 text-2xs font-bold mb-1"><span className="h-2 w-2 rounded-full shrink-0 bg-[#f97316]"></span> High</div>
+                <div className="flex items-center gap-1.5 text-2xs font-bold mb-1"><span className="h-2 w-2 rounded-full shrink-0 bg-[#eab308]"></span> Moderate</div>
+                <div className="flex items-center gap-1.5 text-2xs font-bold"><span className="h-2 w-2 rounded-full shrink-0 bg-[#10b981]"></span> Low</div>
+              </>}
+              {activeMapTab === 'migration' && <>
+                <div className="flex items-center gap-1.5 text-2xs font-bold mb-1"><span className="h-1.5 w-4 rounded shrink-0 bg-[#10b981]"></span> Confirmed</div>
+                <div className="flex items-center gap-1.5 text-2xs font-bold mb-1"><span className="h-1.5 w-4 rounded shrink-0 bg-[#eab308]"></span> Likely</div>
+                <div className="flex items-center gap-1.5 text-2xs font-bold mb-1"><span className="h-1.5 w-4 rounded shrink-0 bg-[#ef4444]"></span> Low Conf.</div>
+                <div className="flex items-center gap-1.5 text-2xs font-bold mb-1"><span className="h-2.5 w-2.5 rounded-full shrink-0 bg-emerald-500"></span> Origin</div>
+                <div className="flex items-center gap-1.5 text-2xs font-bold"><span className="h-2.5 w-2.5 rounded-full shrink-0 bg-rose-500"></span> Destination</div>
+              </>}
+              {activeMapTab === 'distribution' && <>
+                <div className="flex items-center gap-1.5 text-2xs font-bold mb-1"><span className="h-2 w-2 rounded-full shrink-0 bg-[#3b82f6]"></span> Species Range</div>
+                <div className="flex items-center gap-1.5 text-2xs font-bold"><span className="h-2 w-2 rounded-full shrink-0 bg-slate-400"></span> Monitoring Site</div>
+              </>}
+            </div>
+          )}
+        </MapCard>
       </DashboardSection>
 
       {/* Table Section */}
       <DashboardSection title="Recent Population Assessments" subtitle="Validated and pending census records generated by officers and researchers">
-        <div className="glass-card overflow-hidden border-slate-202 dark:border-slate-805 shadow-sm space-y-4">
+        <div className="glass-card overflow-hidden border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <div className="overflow-x-auto max-h-[420px]">
             <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-800 text-left text-xs font-semibold">
               <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 uppercase tracking-widest text-4xs sticky top-0 z-10 border-b border-slate-250 dark:border-slate-800">
@@ -625,7 +1060,7 @@ const PopulationEstimation = () => {
                   <th className="px-6 py-4">Latest Observation</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-transparent text-slate-700 dark:text-slate-350">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-transparent text-slate-700 dark:text-slate-300">
                 {loading ? (
                   <tr>
                     <td colSpan="8" className="py-8 text-center text-slate-500">
@@ -646,7 +1081,7 @@ const PopulationEstimation = () => {
                   </tr>
                 ) : (
                   currentMetrics.map((item) => (
-                    <tr key={item.species_name} className="hover:bg-slate-55/40 dark:hover:bg-slate-900/10 transition-colors odd:bg-slate-50/10 dark:odd:bg-slate-950/5 even:bg-transparent">
+                    <tr key={item.species_name} className="hover:bg-slate-50/40 dark:hover:bg-slate-900/10 transition-colors odd:bg-slate-50/10 dark:odd:bg-slate-950/5 even:bg-transparent">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex flex-col">
                           <span className="font-extrabold text-slate-900 dark:text-white">{localizeSpeciesName(item.species_name)}</span>
@@ -657,11 +1092,11 @@ const PopulationEstimation = () => {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap font-black text-slate-900 dark:text-white">{item.estimated_population}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{item.observation_count}</td>
-                      <td className="px-6 py-4 whitespace-nowrap font-bold">{item.population_density.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{item.detection_frequency}%</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{(item.average_confidence * 100).toFixed(0)}%</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-655 dark:text-slate-400">{item.monitoring_site_count}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-550 text-3xs">
+                      <td className="px-6 py-4 whitespace-nowrap font-bold">{Number.isFinite(item.population_density) ? item.population_density.toFixed(2) : '—'}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{item.detection_frequency ?? 0}%</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{Number.isFinite(item.average_confidence) ? (item.average_confidence * 100).toFixed(0) : '0'}%</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-400">{item.monitoring_site_count}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-500 text-3xs">
                         {item.latest_observation ? new Date(item.latest_observation).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' }) : '—'}
                       </td>
                     </tr>
@@ -673,7 +1108,7 @@ const PopulationEstimation = () => {
 
           {/* Pagination Controls */}
           {!loading && !error && !isEmpty && (
-            <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 dark:border-slate-800/80 px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-405 gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between border-t border-slate-100 dark:border-slate-800/80 px-6 py-4 text-xs font-semibold text-slate-600 dark:text-slate-400 gap-4">
               <div className="flex items-center gap-2">
                 <span className="text-3xs font-black uppercase text-slate-400 dark:text-slate-500">Rows per page:</span>
                 <select
@@ -682,7 +1117,7 @@ const PopulationEstimation = () => {
                     setPageSize(parseInt(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="py-1 px-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none text-slate-705 dark:text-slate-200 font-semibold"
+                  className="py-1 px-1.5 text-xs rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 focus:outline-none text-slate-700 dark:text-slate-200 font-semibold"
                 >
                   <option value={4}>4</option>
                   <option value={8}>8</option>

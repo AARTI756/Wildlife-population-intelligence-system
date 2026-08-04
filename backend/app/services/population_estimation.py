@@ -64,10 +64,43 @@ def get_filtered_observations(
     select_entity=Observation
 ):
     """Core helper function to apply filters consistently across database queries."""
+    import logging
+    logger = logging.getLogger("app.services.population_estimation")
+    
     query = db.query(select_entity)
     
-    if habitat is not None:
+    # 2. Verify Database Relationships and exclude orphans/missing coordinates
+    if select_entity is Observation:
+        # Exclude observations missing monitoring site, survey, or coordinates, and log the reason.
+        orphaned_sites = db.query(Observation).filter(
+            (Observation.monitoring_site_id.is_(None)) | 
+            (~Observation.monitoring_site_id.in_(db.query(MonitoringSite.id)))
+        ).count()
+        if orphaned_sites > 0:
+            logger.warning(f"Excluding {orphaned_sites} observations due to missing or invalid monitoring site linkage.")
+
+        orphaned_surveys = db.query(Observation).filter(
+            (Observation.survey_id.is_(None)) | 
+            (~Observation.survey_id.in_(db.query(Survey.id)))
+        ).count()
+        if orphaned_surveys > 0:
+            logger.warning(f"Excluding {orphaned_surveys} observations due to missing or invalid survey linkage.")
+
+        query = query.join(MonitoringSite, Observation.monitoring_site_id == MonitoringSite.id)
         query = query.join(Survey, Observation.survey_id == Survey.id)
+        query = query.filter(
+            MonitoringSite.latitude.isnot(None),
+            MonitoringSite.longitude.isnot(None)
+        )
+    else:
+        # For non-Observation entities, join Observation and link relationships
+        query = query.join(Observation, Observation.id == PredictionHistory.linked_observation_id)
+        query = query.join(MonitoringSite, Observation.monitoring_site_id == MonitoringSite.id)
+        query = query.join(Survey, Observation.survey_id == Survey.id)
+        query = query.filter(
+            MonitoringSite.latitude.isnot(None),
+            MonitoringSite.longitude.isnot(None)
+        )
         
     query = query.filter(
         Observation.species_name != "Unknown Species",
@@ -278,9 +311,7 @@ def get_population_overview(db, **filters) -> Dict[str, Any]:
     coverage = calculate_observation_coverage(db, **filters)
     
     # Calculate average confidence
-    conf_query = get_filtered_observations(db, select_entity=PredictionHistory.confidence, **filters).join(
-        Observation, Observation.id == PredictionHistory.linked_observation_id
-    )
+    conf_query = get_filtered_observations(db, select_entity=PredictionHistory.confidence, **filters)
     conf_list = [row[0] for row in conf_query.all() if row[0] is not None]
     avg_conf = sum(conf_list) / len(conf_list) if conf_list else 0.84
     
@@ -458,7 +489,8 @@ def get_site_densities(db, **filters) -> List[Dict[str, Any]]:
         if o.monitoring_site_id is not None:
             site_obs[o.monitoring_site_id].append(o)
             
-    site_lookup = {site.id: site for site in db.query(MonitoringSite).all()}
+    sites = db.query(MonitoringSite).all()
+    site_lookup = {site.id: site for site in sites}
     
     results = []
     for site_id, o_list in site_obs.items():
@@ -470,12 +502,27 @@ def get_site_densities(db, **filters) -> List[Dict[str, Any]]:
         for o in o_list:
             sp_counts[o.species_name] += o.count
             
+        individuals = sum(o.count for o in o_list if o.count is not None)
+        species_count = len(sp_counts)
+        
+        # Sort observations by timestamp descending to find latest
+        sorted_obs = sorted(o_list, key=lambda x: x.timestamp or datetime.min, reverse=True)
+        latest_observation = sorted_obs[0].species_name if sorted_obs else "None"
+        
+        survey_name = "No Active Survey"
+        if sorted_obs and sorted_obs[0].survey:
+            survey_name = sorted_obs[0].survey.name or "Unnamed Survey"
+        else:
+            any_survey = db.query(Survey).filter(Survey.monitoring_site_id == site.id).first()
+            if any_survey:
+                survey_name = any_survey.name or "Unnamed Survey"
+        
         site_est_pop = 0
         for sp_name, obs_count in sp_counts.items():
             site_est_pop += int(math.ceil(obs_count / 0.8))
             
-        area = 12.0
-        density = round(site_est_pop / area, 2)
+        survey_area = 10.0  # 10 km2 survey area
+        density = round(individuals / survey_area, 2)
         
         results.append({
             "site_id": site.id,
@@ -485,9 +532,40 @@ def get_site_densities(db, **filters) -> List[Dict[str, Any]]:
             "location": site.location,
             "estimated_population": site_est_pop,
             "density": density,
-            "protected_area": site.protected_area
+            "protected_area": site.protected_area,
+            "species_count": species_count,
+            "individuals": individuals,
+            "latest_observation": latest_observation,
+            "site_area": None,
+            "population_count": individuals,
+            "survey_name": survey_name,
+            "observation_count": len(o_list)
         })
         
+    # Make sure we don't leave sites out if they exist but have no observations
+    seen_site_ids = {r["site_id"] for r in results}
+    for site in sites:
+        if site.id not in seen_site_ids:
+            any_survey = db.query(Survey).filter(Survey.monitoring_site_id == site.id).first()
+            survey_name = any_survey.name if any_survey else "No Active Survey"
+            results.append({
+                "site_id": site.id,
+                "site_name": site.name,
+                "latitude": site.latitude,
+                "longitude": site.longitude,
+                "location": site.location,
+                "estimated_population": 0,
+                "density": 0.0,
+                "protected_area": site.protected_area,
+                "species_count": 0,
+                "individuals": 0,
+                "latest_observation": "None",
+                "site_area": None,
+                "population_count": 0,
+                "survey_name": survey_name,
+                "observation_count": 0
+            })
+            
     return results
 
 def get_richness_stats(db, **filters) -> List[Dict[str, Any]]:
@@ -515,4 +593,122 @@ def get_richness_stats(db, **filters) -> List[Dict[str, Any]]:
             "site_name": site.name,
             "richness": len(species_set)
         })
+    return results
+
+def get_migration_patterns(db, **filters) -> List[Dict[str, Any]]:
+    """
+    Calculate migration patterns/vectors by grouping observations by species 
+    and tracing chronological movements between monitoring sites.
+    """
+    obs_query = get_filtered_observations(db, **filters)
+    observations = obs_query.order_by(Observation.timestamp.asc()).all()
+    
+    # Group observations by species
+    species_obs = defaultdict(list)
+    for o in observations:
+        if o.species_name and o.monitoring_site_id is not None:
+            species_obs[o.species_name].append(o)
+            
+    site_lookup = {site.id: site for site in db.query(MonitoringSite).all()}
+    vectors = []
+    
+    # Haversine formula to compute travel distance in km
+    def calculate_distance(lat1, lon1, lat2, lon2):
+        R = 6371.0 # Earth radius in km
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        a = math.sin(dlat / 2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2)**2
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        return round(R * c, 2)
+        
+    for species_name, o_list in species_obs.items():
+        # Trace chronological movement from one site to next
+        for i in range(len(o_list) - 1):
+            o1 = o_list[i]
+            o2 = o_list[i+1]
+            
+            # Migration implies moving to a DIFFERENT site
+            if o1.monitoring_site_id != o2.monitoring_site_id:
+                s1 = site_lookup.get(o1.monitoring_site_id)
+                s2 = site_lookup.get(o2.monitoring_site_id)
+                if not s1 or not s2:
+                    continue
+                    
+                dist = calculate_distance(s1.latitude, s1.longitude, s2.latitude, s2.longitude)
+                
+                # Travel time in hours
+                time_diff = o2.timestamp - o1.timestamp if o2.timestamp and o1.timestamp else timedelta(0)
+                travel_hours = round(time_diff.total_seconds() / 3600.0, 1)
+                
+                # Confidence score based on time difference, distance, and speed
+                confidence = 85.0
+                if travel_hours > 0:
+                    speed = dist / travel_hours
+                    # If speed is realistic for wildlife (e.g. 0.5 to 50 km/h)
+                    if 0.5 <= speed <= 60:
+                        confidence = min(98.0, 75.0 + speed * 0.3)
+                    else:
+                        confidence = max(30.0, 75.0 - abs(speed - 30) * 0.5)
+                else:
+                    travel_hours = 1.0 # fallback
+                    confidence = 50.0
+                    
+                days_between = round(time_diff.total_seconds() / 86400.0, 1)
+                obs_count = (o1.count or 1) + (o2.count or 1)
+                    
+                vectors.append({
+                    "species": species_name,
+                    "first_site": s1.name,
+                    "first_lat": s1.latitude,
+                    "first_lng": s1.longitude,
+                    "second_site": s2.name,
+                    "second_lat": s2.latitude,
+                    "second_lng": s2.longitude,
+                    "distance_km": dist,
+                    "travel_time_hours": travel_hours,
+                    "confidence": round(confidence, 1),
+                    "days_between": days_between,
+                    "observation_count": obs_count
+                })
+                
+    # Sort vectors by confidence descending
+    vectors.sort(key=lambda x: x["confidence"], reverse=True)
+    return vectors[:50]
+
+def get_species_distribution_map(db, **filters) -> List[Dict[str, Any]]:
+    """Retrieve observation coordinates and details for species distribution mapping."""
+    obs_query = get_filtered_observations(db, **filters)
+    observations = obs_query.all()
+    
+    site_lookup = {site.id: site for site in db.query(MonitoringSite).all()}
+    survey_lookup = {survey.id: survey for survey in db.query(Survey).all()}
+    
+    results = []
+    for o in observations:
+        if o.monitoring_site_id is None:
+            continue
+        site = site_lookup.get(o.monitoring_site_id)
+        if not site:
+            continue
+            
+        survey = survey_lookup.get(o.survey_id)
+        survey_name = survey.name if survey else "General Survey"
+        
+        conf = 85.0
+        if o.reidentification_confidence is not None:
+            conf = o.reidentification_confidence * 100.0
+        elif o.observation_type == "Camera Trap":
+            conf = 92.0
+            
+        results.append({
+            "lat": site.latitude,
+            "lng": site.longitude,
+            "species": o.species_name or "Unknown Species",
+            "confidence": round(conf, 1),
+            "date": o.timestamp.isoformat() + "Z" if o.timestamp else datetime.utcnow().isoformat() + "Z",
+            "site_name": site.name,
+            "survey_name": survey_name,
+            "count": o.count or 1
+        })
+        
     return results

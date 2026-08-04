@@ -32,17 +32,12 @@ import {
   AlertTriangle,
   Volume2, 
   ClipboardList, 
-  MapPin, 
   Loader2, 
   CheckCircle,
-  Clock,
-  User,
-  Cpu,
   X,
   Check,
   Play,
   Pause,
-  Square,
   FileText,
   Download,
   Activity,
@@ -1046,8 +1041,8 @@ const WildlifeAudioUpload = () => {
 
       const response = await api.post('/api/audio/analyze', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
       clearInterval(interval);
@@ -1191,33 +1186,33 @@ const WildlifeAudioUpload = () => {
     return (
       <div className="flex h-[60vh] items-center justify-center text-emerald-500 font-sans">
         <span className="h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></span>
-        <span className="ml-3 text-lg font-bold text-slate-755 dark:text-slate-400">Initializing Acoustic Metadata...</span>
+        <span className="ml-3 text-lg font-bold text-slate-700 dark:text-slate-400">Initializing Acoustic Metadata...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-850 dark:text-slate-100 font-sans">
+    <div className="space-y-6 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
       
 
 
       {/* Page Header */}
       <div>
-        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-455 uppercase tracking-widest flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-emerald-555" />
+        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
           Bioacoustic Monitoring Suite
         </span>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mt-1">
           Bioacoustic Recognition Interface
         </h1>
-        <p className="text-slate-655 dark:text-slate-400 text-sm mt-1 font-semibold">
+        <p className="text-slate-600 dark:text-slate-400 text-sm mt-1 font-semibold">
           Upload and analyze field audio recordings using deep learning bioacoustic recognition models.
         </p>
       </div>
 
       {/* Error Alert Display */}
       {analysisError && (
-        <div className="flex items-start gap-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/30 p-4 text-xs text-rose-800 dark:text-rose-455 font-semibold max-w-5xl mx-auto">
+        <div className="flex items-start gap-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/30 p-4 text-xs text-rose-800 dark:text-rose-400 font-semibold max-w-5xl mx-auto">
           <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-bold">Acoustic Analysis Telemetry Fault</p>
@@ -1236,8 +1231,8 @@ const WildlifeAudioUpload = () => {
       <div className="space-y-6 max-w-5xl mx-auto">
         
         {/* 1. Survey & Audio Sensor Selection */}
-        <div className="glass-card p-6 space-y-4 shadow-sm border-slate-205 dark:border-slate-805">
-          <h3 className="text-sm font-bold text-slate-905 dark:text-white flex items-center gap-2">
+        <div className="glass-card p-6 space-y-4 shadow-sm border-slate-200 dark:border-slate-800">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <ClipboardList className="h-4.5 w-4.5 text-emerald-500" />
             Deployment Association
           </h3>
@@ -1317,30 +1312,30 @@ const WildlifeAudioUpload = () => {
         {/* Selected Context details */}
         {selectedSurveyDetails && (
           <div className="glass-card p-5 border border-emerald-500/15 bg-emerald-50/5 dark:bg-emerald-950/5 space-y-3.5 animate-fade-in shadow-sm">
-            <h4 className="text-2xs font-extrabold uppercase tracking-wider text-slate-555 dark:text-slate-500">
+            <h4 className="text-2xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-500">
               Selected Deployment Context Info
             </h4>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-xs font-semibold text-slate-705 dark:text-slate-350">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Survey Name</span>
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Survey Name</span>
                 <span className="text-slate-900 dark:text-white font-extrabold">{selectedSurveyDetails.name}</span>
               </div>
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Monitoring Site</span>
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Monitoring Site</span>
                 <span className="text-slate-900 dark:text-white font-extrabold">{selectedSiteDetails?.name || 'N/A'}</span>
               </div>
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Habitat Type</span>
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Habitat Type</span>
                 <span className="text-slate-900 dark:text-white font-extrabold">{selectedSurveyDetails.habitat_type}</span>
               </div>
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Acoustic Model</span>
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Acoustic Model</span>
                 <span className="text-slate-900 dark:text-white font-extrabold">{selectedSensorDetails?.model || 'Select Sensor...'}</span>
               </div>
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Status</span>
-                <span className="inline-flex px-1.5 py-0.2 rounded text-5xs font-bold border border-emerald-250 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Status</span>
+                <span className="inline-flex px-1.5 py-0.2 rounded text-5xs font-bold border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                   {selectedSensorDetails?.status || 'Select Sensor...'}
                 </span>
               </div>
@@ -1350,7 +1345,7 @@ const WildlifeAudioUpload = () => {
 
         {/* 2. Audio Upload Card */}
         {selectedAudioSensorId && !uploading && !success && (
-          <div className="glass-card p-6 space-y-6 animate-fade-in shadow-sm border-slate-205 dark:border-slate-800">
+          <div className="glass-card p-6 space-y-6 animate-fade-in shadow-sm border-slate-200 dark:border-slate-800">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <Volume2 className="h-4.5 w-4.5 text-emerald-500" />
               Upload Wildlife Audio
@@ -1361,7 +1356,7 @@ const WildlifeAudioUpload = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-10 bg-slate-50/50 dark:bg-slate-950/15 cursor-pointer transition-all ${
-                preview ? 'border-emerald-500/50' : 'border-slate-202 dark:border-slate-800 hover:border-emerald-500/40'
+                preview ? 'border-emerald-500/50' : 'border-slate-200 dark:border-slate-800 hover:border-emerald-500/40'
               }`}
             >
               {preview ? (
@@ -1369,7 +1364,7 @@ const WildlifeAudioUpload = () => {
                   <div className="max-w-md mx-auto p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm space-y-3">
                     <Volume2 className="h-8 w-8 text-emerald-600 dark:text-emerald-400 mx-auto animate-bounce" />
                     
-                    <div className="pt-2 border-t border-slate-105 grid grid-cols-2 gap-2 text-xs font-semibold text-slate-705 dark:text-slate-350 text-left">
+                    <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs font-semibold text-slate-700 dark:text-slate-300 text-left">
                       <div className="col-span-2 text-2xs font-bold text-emerald-600 uppercase border-b border-slate-50 pb-1">
                         Acoustic Ingestion Target
                       </div>
@@ -1406,17 +1401,17 @@ const WildlifeAudioUpload = () => {
                   <button
                     type="button"
                     onClick={resetStates}
-                    className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-3xs font-bold text-slate-655 hover:text-rose-500 hover:border-rose-500/30 transition-all bg-white dark:bg-slate-950 focus:outline-none"
+                    className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-3xs font-bold text-slate-600 hover:text-rose-500 hover:border-rose-500/30 transition-all bg-white dark:bg-slate-950 focus:outline-none"
                   >
                     Remove Audio File
                   </button>
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
-                  <Upload className="h-10 w-10 text-slate-400 dark:text-slate-655 mb-3" />
-                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-350">Drag & Drop Audio Asset</h4>
-                  <p className="text-3xs text-slate-555 mt-1">or click to browse local storage</p>
-                  <span className="mt-3.5 px-3 py-1 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-5xs font-bold text-slate-505 uppercase tracking-widest">
+                  <Upload className="h-10 w-10 text-slate-400 dark:text-slate-600 mb-3" />
+                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">Drag & Drop Audio Asset</h4>
+                  <p className="text-3xs text-slate-500 mt-1">or click to browse local storage</p>
+                  <span className="mt-3.5 px-3 py-1 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-5xs font-bold text-slate-500 uppercase tracking-widest">
                     WAV, MP3, FLAC, AAC up to 30MB
                   </span>
                   <input
@@ -1449,7 +1444,7 @@ const WildlifeAudioUpload = () => {
             <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
             <div className="space-y-2 max-w-sm w-full">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Executing Bioacoustic AI Inference Pipeline...</h3>
-              <p className="text-3xs text-slate-555 leading-normal font-semibold">
+              <p className="text-3xs text-slate-500 leading-normal font-semibold">
                 Running bioacoustic classifier to parse sound segments and identify animal vocalizations.
               </p>
             </div>
@@ -1503,7 +1498,7 @@ const WildlifeAudioUpload = () => {
             
             {/* Banner Alert */}
             <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-50/20 dark:bg-emerald-950/10 flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-450 font-extrabold text-sm">
+              <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
                 <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500 animate-bounce" />
                 <span>AI Inference Completed & Mapped successfully to database</span>
               </div>
@@ -1517,16 +1512,16 @@ const WildlifeAudioUpload = () => {
 
             {/* AI Summary Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="glass-card p-6 border-slate-205 dark:border-slate-805 space-y-3 md:col-span-2">
+              <div className="glass-card p-6 border-slate-200 dark:border-slate-800 space-y-3 md:col-span-2">
                 <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <Activity className="h-4.5 w-4.5 text-emerald-500" />
                   AI Summary
                 </h3>
-                <p className="text-xs text-slate-705 dark:text-slate-300 leading-relaxed font-semibold">
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
                   {analysisResult.ai_summary || "Bioacoustic recognition complete. Telemetry recorded in database logs."}
                 </p>
               </div>
-              <div className="glass-card p-6 border-slate-205 dark:border-slate-805 space-y-3">
+              <div className="glass-card p-6 border-slate-200 dark:border-slate-800 space-y-3">
                 <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                   <Volume2 className="h-4.5 w-4.5 text-emerald-500" />
                   Bioacoustic Call Detection
@@ -1536,7 +1531,7 @@ const WildlifeAudioUpload = () => {
                     <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Call Detected</span>
                     <span className={`px-2 py-0.5 rounded-full text-5xs font-bold border uppercase tracking-wider font-mono ${
                       analysisResult.animal_call_detected 
-                        ? 'bg-emerald-100 text-emerald-800 border-emerald-250 dark:bg-emerald-950/40 dark:text-emerald-450 dark:border-emerald-900/30'
+                        ? 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30'
                         : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-900 dark:text-slate-400 dark:border-slate-700'
                     }`}>
                       {analysisResult.animal_call_detected ? "Yes" : "No"}
@@ -1576,10 +1571,10 @@ const WildlifeAudioUpload = () => {
                 </div>
                 <div className="space-y-1.5">
                   <h3 className="text-base font-extrabold text-slate-900 dark:text-white">No Biological Calls Detected</h3>
-                  <p className="text-xs font-semibold text-slate-550 dark:text-slate-400 leading-normal max-w-sm">
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 leading-normal max-w-sm">
                     No biological calls detected. Recording classified as Environmental Noise.
                   </p>
-                  <div className="text-[11px] text-slate-450 dark:text-slate-500 max-w-xs mx-auto leading-relaxed pt-1.5 border-t border-slate-150 dark:border-slate-800 mt-1.5">
+                  <div className="text-[11px] text-slate-400 dark:text-slate-500 max-w-xs mx-auto leading-relaxed pt-1.5 border-t border-slate-200 dark:border-slate-800 mt-1.5">
                     <p className="font-bold mb-0.5">Examples may include:</p>
                     <ul className="list-disc text-left pl-5 inline-block">
                       <li>wind</li>
@@ -1593,7 +1588,7 @@ const WildlifeAudioUpload = () => {
                 <button 
                   type="button" 
                   onClick={resetStates} 
-                  className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-705 dark:text-slate-305 bg-white dark:bg-slate-950 hover:bg-slate-100 transition-colors focus:outline-none"
+                  className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950 hover:bg-slate-100 transition-colors focus:outline-none"
                 >
                   Upload Another File
                 </button>
@@ -1602,18 +1597,18 @@ const WildlifeAudioUpload = () => {
 
             {/* Analysis Metrics Summary */}
             {analysisResult.detections.length > 0 && (
-              <div className="glass-card p-5 border border-slate-202 bg-white dark:bg-slate-950 shadow-xs space-y-4">
+              <div className="glass-card p-5 border border-slate-200 bg-white dark:bg-slate-950 shadow-xs space-y-4">
                 <div className="flex items-center justify-between border-b border-slate-50 dark:border-slate-900 pb-3">
                   <h3 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Sparkles className="h-4 w-4 text-emerald-505" />
+                    <Sparkles className="h-4 w-4 text-emerald-500" />
                     Bioacoustic Analysis Summary
                   </h3>
-                  <span className="text-5xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded border border-emerald-250 uppercase tracking-widest font-mono">
+                  <span className="text-5xs font-extrabold text-emerald-700 bg-emerald-50 dark:bg-emerald-950 px-2 py-0.5 rounded border border-emerald-200 uppercase tracking-widest font-mono">
                     Inference Matrix
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-2xs font-semibold text-slate-655 dark:text-slate-450">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-2xs font-semibold text-slate-600 dark:text-slate-400">
                   <div>
                     <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Species Detected</span>
                     <span className="text-slate-900 dark:text-white font-extrabold text-xs">{uniqueSpeciesCount} species</span>
@@ -1663,11 +1658,11 @@ const WildlifeAudioUpload = () => {
                     
                     // Map IUCN status to colors
                     const iucn = profile.iucn_status || "Least Concern";
-                    let iucnColor = "bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-emerald-950/30 dark:text-emerald-450 dark:border-emerald-900/30";
+                    let iucnColor = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30";
                     if (["Vulnerable", "Near Threatened", "Vulnerable (VU)"].includes(iucn) || iucn.includes("VU") || iucn.includes("Threatened")) {
-                      iucnColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-955/30 dark:text-amber-400 dark:border-amber-900/30";
+                      iucnColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/30";
                     } else if (["Endangered", "Critically Endangered", "Endangered (EN)"].includes(iucn) || iucn.includes("EN") || iucn.includes("CR")) {
-                      iucnColor = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-455 dark:border-rose-900/30";
+                      iucnColor = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/30";
                     }
 
                     // Map confidence colors
@@ -1691,7 +1686,7 @@ const WildlifeAudioUpload = () => {
                       <React.Fragment key={`${group.name}-${index}`}>
                         {index > 0 && <div className="border-t border-slate-200 dark:border-slate-800 my-6 opacity-60" />}
                         <div 
-                          className="glass-card overflow-hidden border-slate-205 dark:border-slate-805 shadow-sm transition-all duration-200"
+                          className="glass-card overflow-hidden border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-200"
                         >
                         {/* Expandable Header */}
                         <div 
@@ -1736,49 +1731,49 @@ const WildlifeAudioUpload = () => {
                               /* YAMNet Result Layout */
                               <div className="grid grid-cols-1 gap-6 animate-fade-in">
                                 <div className="p-6 rounded-2xl border border-emerald-500/20 bg-emerald-50/5 dark:bg-emerald-950/5 text-slate-800 dark:text-slate-200">
-                                  <h4 className="text-base font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-450 mb-3 flex items-center gap-2">
+                                  <h4 className="text-base font-extrabold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 mb-3 flex items-center gap-2">
                                     <Volume2 className="h-5 w-5" />
                                     Animal Call Detected
                                   </h4>
                                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs font-semibold mb-4">
-                                    <div className="p-3.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
+                                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
                                       <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">Category</span>
                                       <span className="text-slate-900 dark:text-white font-extrabold text-sm">{det.species}</span>
                                     </div>
-                                    <div className="p-3.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
+                                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
                                       <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">Confidence</span>
                                       <span className="text-slate-900 dark:text-white font-extrabold text-sm">{confPct}%</span>
                                     </div>
-                                    <div className="p-3.5 rounded-xl border border-slate-150 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
+                                    <div className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
                                       <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">Status</span>
-                                      <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-250 dark:bg-amber-955/20 dark:text-amber-400 dark:border-amber-900/30">
+                                      <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900/30">
                                         Requires Species Identification
                                       </span>
                                     </div>
                                   </div>
                                   <div className="space-y-2 text-xs font-semibold leading-relaxed">
                                     <p className="font-extrabold text-slate-900 dark:text-white">Explanation:</p>
-                                    <p className="text-slate-655 dark:text-slate-350">
+                                    <p className="text-slate-600 dark:text-slate-300">
                                       This recording contains a {det.species.toLowerCase().replace(" vocalization", "").replace(" call", "").replace(" sound", "")} call.
                                     </p>
-                                    <p className="text-slate-655 dark:text-slate-350">
+                                    <p className="text-slate-600 dark:text-slate-300">
                                       Current AI models can classify the sound as belonging to a {det.species.toLowerCase().replace(" vocalization", "").replace(" call", "").replace(" sound", "")} but cannot reliably identify the exact species.
                                     </p>
-                                    <p className="text-slate-655 dark:text-slate-350">
+                                    <p className="text-slate-600 dark:text-slate-300">
                                       Further expert verification or a species-level classifier is required.
                                     </p>
                                   </div>
                                 </div>
                               </div>
                             ) : det.is_unknown ? (
-                              <div className="p-5 rounded-2xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-955/10 flex flex-col gap-4 text-slate-800 dark:text-slate-200">
+                              <div className="p-5 rounded-2xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-950/10 flex flex-col gap-4 text-slate-800 dark:text-slate-200">
                                 <div className="flex items-start gap-3">
                                   <AlertCircle className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
                                   <div className="space-y-1">
                                     <h4 className="text-sm font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                                       ⚠️ Manual Verification Recommended
                                     </h4>
-                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-350">
+                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                                       Unable to confidently identify this species. The classification confidence ({confPct}%) is below the minimum operational threshold.
                                     </p>
                                   </div>
@@ -1802,17 +1797,17 @@ const WildlifeAudioUpload = () => {
                               <>
                                 {/* Endangered Species Alert Banner */}
                                 {det.is_endangered && (
-                                  <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5 dark:bg-rose-955/5 flex items-start gap-3 text-xs text-rose-705 dark:text-rose-400">
+                                  <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5 dark:bg-rose-950/5 flex items-start gap-3 text-xs text-rose-700 dark:text-rose-400">
                                     <AlertCircle className="h-5 w-5 shrink-0 text-rose-500 mt-0.5" />
                                     <div className="space-y-1">
-                                      <span className="font-extrabold uppercase tracking-wider text-[10px] text-rose-650 dark:text-rose-350">
+                                      <span className="font-extrabold uppercase tracking-wider text-[10px] text-rose-600 dark:text-rose-300">
                                         ⚠️ Conservation Alert — Threatened Species Detected
                                       </span>
-                                      <p className="font-semibold text-slate-700 dark:text-slate-350">
+                                      <p className="font-semibold text-slate-700 dark:text-slate-300">
                                         This animal is classified as <span className="font-bold underline">{profile.iucn_status}</span>. Immediate protection actions are recommended.
                                       </p>
                                       <div className="pt-1.5 flex flex-wrap gap-4 text-3xs font-bold text-slate-500 dark:text-slate-400">
-                                        <span>Priority Level: <span className="text-rose-600 dark:text-rose-455">{profile.iucn_status === 'Critically Endangered' ? 'High Priority (Critical)' : (profile.iucn_status === 'Endangered' ? 'High Priority' : 'Medium-High Priority')}</span></span>
+                                        <span>Priority Level: <span className="text-rose-600 dark:text-rose-400">{profile.iucn_status === 'Critically Endangered' ? 'High Priority (Critical)' : (profile.iucn_status === 'Endangered' ? 'High Priority' : 'Medium-High Priority')}</span></span>
                                         <span>Recommended Actions: Enable continuous camera surveillance & restrict zone entry.</span>
                                       </div>
                                     </div>
@@ -1823,13 +1818,13 @@ const WildlifeAudioUpload = () => {
                                   
                                   <div className="space-y-4 md:col-span-2">
                                     {det.is_likely && (
-                                      <div className="p-4 rounded-xl border border-orange-500/20 bg-orange-500/5 dark:bg-orange-955/5 flex items-start gap-3 text-xs text-orange-700 dark:text-orange-400 mb-4">
+                                      <div className="p-4 rounded-xl border border-orange-500/20 bg-orange-500/5 dark:bg-orange-950/5 flex items-start gap-3 text-xs text-orange-700 dark:text-orange-400 mb-4">
                                         <AlertTriangle className="h-5 w-5 shrink-0 text-orange-500 mt-0.5" />
                                         <div className="space-y-1 font-sans">
-                                          <span className="font-extrabold uppercase tracking-wider text-[10px] text-orange-600 dark:text-orange-350">
+                                          <span className="font-extrabold uppercase tracking-wider text-[10px] text-orange-600 dark:text-orange-300">
                                             ⚠️ Likely Species — Low Confidence Prediction
                                           </span>
-                                          <p className="font-semibold text-slate-700 dark:text-slate-350">
+                                          <p className="font-semibold text-slate-700 dark:text-slate-300">
                                             Low confidence prediction. Manual verification is recommended.
                                           </p>
                                         </div>
@@ -1864,7 +1859,7 @@ const WildlifeAudioUpload = () => {
                                     {(profile.description && !profile.description.includes('profile not yet available') && profile.description !== 'Data unavailable') && (
                                     <div className="space-y-1">
                                       <span className="block text-xs sm:text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 font-extrabold">Description</span>
-                                      <p className="text-xs text-slate-655 dark:text-slate-350 leading-relaxed font-semibold">
+                                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-semibold">
                                         {profile.description}
                                       </p>
                                     </div>
@@ -1880,7 +1875,7 @@ const WildlifeAudioUpload = () => {
                                           <div 
                                             key={dIdx} 
                                             onClick={() => handleSeek(d.start_time)}
-                                            className="px-2.5 py-1 rounded-lg border border-emerald-500/10 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 text-3xs font-mono font-bold text-emerald-600 dark:text-emerald-455 cursor-pointer transition-all flex items-center gap-1"
+                                            className="px-2.5 py-1 rounded-lg border border-emerald-500/10 hover:border-emerald-500/40 bg-emerald-500/5 hover:bg-emerald-500/10 text-3xs font-mono font-bold text-emerald-600 dark:text-emerald-400 cursor-pointer transition-all flex items-center gap-1"
                                             title="Click to seek to this offset"
                                           >
                                             <span>{formatSecsToMinSec(d.start_time)} - {formatSecsToMinSec(d.end_time)}</span>
@@ -1894,7 +1889,7 @@ const WildlifeAudioUpload = () => {
                                     <h4 className="block text-xs sm:text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 font-extrabold mb-2.5">
                                       Sighting Metadata & Taxonomy
                                     </h4>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 text-[10px] font-semibold text-slate-750 dark:text-slate-400">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 text-[10px] font-semibold text-slate-700 dark:text-slate-400">
                                       <div>
                                         <span className="text-slate-400 font-medium uppercase text-[9px] block mb-0.5">Kingdom</span>
                                         <p className="text-3xs text-slate-900 dark:text-white font-extrabold">{tax.kingdom || "Animalia"}</p>
@@ -1969,9 +1964,9 @@ const WildlifeAudioUpload = () => {
 
             {/* 7. Chronological Detection Timeline */}
             {analysisResult.detections.length > 0 && (
-              <div className="glass-card p-6 space-y-6 border-slate-205 dark:border-slate-805">
-                <h3 className="text-xs font-bold text-slate-905 dark:text-white uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-50 dark:border-slate-850 pb-2">
-                  <Activity className="h-4 w-4 text-emerald-505" />
+              <div className="glass-card p-6 space-y-6 border-slate-200 dark:border-slate-800">
+                <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest flex items-center gap-1.5 border-b border-slate-50 dark:border-slate-800 pb-2">
+                  <Activity className="h-4 w-4 text-emerald-500" />
                   Chronological Detection Timeline
                 </h3>
                 
@@ -1984,12 +1979,12 @@ const WildlifeAudioUpload = () => {
                         className="flex items-center justify-between p-3 rounded-xl border border-slate-100 dark:border-slate-900 bg-slate-50/20 dark:bg-slate-900/10 gap-3 shadow-3xs"
                       >
                         <div className="flex items-center gap-3 min-w-0 flex-1">
-                          <span className="font-mono text-emerald-600 dark:text-emerald-455 font-black text-[10px] shrink-0 bg-emerald-500/5 px-2 py-0.5 rounded-lg border border-emerald-500/10">
+                          <span className="font-mono text-emerald-600 dark:text-emerald-400 font-black text-[10px] shrink-0 bg-emerald-500/5 px-2 py-0.5 rounded-lg border border-emerald-500/10">
                             {formatSecsToMinSec(det.start_time)}
                           </span>
                           
                           {["Mammal Vocalization", "Amphibian Call", "Insect Sound", "Generic Animal Vocalization"].includes(detectionName(det)) ? (
-                            <div className="h-10 w-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-450 flex items-center justify-center border border-emerald-500/10 shrink-0">
+                            <div className="h-10 w-10 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/10 shrink-0">
                               <Volume2 className="h-5 w-5" />
                             </div>
                           ) : (
@@ -2006,14 +2001,14 @@ const WildlifeAudioUpload = () => {
                               {detectionName(det)}
                             </span>
                             {!["Mammal Vocalization", "Amphibian Call", "Insect Sound", "Generic Animal Vocalization"].includes(detectionName(det)) && (
-                              <span className="text-[9px] text-slate-550 italic block mt-0.5 truncate" title={det.scientific_name}>
+                              <span className="text-[9px] text-slate-500 italic block mt-0.5 truncate" title={det.scientific_name}>
                                 {det.scientific_name}
                               </span>
                             )}
                           </div>
                         </div>
                         
-                        <span className="px-1.5 py-0.5 rounded bg-emerald-55 border border-emerald-250 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-455 font-bold font-mono text-[9px] shrink-0">
+                        <span className="px-1.5 py-0.5 rounded bg-emerald-50 border border-emerald-200 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400 font-bold font-mono text-[9px] shrink-0">
                           {(det.confidence * 100).toFixed(0)}%
                         </span>
                       </div>
@@ -2044,14 +2039,14 @@ const WildlifeAudioUpload = () => {
 
             {/* 8. Environmental Noise & Acoustic Quality Assessment (collapsible) */}
             {qualityMetrics && (
-              <div className="glass-card p-5 border border-slate-205 dark:border-slate-805 space-y-4 bg-white dark:bg-slate-950">
+              <div className="glass-card p-5 border border-slate-200 dark:border-slate-800 space-y-4 bg-white dark:bg-slate-950">
                 <button 
                   type="button"
                   onClick={() => setQualityExpanded(!qualityExpanded)}
                   className="flex w-full items-center justify-between focus:outline-none"
                 >
                   <div className="text-left">
-                    <span className="text-xs font-bold text-emerald-655 dark:text-emerald-455 uppercase tracking-widest flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
                       <Activity className="h-3.5 w-3.5" />
                       Environmental Noise & Acoustic Quality Assessment
                     </span>
@@ -2059,13 +2054,13 @@ const WildlifeAudioUpload = () => {
                       Acoustic Quality Assessment
                     </h3>
                   </div>
-                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-1 rounded border border-emerald-250 uppercase tracking-wider transition-colors hover:bg-emerald-100/50">
+                  <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-1 rounded border border-emerald-200 uppercase tracking-wider transition-colors hover:bg-emerald-100/50">
                     {qualityExpanded ? 'Collapse' : 'Expand Details'}
                   </span>
                 </button>
 
                 {qualityExpanded && (
-                  <div className="space-y-6 pt-4 border-t border-slate-100 dark:border-slate-855 animate-fade-in">
+                  <div className="space-y-6 pt-4 border-t border-slate-100 dark:border-slate-800 animate-fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <RecordingQualityCard 
                         rating={qualityMetrics.qualityRating}
@@ -2102,19 +2097,19 @@ const WildlifeAudioUpload = () => {
                     </div>
                     
                     {/* Noise Impact Analysis Banner */}
-                    <div className="glass-card p-5 border border-slate-205 dark:border-slate-805 bg-slate-50/10 dark:bg-slate-900/10 flex items-start gap-3">
+                    <div className="glass-card p-5 border border-slate-200 dark:border-slate-800 bg-slate-50/10 dark:bg-slate-900/10 flex items-start gap-3">
                       <Info className="h-5 w-5 text-emerald-500 shrink-0 mt-0.5" />
                       <div>
                         <h4 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-2">
                           Noise Impact Level:
                           <span className={`inline-flex px-1.5 py-0.2 rounded text-[10px] font-bold uppercase tracking-wider ${
                             qualityMetrics.noiseImpact === 'Minimal' ? 'bg-emerald-50 text-emerald-700' :
-                            qualityMetrics.noiseImpact === 'Moderate' ? 'bg-amber-50 text-amber-750' : 'bg-rose-50 text-rose-700'
+                            qualityMetrics.noiseImpact === 'Moderate' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
                           }`}>
                             {qualityMetrics.noiseImpact} Impact
                           </span>
                         </h4>
-                        <p className="text-2xs text-slate-550 dark:text-slate-400 mt-1 leading-relaxed">
+                        <p className="text-2xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
                           Environmental noise assessment indicates {qualityMetrics.noiseImpact.toLowerCase()} impact on bioacoustic inference. 
                           {qualityMetrics.noiseImpact === 'High' 
                             ? ' Signals are heavily masked; high likelihood of missing faint species calls. Manual verification check is recommended.' 
@@ -2132,19 +2127,19 @@ const WildlifeAudioUpload = () => {
               <button
                 type="button"
                 onClick={resetStates}
-                className="px-4 py-2.5 rounded-xl border border-slate-205 dark:border-slate-800 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-350 focus:outline-none transition-all shadow-sm"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none transition-all shadow-sm"
               >
                 Upload Another Audio
               </button>
               <Link
                 to="/observations"
-                className="px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-800 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center"
               >
                 View Observation
               </Link>
               <Link
                 to="/ai/prediction-history"
-                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 hover:bg-slate-202 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-305 text-xs font-bold transition-all shadow-sm flex items-center justify-center"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all shadow-sm flex items-center justify-center"
               >
                 View Prediction History
               </Link>
@@ -2155,9 +2150,9 @@ const WildlifeAudioUpload = () => {
 
         {/* Initial Empty / Awaiting state */}
         {!preview && !success && (
-          <div className="flex flex-col items-center justify-center py-20 bg-slate-50/30 dark:bg-slate-900/10 rounded-2xl border border-dashed border-slate-202 dark:border-slate-800 text-center">
-            <Volume2 className="h-12 w-12 text-slate-400 dark:text-slate-655 mb-3 animate-pulse" />
-            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-350">Awaiting Bioacoustic File</h4>
+          <div className="flex flex-col items-center justify-center py-20 bg-slate-50/30 dark:bg-slate-900/10 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center">
+            <Volume2 className="h-12 w-12 text-slate-400 dark:text-slate-600 mb-3 animate-pulse" />
+            <h4 className="text-sm font-bold text-slate-900 dark:text-slate-300">Awaiting Bioacoustic File</h4>
             <p className="text-4xs text-slate-500 dark:text-slate-500 mt-1 max-w-xs leading-normal font-semibold">
               Please select survey coordinates and associate an acoustic sensor to trigger the local file upload system.
             </p>
@@ -2180,7 +2175,7 @@ const WildlifeAudioUpload = () => {
             
             <div className="space-y-3 pt-2">
               <div>
-                <label className="block text-4xs uppercase tracking-wider text-slate-505 font-bold mb-1">
+                <label className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">
                   Taxonomic Common Name
                 </label>
                 <input
@@ -2194,7 +2189,7 @@ const WildlifeAudioUpload = () => {
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-4xs uppercase tracking-wider text-slate-505 font-bold mb-1">
+                  <label className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">
                     Sighted Count
                   </label>
                   <input
@@ -2206,20 +2201,20 @@ const WildlifeAudioUpload = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-4xs uppercase tracking-wider text-slate-505 font-bold mb-1">
+                  <label className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">
                     Sighting Type
                   </label>
                   <input
                     type="text"
                     disabled
                     value="Visual Sighting"
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-955 px-3 py-2 text-xs w-full text-slate-500 cursor-not-allowed"
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 px-3 py-2 text-xs w-full text-slate-500 cursor-not-allowed"
                   />
                 </div>
               </div>
               
               <div>
-                <label className="block text-4xs uppercase tracking-wider text-slate-505 font-bold mb-1">
+                <label className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">
                   Field Investigator Remarks
                 </label>
                 <textarea
@@ -2243,7 +2238,7 @@ const WildlifeAudioUpload = () => {
                 type="button"
                 onClick={handleSaveManualObs}
                 disabled={manualObsSaving}
-                className="px-4 py-2 rounded-xl bg-rose-605 hover:bg-rose-500 text-white font-bold transition-all focus:outline-none disabled:opacity-40"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold transition-all focus:outline-none disabled:opacity-40"
               >
                 {manualObsSaving ? "Logging..." : "Log Sighting"}
               </button>

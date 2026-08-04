@@ -1,14 +1,14 @@
 SPECIES_SEED_DATA = [
     {
         "common_name": "Bengal Tiger",
-        "scientific_name": "Panthera tigris",
+        "scientific_name": "Panthera tigris tigris",
         "kingdom": "Animalia",
         "phylum": "Chordata",
         "class_name": "Mammalia",
         "order": "Carnivora",
         "family": "Felidae",
         "genus": "Panthera",
-        "species": "P. tigris",
+        "species": "P. tigris tigris",
         "iucn_status": "Endangered",
         "habitat": "Forests, Mangroves, Grasslands",
         "diet": "Carnivore",

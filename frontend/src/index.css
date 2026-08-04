@@ -393,3 +393,219 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   opacity: 0;
   cursor: pointer;
 }
+
+/* ── GIS Redesign Utility Classes ────────────────────────── */
+
+/* Animated migration flow paths */
+@keyframes leafletFlow {
+  from {
+    stroke-dashoffset: 24;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.leaflet-flow-line {
+  stroke-dasharray: 8, 12;
+  animation: leafletFlow 1.5s linear infinite !important;
+}
+
+/* Rounded table rows styling */
+.enterprise-table {
+  border-collapse: separate !important;
+  border-spacing: 0 6px !important;
+}
+
+.enterprise-table tr {
+  background-color: transparent !important;
+}
+
+.enterprise-table td {
+  border-top: 1px solid transparent;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.enterprise-table td:first-child {
+  border-left: 1px solid transparent;
+  border-top-left-radius: 10px;
+  border-bottom-left-radius: 10px;
+}
+
+.enterprise-table td:last-child {
+  border-right: 1px solid transparent;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+}
+
+/* Light / Dark Mode borders and bg hover for rounded rows */
+.enterprise-table tbody tr {
+  @apply bg-slate-50/45 dark:bg-slate-900/35 border-y border-slate-100 dark:border-slate-800 hover:bg-slate-100/60 dark:hover:bg-slate-900/70 hover:shadow-sm transition-all;
+}
+
+.enterprise-table tbody tr td {
+  @apply border-slate-200/40 dark:border-slate-800/40;
+}
+
+.enterprise-table tbody tr:hover td {
+  @apply border-slate-300 dark:border-slate-700;
+}
+
+/* Custom premium popup cards inside Leaflet maps */
+.leaflet-popup-content-wrapper {
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.12) !important;
+  color: #0f172a !important;
+  font-family: 'Inter', sans-serif !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  width: 290px !important;
+  color: #334155 !important;
+}
+
+.leaflet-popup-content h4,
+.leaflet-popup-content .font-bold,
+.leaflet-popup-content .font-extrabold {
+  color: #0f172a !important;
+}
+
+.leaflet-popup-tip {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Dark mode overrides for Leaflet popups */
+.dark .leaflet-popup-content-wrapper {
+  background: rgba(15, 23, 42, 0.96) !important;
+  border: 1px solid rgba(51, 65, 85, 0.6) !important;
+  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5) !important;
+  color: #cbd5e1 !important;
+}
+
+.dark .leaflet-popup-content {
+  color: #94a3b8 !important;
+}
+
+.dark .leaflet-popup-content h4,
+.dark .leaflet-popup-content .font-bold,
+.dark .leaflet-popup-content .font-extrabold {
+  color: #ffffff !important;
+}
+
+.dark .leaflet-popup-tip {
+  background: rgba(15, 23, 42, 0.96) !important;
+  border: 1px solid rgba(51, 65, 85, 0.6) !important;
+}
+
+/* Theme-aware Leaflet controls, zoom controls, and bars */
+.leaflet-container .leaflet-control-zoom-in,
+.leaflet-container .leaflet-control-zoom-out,
+.leaflet-container .leaflet-bar a,
+.leaflet-container .leaflet-bar,
+.leaflet-container .leaflet-control-layers {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  color: #0f172a !important;
+}
+
+.leaflet-container .leaflet-bar a:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+.dark .leaflet-container .leaflet-control-zoom-in,
+.dark .leaflet-container .leaflet-control-zoom-out,
+.dark .leaflet-container .leaflet-bar a,
+.dark .leaflet-container .leaflet-bar,
+.dark .leaflet-container .leaflet-control-layers {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(51, 65, 85, 0.6) !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .leaflet-container .leaflet-bar a:hover {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+}
+
+/* Leaflet Attribution & Scale */
+.leaflet-container .leaflet-control-attribution,
+.leaflet-container .leaflet-control-scale-line {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #475569 !important;
+  border-color: #cbd5e1 !important;
+}
+
+.dark .leaflet-container .leaflet-control-attribution,
+.dark .leaflet-container .leaflet-control-scale-line {
+  background: rgba(15, 23, 42, 0.85) !important;
+  color: #94a3b8 !important;
+  border-color: #334155 !important;
+  text-shadow: none !important;
+}
+
+.leaflet-container .leaflet-control-attribution a {
+  color: #2563eb !important;
+}
+.dark .leaflet-container .leaflet-control-attribution a {
+  color: #60a5fa !important;
+}
+
+/* Map legend containers custom styling */
+.map-legend, .custom-map-legend {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  color: #334155 !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+
+.dark .map-legend, .dark .custom-map-legend {
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid rgba(51, 65, 85, 0.6) !important;
+  color: #cbd5e1 !important;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);
+}
+
+/* Recharts Theme Adaptations */
+.recharts-cartesian-axis-tick-value, .recharts-label {
+  fill: #475569 !important;
+  font-size: 10px;
+}
+.dark .recharts-cartesian-axis-tick-value, .dark .recharts-label {
+  fill: #94a3b8 !important;
+}
+
+.recharts-legend-item-text {
+  color: #475569 !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+.dark .recharts-legend-item-text {
+  color: #cbd5e1 !important;
+}
+
+.recharts-default-tooltip {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05) !important;
+  color: #0f172a !important;
+}
+.dark .recharts-default-tooltip {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border: 1px solid #1e293b !important;
+  box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3) !important;
+  color: #f1f5f9 !important;
+}
+
+

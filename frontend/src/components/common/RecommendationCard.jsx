@@ -15,6 +15,12 @@ const RecommendationCard = ({
   expected_impact,
   estimated_cost,
   priority_score,
+  confidence,
+  related_habitat,
+  related_species,
+  agency,
+  biodiversity_improvement,
+  habitat_improvement,
   className = ''
 }) => {
   const getPriorityStyle = (p) => {
@@ -89,6 +95,42 @@ const RecommendationCard = ({
             <span className="text-5xs uppercase tracking-wider text-slate-400 font-bold block">Estimated Cost</span>
             <span className="text-4xs font-extrabold text-slate-700 dark:text-slate-350">{estimated_cost || cost}</span>
           </div>
+          {confidence && (
+            <div>
+              <span className="text-5xs uppercase tracking-wider text-slate-400 font-bold block">Confidence</span>
+              <span className="text-4xs font-extrabold text-slate-700 dark:text-slate-350">{confidence}%</span>
+            </div>
+          )}
+          {agency && (
+            <div>
+              <span className="text-5xs uppercase tracking-wider text-slate-400 font-bold block">Agency</span>
+              <span className="text-4xs font-extrabold text-slate-700 dark:text-slate-350 truncate block" title={agency}>{agency}</span>
+            </div>
+          )}
+          {related_habitat && (
+            <div>
+              <span className="text-5xs uppercase tracking-wider text-slate-400 font-bold block">Related Habitat</span>
+              <span className="text-4xs font-extrabold text-slate-700 dark:text-slate-350 truncate block" title={related_habitat}>{related_habitat}</span>
+            </div>
+          )}
+          {related_species && (
+            <div>
+              <span className="text-5xs uppercase tracking-wider text-slate-400 font-bold block">Related Species</span>
+              <span className="text-4xs font-extrabold text-slate-700 dark:text-slate-350 truncate block" title={related_species}>{related_species}</span>
+            </div>
+          )}
+          {biodiversity_improvement && (
+            <div>
+              <span className="text-5xs uppercase tracking-wider text-slate-400 font-bold block">Bio Improv. (Est.)</span>
+              <span className="text-4xs font-extrabold text-emerald-500">+{biodiversity_improvement}%</span>
+            </div>
+          )}
+          {habitat_improvement && (
+            <div>
+              <span className="text-5xs uppercase tracking-wider text-slate-400 font-bold block">Hab Improv. (Est.)</span>
+              <span className="text-4xs font-extrabold text-emerald-500">+{habitat_improvement}%</span>
+            </div>
+          )}
           {completion_time && (
             <div className="col-span-2">
               <span className="text-5xs uppercase tracking-wider text-slate-400 font-bold block">Est. Completion Time</span>

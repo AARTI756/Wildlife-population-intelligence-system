@@ -127,6 +127,19 @@ export function nowISTLocal() {
   return `${ist.getFullYear()}-${pad(ist.getMonth()+1)}-${pad(ist.getDate())}T${pad(ist.getHours())}:${pad(ist.getMinutes())}`;
 }
 
+export function formatLastUpdated(dateVal = new Date()) {
+  const d = dateVal instanceof Date ? dateVal : new Date(dateVal);
+  if (isNaN(d.getTime())) return '—';
+  const pad = (n) => String(n).padStart(2, '0');
+  const day = pad(d.getDate());
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  const hours = pad(d.getHours());
+  const minutes = pad(d.getMinutes());
+  return `${day} ${month} ${year} • ${hours}:${minutes} IST`;
+}
+
 export const getUserAvatar = (user, baseURL = 'http://localhost:8000') => {
   if (user?.picture) {
     return user.picture.startsWith('http') ? user.picture : `${baseURL}${user.picture}`;
@@ -172,35 +185,125 @@ export const getUserAvatar = (user, baseURL = 'http://localhost:8000') => {
   return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
 };
 
-// Map foreign/non-indigenous species names to realistic Indian fauna equivalents
-export const INDIAN_FAUNA_MAPPING = {
-  'raccoon': 'Bengal Tiger',
-  'kangaroo': 'Indian Leopard',
-  'giraffe': 'Asiatic Lion',
-  'canada goose': 'Indian Elephant',
-  'jellyfish': 'Sloth Bear',
-  'african bullfrog': 'Indian Gaur',
-  'ladybug': 'Great Indian Bustard',
-  'koala': 'Nilgai (Blue Bull)',
-  'hamster': 'Sambar Deer',
-  'hedgehog': 'Chital (Spotted Deer)',
-  'panda': 'Indian Peafowl',
-  'red panda': 'Great Hornbill',
-  'hippo': 'Mugger Crocodile',
-  'hippopotamus': 'Mugger Crocodile',
-  'lion': 'Asiatic Lion'
+// Mapping of raw names to Standard Common and Scientific Name
+export const SPECIES_NORMALIZATION_MAP = {
+  'asiatic lion': { common: 'Asiatic Lion', scientific: 'Panthera leo persica' },
+  'panthera leo': { common: 'Asiatic Lion', scientific: 'Panthera leo persica' },
+  'panthera leo persica': { common: 'Asiatic Lion', scientific: 'Panthera leo persica' },
+  'lion': { common: 'Asiatic Lion', scientific: 'Panthera leo persica' },
+  
+  'bengal tiger': { common: 'Bengal Tiger', scientific: 'Panthera tigris tigris' },
+  'tiger': { common: 'Bengal Tiger', scientific: 'Panthera tigris tigris' },
+  'panthera tigris': { common: 'Bengal Tiger', scientific: 'Panthera tigris tigris' },
+  
+  'sloth bear': { common: 'Sloth Bear', scientific: 'Melursus ursinus' },
+  'bear': { common: 'Sloth Bear', scientific: 'Melursus ursinus' },
+  'ursidae': { common: 'Sloth Bear', scientific: 'Melursus ursinus' },
+  'melursus ursinus': { common: 'Sloth Bear', scientific: 'Melursus ursinus' },
+  
+  'sambar deer': { common: 'Sambar Deer', scientific: 'Rusa unicolor' },
+  'deer': { common: 'Sambar Deer', scientific: 'Rusa unicolor' },
+  'cervidae': { common: 'Sambar Deer', scientific: 'Rusa unicolor' },
+  'rusa unicolor': { common: 'Sambar Deer', scientific: 'Rusa unicolor' },
+  
+  'chital': { common: 'Spotted Deer (Chital)', scientific: 'Axis axis' },
+  'spotted deer': { common: 'Spotted Deer (Chital)', scientific: 'Axis axis' },
+  'chital (spotted deer)': { common: 'Spotted Deer (Chital)', scientific: 'Axis axis' },
+  'axis axis': { common: 'Spotted Deer (Chital)', scientific: 'Axis axis' },
+
+  'koel': { common: 'Asian Koel', scientific: 'Eudynamys scolopaceus' },
+  'koel koel': { common: 'Asian Koel', scientific: 'Eudynamys scolopaceus' },
+  'asian koel': { common: 'Asian Koel', scientific: 'Eudynamys scolopaceus' },
+  'eudynamys scolopaceus': { common: 'Asian Koel', scientific: 'Eudynamys scolopaceus' },
+  
+  'indian leopard': { common: 'Indian Leopard', scientific: 'Panthera pardus fusca' },
+  'leopard': { common: 'Indian Leopard', scientific: 'Panthera pardus fusca' },
+  'panthera pardus': { common: 'Indian Leopard', scientific: 'Panthera pardus fusca' },
+  
+  'asian elephant': { common: 'Asian Elephant', scientific: 'Elephas maximus' },
+  'elephant': { common: 'Asian Elephant', scientific: 'Elephas maximus' },
+  'elephas maximus': { common: 'Asian Elephant', scientific: 'Elephas maximus' },
+  
+  'indian gaur': { common: 'Indian Gaur (Bison)', scientific: 'Bos gaurus' },
+  'gaur': { common: 'Indian Gaur (Bison)', scientific: 'Bos gaurus' },
+  'gaur (bison)': { common: 'Indian Gaur (Bison)', scientific: 'Bos gaurus' },
+  'bos gaurus': { common: 'Indian Gaur (Bison)', scientific: 'Bos gaurus' },
+  
+  'dhole': { common: 'Dhole (Indian Wild Dog)', scientific: 'Cuon alpinus' },
+  'dhole (indian wild dog)': { common: 'Dhole (Indian Wild Dog)', scientific: 'Cuon alpinus' },
+  'cuon alpinus': { common: 'Dhole (Indian Wild Dog)', scientific: 'Cuon alpinus' },
+  
+  'indian rhinoceros': { common: 'Indian Rhinoceros', scientific: 'Rhinoceros unicornis' },
+  'rhinoceros': { common: 'Indian Rhinoceros', scientific: 'Rhinoceros unicornis' },
+  'rhinoceros unicornis': { common: 'Indian Rhinoceros', scientific: 'Rhinoceros unicornis' },
+  
+  'nilgai': { common: 'Nilgai (Blue Bull)', scientific: 'Boselaphus tragocamelus' },
+  'nilgai (blue bull)': { common: 'Nilgai (Blue Bull)', scientific: 'Boselaphus tragocamelus' },
+  'indian peafowl': { common: 'Indian Peafowl', scientific: 'Pavo cristatus' },
+  'peafowl': { common: 'Indian Peafowl', scientific: 'Pavo cristatus' },
+  'great hornbill': { common: 'Great Hornbill', scientific: 'Buceros bicornis' },
+  'hornbill': { common: 'Great Hornbill', scientific: 'Buceros bicornis' },
+  'mugger crocodile': { common: 'Mugger Crocodile', scientific: 'Crocodylus palustris' },
+  'blackbuck': { common: 'Blackbuck', scientific: 'Antilope cervicapra' },
+  'indian wolf': { common: 'Indian Wolf', scientific: 'Canis lupus pallipes' },
+  'gharial': { common: 'Gharial', scientific: 'Gavialis gangeticus' },
+  'king cobra': { common: 'King Cobra', scientific: 'Ophiophagus hannah' },
+  'indian pangolin': { common: 'Indian Pangolin', scientific: 'Manis crassicaudata' },
+  'himalayan black bear': { common: 'Himalayan Black Bear', scientific: 'Ursus thibetanus laniger' },
 };
 
-export function localizeSpeciesName(name) {
-  if (!name) return '—';
+export function normalizeSpecies(name) {
+  if (!name) return null;
   const key = name.toLowerCase().trim();
-  if (INDIAN_FAUNA_MAPPING[key]) {
-    return INDIAN_FAUNA_MAPPING[key];
+  
+  // Explicit mapping check (Indian species map)
+  if (SPECIES_NORMALIZATION_MAP[key]) {
+    return SPECIES_NORMALIZATION_MAP[key];
   }
-  for (const [k, v] of Object.entries(INDIAN_FAUNA_MAPPING)) {
-    if (key.includes(k)) {
+
+  // Substring checks against the Indian species map
+  for (const [k, v] of Object.entries(SPECIES_NORMALIZATION_MAP)) {
+    if (key === k || (key.length > 3 && k.length > 3 && (key.includes(k) || k.includes(key)))) {
       return v;
     }
   }
-  return name;
+
+  // Generic fallback checks for common Indian species substrings
+  if (key.includes('tiger') && !key.includes('shark') && !key.includes('salamander')) return SPECIES_NORMALIZATION_MAP['tiger'];
+  if (key.includes('sloth bear') || (key.includes('bear') && key.includes('indian'))) return SPECIES_NORMALIZATION_MAP['bear'];
+  if (key.includes('sambar') || (key.includes('deer') && !key.includes('spotted') && !key.includes('axis') && !key.includes('barking') && !key.includes('reindeer'))) return SPECIES_NORMALIZATION_MAP['deer'];
+  if ((key.includes('asiatic') && key.includes('lion')) || (key === 'lion' && key.includes('asiatic'))) return SPECIES_NORMALIZATION_MAP['lion'];
+  if (key.includes('koel')) return SPECIES_NORMALIZATION_MAP['koel'];
+  if (key.includes('leopard') && (key.includes('indian') || key.includes('panthera'))) return SPECIES_NORMALIZATION_MAP['leopard'];
+  if (key.includes('elephant') && (key.includes('asian') || key.includes('indian'))) return SPECIES_NORMALIZATION_MAP['elephant'];
+  
+  // No match found — return null (caller should use original name)
+  return null;
+}
+
+export function localizeSpeciesName(name) {
+  if (!name) return 'Unknown Species';
+  const norm = normalizeSpecies(name);
+  // If recognized as an Indian species, use the standardized common name.
+  // If not recognized (global/demo species), return the original name unchanged.
+  return norm ? norm.common : name;
+}
+
+export function getScientificName(name) {
+  const norm = normalizeSpecies(name);
+  // Return the scientific name if recognized, or the original name for global species
+  return norm ? norm.scientific : (name || 'Unknown');
+}
+
+export function isIndianWildlife(name) {
+  if (!name) return false;
+  const key = name.toLowerCase().trim();
+  // Known global/demo benchmark species are explicitly NOT Indian wildlife
+  const globalSpecies = [
+    'zebra', 'aardvark', 'canada goose', 'raccoon', 'kangaroo', 'giraffe',
+    'koala', 'polar bear', 'hamster', 'hedgehog', 'hippopotamus', 'hippo',
+    'panda', 'red panda', 'penguin', 'ostrich', 'gorilla', 'chimpanzee'
+  ];
+  if (globalSpecies.some(g => key.includes(g))) return false;
+  return normalizeSpecies(name) !== null;
 }

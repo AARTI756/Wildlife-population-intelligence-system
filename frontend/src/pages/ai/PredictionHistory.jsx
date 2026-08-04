@@ -8,7 +8,6 @@ import {
   Eye, 
   AlertCircle, 
   Loader2, 
-  FileText, 
   FileAudio,
   Calendar,
   ChevronLeft,
@@ -129,12 +128,12 @@ const PredictionHistory = () => {
   }
 
   return (
-    <div className="space-y-6 text-slate-805 dark:text-slate-100 font-sans max-w-7xl mx-auto">
+    <div className="space-y-6 text-slate-800 dark:text-slate-100 font-sans max-w-7xl mx-auto">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-2 border-b border-slate-100 dark:border-slate-900/60">
         <div>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-widest flex items-center gap-1.5">
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
             <History className="h-3.5 w-3.5" />
             AI Audit Logs
           </span>
@@ -148,7 +147,7 @@ const PredictionHistory = () => {
       </div>
 
       {error && (
-        <div className="flex items-start gap-3 rounded-2xl bg-rose-50 dark:bg-rose-955/40 border border-rose-200 dark:border-rose-900/35 p-4 text-xs text-rose-800 dark:text-rose-455 font-semibold max-w-7xl mx-auto">
+        <div className="flex items-start gap-3 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/35 p-4 text-xs text-rose-800 dark:text-rose-400 font-semibold max-w-7xl mx-auto">
           <AlertCircle className="h-5 w-5 shrink-0 mt-0.5" />
           <div className="space-y-1">
             <p className="font-bold">Acoustic History Fetch Fault</p>
@@ -241,7 +240,7 @@ const PredictionHistory = () => {
                 onChange={(e) => setIncludeUnknown(e.target.checked)}
                 className="rounded text-emerald-600 focus:ring-emerald-500 border-slate-300 h-3.5 w-3.5"
               />
-              <span className="text-slate-505 dark:text-slate-300 font-bold text-3xs uppercase tracking-wider">Include Unknown Species</span>
+              <span className="text-slate-500 dark:text-slate-300 font-bold text-3xs uppercase tracking-wider">Include Unknown Species</span>
             </label>
           </div>
 
@@ -254,7 +253,7 @@ const PredictionHistory = () => {
               setSortBy('newest');
               setIncludeUnknown(false);
             }}
-            className="text-emerald-600 dark:text-emerald-404 hover:text-emerald-500 font-bold hover:underline"
+            className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-500 font-bold hover:underline"
           >
             Clear Filters
           </button>
@@ -277,7 +276,7 @@ const PredictionHistory = () => {
                 <th className="p-4 text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-350 font-semibold">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-slate-700 dark:text-slate-300 font-semibold">
               {paginatedRecords.length === 0 ? (
                 <tr>
                   <td colSpan="8" className="p-10 text-center text-slate-400 font-medium">
@@ -329,7 +328,7 @@ const PredictionHistory = () => {
                       </td>
                       <td className="p-4">
                         {r.prediction_type === 'Image' ? (
-                          <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-250 dark:bg-emerald-950/30 dark:text-emerald-450 dark:border-emerald-900/30 animate-fade-in">
+                          <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30 animate-fade-in">
                             🟢 AI Image
                           </span>
                         ) : (
@@ -338,11 +337,11 @@ const PredictionHistory = () => {
                               🔘 Environmental Noise
                             </span>
                           ) : ["Mammal Vocalization", "Amphibian Call", "Insect Sound", "Generic Animal Vocalization"].includes(r.species_predicted) ? (
-                            <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-450 dark:border-blue-900/30 animate-fade-in">
+                            <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/30 dark:text-blue-400 dark:border-blue-900/30 animate-fade-in">
                               🔵 Animal Call Category
                             </span>
                           ) : (
-                            <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-250 dark:bg-emerald-950/30 dark:text-emerald-450 dark:border-emerald-900/30 animate-fade-in">
+                            <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/30 animate-fade-in">
                               🟢 Bird Species
                             </span>
                           )
@@ -356,7 +355,7 @@ const PredictionHistory = () => {
                           {confVal}%
                         </span>
                       </td>
-                      <td className="p-4 text-slate-555 font-mono text-[11px]">
+                      <td className="p-4 text-slate-500 font-mono text-[11px]">
                         {formattedDate}
                       </td>
                       <td className="p-4 text-slate-600 dark:text-slate-400 font-semibold">
@@ -380,7 +379,7 @@ const PredictionHistory = () => {
                             type="button"
                             onClick={() => setSelectedRecord(r)}
                             title="Inspect Details"
-                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-550 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-white dark:bg-slate-950"
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-white dark:bg-slate-950"
                           >
                             <Eye className="h-4.5 w-4.5" />
                           </button>
@@ -390,7 +389,7 @@ const PredictionHistory = () => {
                             target="_blank"
                             rel="noopener noreferrer"
                             title="Download original file"
-                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-550 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-white dark:bg-slate-950"
+                            className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors bg-white dark:bg-slate-950"
                           >
                             <Download className="h-4.5 w-4.5" />
                           </a>
@@ -434,7 +433,7 @@ const PredictionHistory = () => {
       {/* Details Modal */}
       {selectedRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
-          <div className="glass-card w-full max-w-2xl bg-white dark:bg-slate-950 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-850">
+          <div className="glass-card w-full max-w-2xl bg-white dark:bg-slate-950 shadow-2xl rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800">
             
             {/* Modal Header */}
             <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/10">
@@ -448,7 +447,7 @@ const PredictionHistory = () => {
               </div>
               <button 
                 onClick={() => setSelectedRecord(null)}
-                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-850 text-slate-550 dark:text-slate-400 transition-all bg-white dark:bg-slate-950 focus:outline-none"
+                className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 transition-all bg-white dark:bg-slate-950 focus:outline-none"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -478,8 +477,8 @@ const PredictionHistory = () => {
               </div>
 
               {/* Taxonomy Details Card */}
-              <div className="p-5 rounded-2xl border border-slate-150 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/5 space-y-4">
-                <h4 className="text-3xs uppercase tracking-wider font-extrabold text-emerald-600 dark:text-emerald-450">
+              <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/5 space-y-4">
+                <h4 className="text-3xs uppercase tracking-wider font-extrabold text-emerald-600 dark:text-emerald-400">
                   Taxonomic Resolution
                 </h4>
                 
@@ -510,7 +509,7 @@ const PredictionHistory = () => {
                   </div>
                   <div>
                     <span className="block text-4xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Status</span>
-                    <span className="inline-flex px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-305">
+                    <span className="inline-flex px-1.5 py-0.2 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                       {["Mammal Vocalization", "Amphibian Call", "Insect Sound", "Generic Animal Vocalization", "Environmental Noise"].includes(selectedRecord.species_predicted)
                         ? "Requires Species Identification"
                         : "Verified AI Generated"}
@@ -524,7 +523,7 @@ const PredictionHistory = () => {
                       </div>
                       <div>
                         <span className="block text-4xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Audio Classification</span>
-                        <p className="text-slate-900 dark:text-white font-extrabold text-emerald-600 dark:text-emerald-450">{selectedRecord.animal_call_category || "Environmental Noise"}</p>
+                        <p className="text-slate-900 dark:text-white font-extrabold text-emerald-600 dark:text-emerald-400">{selectedRecord.animal_call_category || "Environmental Noise"}</p>
                       </div>
                     </>
                   )}
@@ -538,7 +537,7 @@ const PredictionHistory = () => {
               <button
                 type="button"
                 onClick={() => setSelectedRecord(null)}
-                className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-250 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950 hover:bg-slate-100 transition-colors focus:outline-none"
+                className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-950 hover:bg-slate-100 transition-colors focus:outline-none"
               >
                 Close Audit Entry
               </button>

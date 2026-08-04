@@ -7,7 +7,8 @@ from app.database.connection import get_db
 from app.auth.dependencies import get_current_user
 from app.schemas.population import (
     PopulationOverview, SpeciesPopulationMetric, PopulationTrends, 
-    PopulationDistribution, SiteDensity, SiteRichness
+    PopulationDistribution, SiteDensity, SiteRichness, MigrationVector,
+    DistributionMapPoint
 )
 from app.services import population_estimation as pep
 
@@ -161,6 +162,78 @@ def get_richness(
     date_to_dt = parse_date(date_to)
     
     return pep.get_richness_stats(
+        db,
+        survey_id=survey_id,
+        site_id=site_id,
+        species=species,
+        habitat=habitat,
+        date_from=date_from_dt,
+        date_to=date_to_dt
+    )
+
+@router.get("/migration", response_model=List[MigrationVector])
+def get_migration(
+    survey_id: Optional[int] = Query(None),
+    site_id: Optional[int] = Query(None),
+    species: Optional[str] = Query(None),
+    habitat: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    date_from_dt = parse_date(date_from)
+    date_to_dt = parse_date(date_to)
+    
+    return pep.get_migration_patterns(
+        db,
+        survey_id=survey_id,
+        site_id=site_id,
+        species=species,
+        habitat=habitat,
+        date_from=date_from_dt,
+        date_to=date_to_dt
+    )
+
+@router.get("/distribution-map", response_model=List[DistributionMapPoint])
+def get_distribution_map(
+    survey_id: Optional[int] = Query(None),
+    site_id: Optional[int] = Query(None),
+    species: Optional[str] = Query(None),
+    habitat: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    date_from_dt = parse_date(date_from)
+    date_to_dt = parse_date(date_to)
+    
+    return pep.get_species_distribution_map(
+        db,
+        survey_id=survey_id,
+        site_id=site_id,
+        species=species,
+        habitat=habitat,
+        date_from=date_from_dt,
+        date_to=date_to_dt
+    )
+
+@router.get("/species-distribution", response_model=List[DistributionMapPoint])
+def get_species_distribution(
+    survey_id: Optional[int] = Query(None),
+    site_id: Optional[int] = Query(None),
+    species: Optional[str] = Query(None),
+    habitat: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user)
+):
+    date_from_dt = parse_date(date_from)
+    date_to_dt = parse_date(date_to)
+    
+    return pep.get_species_distribution_map(
         db,
         survey_id=survey_id,
         site_id=site_id,

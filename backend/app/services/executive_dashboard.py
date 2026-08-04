@@ -201,24 +201,248 @@ def get_executive_activity(db, **filters) -> List[Dict[str, Any]]:
     return results
 
 def get_executive_map_pins(db, **filters) -> List[Dict[str, Any]]:
-    """Retrieve geographic coordinate markers for all active reserves."""
+    """Retrieve geographic coordinate markers for all active reserves, camera traps, and audio sensors."""
+    from app.models.monitoring import CameraTrap, AudioSensor, Survey
+    from app.models.observation import Observation
+    
+    # Get all sites
     sites = db.query(MonitoringSite).all()
     results = []
     
-    for site in sites:
-        indices = calculate_habitat_indices(db, site_id=site.id)
-        q_score = int(indices["habitat_quality"])
+    # Get filtered observations based on the current filters
+    obs_query = get_filtered_observations(db, **filters)
+    filtered_obs = obs_query.all()
+    
+    # Group observations by site ID
+    obs_by_site = {}
+    for o in filtered_obs:
+        if o.monitoring_site_id not in obs_by_site:
+            obs_by_site[o.monitoring_site_id] = []
+        obs_by_site[o.monitoring_site_id].append(o)
         
+    site_lookup = {site.id: site for site in sites}
+        
+    for site in sites:
+        # Filter sites if site_id filter is specified
+        if filters.get("site_id") and site.id != filters["site_id"]:
+            continue
+            
+        site_obs = obs_by_site.get(site.id, [])
+        
+        # Site details
+        latest_obs = None
+        obs_count = 0
+        latest_detection = "None"
+        last_updated = "Never"
+        survey_name = "No Active Survey"
+        habitat_type = "Unspecified"
+        
+        if site_obs:
+            sorted_obs = sorted(site_obs, key=lambda x: x.timestamp or datetime.min, reverse=True)
+            latest_obs = sorted_obs[0]
+            obs_count = sum(o.count for o in site_obs if o.count is not None)
+            
+            latest_detection = latest_obs.species_name or "Unknown Species"
+            if latest_obs.timestamp:
+                last_updated = latest_obs.timestamp.strftime("%Y-%m-%d %H:%M")
+            if latest_obs.survey:
+                survey_name = latest_obs.survey.name or "Unnamed Survey"
+                habitat_type = latest_obs.survey.habitat_type or "Unspecified"
+        else:
+            any_survey = db.query(Survey).join(Observation, Observation.survey_id == Survey.id).filter(Observation.monitoring_site_id == site.id).first()
+            if any_survey:
+                survey_name = any_survey.name
+                habitat_type = any_survey.habitat_type
+                
+        # Format popup HTML content with exact required fields
+        site_popup = (
+            f"<div class='space-y-1 font-sans text-xs text-slate-800 dark:text-slate-200'>"
+            f"<div class='font-bold text-sm text-slate-900 dark:text-white border-b pb-1 mb-1'>📍 {site.name}</div>"
+            f"<div><strong>Site:</strong> {site.name}</div>"
+            f"<div><strong>Survey:</strong> {survey_name}</div>"
+            f"<div><strong>Habitat:</strong> {habitat_type}</div>"
+            f"<div><strong>Species:</strong> {latest_detection}</div>"
+            f"<div><strong>Observation Count:</strong> {obs_count}</div>"
+            f"<div><strong>Latest Observation:</strong> {latest_detection}</div>"
+            f"<div><strong>Date:</strong> {last_updated}</div>"
+            f"</div>"
+        )
+        
+        boundary = None
+        if site.protected_area:
+            lat, lng = site.latitude, site.longitude
+            # Generate a small square polygon around the site coordinates
+            boundary = [
+                [lat + 0.015, lng - 0.015],
+                [lat + 0.015, lng + 0.015],
+                [lat - 0.015, lng + 0.015],
+                [lat - 0.015, lng - 0.015]
+            ]
+
         results.append({
+            "id": site.id,
+            "name": site.name,
+            "latitude": site.latitude,
+            "longitude": site.longitude,
             "lat": site.latitude,
             "lng": site.longitude,
-            "popup": f"{site.name} - Active Site (Quality Score: {q_score}/100)"
+            "type": "site",
+            "site_name": site.name,
+            "survey_name": survey_name,
+            "habitat_type": habitat_type,
+            "latest_detection": latest_detection,
+            "observation_count": obs_count,
+            "last_updated": last_updated,
+            "popup": site_popup,
+            "boundary": boundary
         })
         
-    if not results:
-        results = [
-            {"lat": 29.5300, "lng": 78.7758, "popup": "Corbett National Park - Principal Deployment (Score: 82/100)"},
-            {"lat": 26.3000, "lng": 93.0000, "popup": "Kaziranga Reserve - Secondary Deployment (Score: 78/100)"}
-        ]
+        # Plot Camera Traps associated with this site
+        camera_traps = db.query(CameraTrap).filter(CameraTrap.location_id == site.id).all()
+        for ct in camera_traps:
+            ct_obs = [o for o in site_obs if o.device_id == ct.camera_id and o.observation_type == "Camera Trap"]
+            
+            ct_latest_obs = None
+            ct_obs_count = 0
+            ct_latest_detection = "None"
+            ct_last_updated = "Never"
+            ct_survey_name = survey_name
+            ct_habitat_type = habitat_type
+            
+            if ct_obs:
+                ct_sorted_obs = sorted(ct_obs, key=lambda x: x.timestamp or datetime.min, reverse=True)
+                ct_latest_obs = ct_sorted_obs[0]
+                ct_obs_count = sum(o.count for o in ct_obs if o.count is not None)
+                ct_latest_detection = ct_latest_obs.species_name or "Unknown Species"
+                if ct_latest_obs.timestamp:
+                    ct_last_updated = ct_latest_obs.timestamp.strftime("%Y-%m-%d %H:%M")
+                if ct_latest_obs.survey:
+                    ct_survey_name = ct_latest_obs.survey.name or "Unnamed Survey"
+                    ct_habitat_type = ct_latest_obs.survey.habitat_type or "Unspecified"
+                    
+            ct_popup = (
+                f"<div class='space-y-1 font-sans text-xs text-slate-800 dark:text-slate-200'>"
+                f"<div class='font-bold text-sm text-slate-900 dark:text-white border-b pb-1 mb-1'>📷 {ct.name}</div>"
+                f"<div><strong>Site:</strong> {site.name}</div>"
+                f"<div><strong>Survey:</strong> {ct_survey_name}</div>"
+                f"<div><strong>Habitat:</strong> {ct_habitat_type}</div>"
+                f"<div><strong>Species:</strong> {ct_latest_detection}</div>"
+                f"<div><strong>Observation Count:</strong> {ct_obs_count}</div>"
+                f"<div><strong>Latest Observation:</strong> {ct_latest_detection}</div>"
+                f"<div><strong>Date:</strong> {ct_last_updated}</div>"
+                f"</div>"
+            )
+            
+            results.append({
+                "id": ct.id,
+                "name": ct.name,
+                "latitude": ct.latitude,
+                "longitude": ct.longitude,
+                "lat": ct.latitude,
+                "lng": ct.longitude,
+                "type": "camera",
+                "site_name": site.name,
+                "survey_name": ct_survey_name,
+                "habitat_type": ct_habitat_type,
+                "latest_detection": ct_latest_detection,
+                "observation_count": ct_obs_count,
+                "last_updated": ct_last_updated,
+                "popup": ct_popup
+            })
+            
+        # Plot Audio Sensors associated with this site
+        audio_sensors = db.query(AudioSensor).filter(AudioSensor.location_id == site.id).all()
+        for asen in audio_sensors:
+            asen_obs = [o for o in site_obs if o.device_id == asen.sensor_id and o.observation_type == "Audio Sensor"]
+            
+            asen_latest_obs = None
+            asen_obs_count = 0
+            asen_latest_detection = "None"
+            asen_last_updated = "Never"
+            asen_survey_name = survey_name
+            asen_habitat_type = habitat_type
+            
+            if asen_obs:
+                asen_sorted_obs = sorted(asen_obs, key=lambda x: x.timestamp or datetime.min, reverse=True)
+                asen_latest_obs = asen_sorted_obs[0]
+                asen_obs_count = sum(o.count for o in asen_obs if o.count is not None)
+                asen_latest_detection = asen_latest_obs.species_name or "Unknown Species"
+                if asen_latest_obs.timestamp:
+                    asen_last_updated = asen_latest_obs.timestamp.strftime("%Y-%m-%d %H:%M")
+                if asen_latest_obs.survey:
+                    asen_survey_name = asen_latest_obs.survey.name or "Unnamed Survey"
+                    asen_habitat_type = asen_latest_obs.survey.habitat_type or "Unspecified"
+                    
+            asen_popup = (
+                f"<div class='space-y-1 font-sans text-xs text-slate-800 dark:text-slate-200'>"
+                f"<div class='font-bold text-sm text-slate-900 dark:text-white border-b pb-1 mb-1'>🔊 {asen.name}</div>"
+                f"<div><strong>Site:</strong> {site.name}</div>"
+                f"<div><strong>Survey:</strong> {asen_survey_name}</div>"
+                f"<div><strong>Habitat:</strong> {asen_habitat_type}</div>"
+                f"<div><strong>Species:</strong> {asen_latest_detection}</div>"
+                f"<div><strong>Observation Count:</strong> {asen_obs_count}</div>"
+                f"<div><strong>Latest Observation:</strong> {asen_latest_detection}</div>"
+                f"<div><strong>Date:</strong> {asen_last_updated}</div>"
+                f"</div>"
+            )
+            
+            results.append({
+                "id": asen.id,
+                "name": asen.name,
+                "latitude": asen.latitude,
+                "longitude": asen.longitude,
+                "lat": asen.latitude,
+                "lng": asen.longitude,
+                "type": "audio",
+                "site_name": site.name,
+                "survey_name": asen_survey_name,
+                "habitat_type": asen_habitat_type,
+                "latest_detection": asen_latest_detection,
+                "observation_count": asen_obs_count,
+                "last_updated": asen_last_updated,
+                "popup": asen_popup
+            })
+
+    # Plot individual observations as another layer
+    for o in filtered_obs:
+        if o.monitoring_site_id is None:
+            continue
+        site = site_lookup.get(o.monitoring_site_id)
+        if not site:
+            continue
+        
+        survey_name_o = o.survey.name if o.survey else "General Survey"
+        habitat_type_o = o.survey.habitat_type if o.survey else "Unspecified"
+        date_o = o.timestamp.strftime("%Y-%m-%d %H:%M") if o.timestamp else "Unknown"
+        
+        obs_popup = (
+            f"<div class='space-y-1 font-sans text-xs text-slate-800 dark:text-slate-200'>"
+            f"<div class='font-bold text-sm text-slate-900 dark:text-white border-b pb-1 mb-1'>🐾 Sighting Sighting</div>"
+            f"<div><strong>Site:</strong> {site.name}</div>"
+            f"<div><strong>Survey:</strong> {survey_name_o}</div>"
+            f"<div><strong>Habitat:</strong> {habitat_type_o}</div>"
+            f"<div><strong>Species:</strong> {o.species_name}</div>"
+            f"<div><strong>Observation Count:</strong> {o.count}</div>"
+            f"<div><strong>Latest Observation:</strong> {o.species_name}</div>"
+            f"<div><strong>Date:</strong> {date_o}</div>"
+            f"</div>"
+        )
+        
+        results.append({
+            "id": o.id,
+            "name": o.species_name,
+            "latitude": site.latitude,
+            "longitude": site.longitude,
+            "lat": site.latitude,
+            "lng": site.longitude,
+            "type": "observation",
+            "site_name": site.name,
+            "survey_name": survey_name_o,
+            "habitat_type": habitat_type_o,
+            "latest_detection": o.species_name,
+            "observation_count": o.count,
+            "last_updated": date_o,
+            "popup": obs_popup
+        })
         
     return results

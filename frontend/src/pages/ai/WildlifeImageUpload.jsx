@@ -6,7 +6,6 @@ import { getSpeciesKnowledge } from '../../services/speciesKnowledgeService';
 import BehaviourAnalysisPanel from '../../components/common/BehaviourAnalysisPanel';
 import SpeciesIntelligencePanel from '../../components/common/SpeciesIntelligencePanel';
 import ImageQualityAssessment from '../../components/common/ImageQualityAssessment';
-import EcosystemHealthCard from '../../components/common/EcosystemHealthCard';
 import { 
   Upload, 
   Sparkles, 
@@ -14,12 +13,8 @@ import {
   AlertTriangle,
   FileImage, 
   ClipboardList, 
-  MapPin, 
   Loader2, 
   CheckCircle,
-  Clock,
-  User,
-  Cpu,
   X,
   Check,
   Maximize2,
@@ -957,8 +952,8 @@ const WildlifeImageUpload = () => {
 
       const response = await api.post('/api/uploads/image', formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+          'Content-Type': 'multipart/form-data'
+        }
       });
 
       clearInterval(interval);
@@ -986,13 +981,13 @@ const WildlifeImageUpload = () => {
     return (
       <div className="flex h-[60vh] items-center justify-center text-emerald-500 font-sans">
         <span className="h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></span>
-        <span className="ml-3 text-lg font-bold text-slate-705 dark:text-slate-400">Initializing Optical Metadata...</span>
+        <span className="ml-3 text-lg font-bold text-slate-700 dark:text-slate-400">Initializing Optical Metadata...</span>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-805 dark:text-slate-100 font-sans">
+    <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 font-sans">
       
       {/* Zoom Lightbox Modal */}
       {zoomImage && (
@@ -1017,14 +1012,14 @@ const WildlifeImageUpload = () => {
 
       {/* Page Header */}
       <div>
-        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-450 uppercase tracking-widest flex items-center gap-1.5">
-          <Sparkles className="h-3.5 w-3.5 text-emerald-555" />
+        <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest flex items-center gap-1.5">
+          <Sparkles className="h-3.5 w-3.5 text-emerald-500" />
           Optical Monitoring Suite
         </span>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mt-1">
           Wildlife Image Analysis
         </h1>
-        <p className="text-slate-655 dark:text-slate-400 text-sm mt-1 font-semibold">
+        <p className="text-slate-600 dark:text-slate-400 text-sm mt-1 font-semibold">
           Upload and identify wildlife camera trap imagery using YOLOv11 computer vision models.
         </p>
       </div>
@@ -1032,8 +1027,8 @@ const WildlifeImageUpload = () => {
       <div className="space-y-6 max-w-5xl mx-auto">
         
         {/* 1. Survey & Camera Selection */}
-        <div className="glass-card p-6 space-y-4 shadow-sm border-slate-205 dark:border-slate-805">
-          <h3 className="text-sm font-bold text-slate-905 dark:text-white flex items-center gap-2">
+        <div className="glass-card p-6 space-y-4 shadow-sm border-slate-200 dark:border-slate-800">
+          <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <ClipboardList className="h-4.5 w-4.5 text-emerald-500" />
             Deployment Association
           </h3>
@@ -1113,30 +1108,30 @@ const WildlifeImageUpload = () => {
         {/* Selected Context details */}
         {selectedSurveyDetails && (
           <div className="glass-card p-5 border border-emerald-500/15 bg-emerald-50/5 dark:bg-emerald-950/5 space-y-3.5 animate-fade-in shadow-sm">
-            <h4 className="text-2xs font-extrabold uppercase tracking-wider text-slate-555 dark:text-slate-550">
+            <h4 className="text-2xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-500">
               Selected Deployment Context Info
             </h4>
             
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-xs font-semibold text-slate-705 dark:text-slate-350">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-xs font-semibold text-slate-700 dark:text-slate-300">
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Survey Name</span>
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Survey Name</span>
                 <span className="text-slate-900 dark:text-white font-extrabold">{selectedSurveyDetails.name}</span>
               </div>
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Monitoring Site</span>
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Monitoring Site</span>
                 <span className="text-slate-900 dark:text-white font-extrabold">{selectedSiteDetails?.name || 'N/A'}</span>
               </div>
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Habitat Type</span>
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Habitat Type</span>
                 <span className="text-slate-900 dark:text-white font-extrabold">{selectedSurveyDetails.habitat_type}</span>
               </div>
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Camera Model</span>
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Camera Model</span>
                 <span className="text-slate-900 dark:text-white font-extrabold">{selectedTrapDetails?.model || 'Select Trap...'}</span>
               </div>
               <div>
-                <span className="block text-4xs uppercase tracking-wider text-slate-555 font-bold mb-0.5">Status</span>
-                <span className="inline-flex px-1.5 py-0.2 rounded text-5xs font-bold border border-emerald-250 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+                <span className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-0.5">Status</span>
+                <span className="inline-flex px-1.5 py-0.2 rounded text-5xs font-bold border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
                   {selectedTrapDetails?.status || 'Select Trap...'}
                 </span>
               </div>
@@ -1146,14 +1141,14 @@ const WildlifeImageUpload = () => {
 
         {/* 2. Image Upload Card */}
         {selectedCameraTrapId && !uploading && !success && (
-          <div className="glass-card p-6 space-y-6 animate-fade-in shadow-sm border-slate-205 dark:border-slate-800">
+          <div className="glass-card p-6 space-y-6 animate-fade-in shadow-sm border-slate-200 dark:border-slate-800">
             <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <FileImage className="h-4.5 w-4.5 text-emerald-500" />
               Upload Wildlife Image
             </h3>
 
             {error && (
-              <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-955/40 border border-rose-200 dark:border-rose-900/35 p-4 text-xs text-rose-800 dark:text-rose-455 font-semibold">
+              <div className="flex items-start gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/35 p-4 text-xs text-rose-800 dark:text-rose-400 font-semibold">
                 <AlertCircle className="h-4.5 w-4.5 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -1164,7 +1159,7 @@ const WildlifeImageUpload = () => {
               onDragOver={handleDragOver}
               onDrop={handleDrop}
               className={`flex flex-col items-center justify-center border-2 border-dashed rounded-2xl p-10 bg-slate-50/50 dark:bg-slate-950/15 cursor-pointer transition-all ${
-                preview ? 'border-emerald-500/50' : 'border-slate-202 dark:border-slate-800 hover:border-emerald-500/40'
+                preview ? 'border-emerald-500/50' : 'border-slate-200 dark:border-slate-800 hover:border-emerald-500/40'
               }`}
             >
               {preview ? (
@@ -1172,12 +1167,12 @@ const WildlifeImageUpload = () => {
                   <img 
                     src={preview} 
                     alt="Selected Preview" 
-                    className="max-h-60 mx-auto rounded-xl border border-slate-200 dark:border-slate-805 shadow-md object-contain"
+                    className="max-h-60 mx-auto rounded-xl border border-slate-200 dark:border-slate-800 shadow-md object-contain"
                   />
                   
                   {/* File Metadata Details Panel */}
-                  <div className="max-w-md mx-auto p-4 rounded-xl border border-slate-202 dark:border-slate-800 bg-white dark:bg-slate-950 text-left grid grid-cols-2 gap-3 text-xs font-semibold text-slate-705 dark:text-slate-350 shadow-xs">
-                    <div className="col-span-2 pb-2 border-b border-slate-100 dark:border-slate-805 flex justify-between items-center text-2xs font-bold text-emerald-600 uppercase">
+                  <div className="max-w-md mx-auto p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-left grid grid-cols-2 gap-3 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
+                    <div className="col-span-2 pb-2 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center text-2xs font-bold text-emerald-600 uppercase">
                       <span>Ingestion Target Details</span>
                       <span>Pre-Upload Preview</span>
                     </div>
@@ -1202,17 +1197,17 @@ const WildlifeImageUpload = () => {
                   <button
                     type="button"
                     onClick={() => { setFile(null); setPreview(null); setResolution(''); }}
-                    className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-3xs font-bold text-slate-655 hover:text-rose-500 hover:border-rose-500/30 transition-all bg-white dark:bg-slate-950 focus:outline-none"
+                    className="px-3.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 text-3xs font-bold text-slate-600 hover:text-rose-500 hover:border-rose-500/30 transition-all bg-white dark:bg-slate-950 focus:outline-none"
                   >
                     Remove Imagery File
                   </button>
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer">
-                  <Upload className="h-10 w-10 text-slate-400 dark:text-slate-655 mb-3" />
-                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-350">Drag & Drop Image Asset</h4>
-                  <p className="text-3xs text-slate-555 mt-1">or click to browse local storage</p>
-                  <span className="mt-3.5 px-3 py-1 rounded bg-slate-100 dark:bg-slate-900 border border-slate-202 dark:border-slate-800 text-5xs font-bold text-slate-505 uppercase tracking-widest">
+                  <Upload className="h-10 w-10 text-slate-400 dark:text-slate-600 mb-3" />
+                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">Drag & Drop Image Asset</h4>
+                  <p className="text-3xs text-slate-500 mt-1">or click to browse local storage</p>
+                  <span className="mt-3.5 px-3 py-1 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-5xs font-bold text-slate-500 uppercase tracking-widest">
                     PNG, JPG, WEBP, GIF up to 20MB
                   </span>
                   <input
@@ -1245,7 +1240,7 @@ const WildlifeImageUpload = () => {
             <Loader2 className="h-10 w-10 text-emerald-500 animate-spin" />
             <div className="space-y-2 max-w-sm w-full">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white">Executing YOLOv11 Inference Pipeline...</h3>
-              <p className="text-3xs text-slate-550 leading-normal font-semibold">
+              <p className="text-3xs text-slate-500 leading-normal font-semibold">
                 Running computer vision classifier to identify mammals, reptiles, and key avian fauna.
               </p>
             </div>
@@ -1299,7 +1294,7 @@ const WildlifeImageUpload = () => {
             
             {/* Banner Alert with bounce animation */}
             <div className="p-4 rounded-2xl border border-emerald-500/20 bg-emerald-50/20 dark:bg-emerald-950/10 flex items-center justify-between shadow-xs">
-              <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-450 font-extrabold text-sm">
+              <div className="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400 font-extrabold text-sm">
                 <CheckCircle className="h-5 w-5 shrink-0 text-emerald-500 animate-bounce" />
                 <span>AI Inference Completed Mapped successfully to database</span>
               </div>
@@ -1312,19 +1307,19 @@ const WildlifeImageUpload = () => {
             </div>
 
             {/* AI Summary Section */}
-            <div className="glass-card p-6 border-slate-205 dark:border-slate-805 space-y-3">
+            <div className="glass-card p-6 border-slate-200 dark:border-slate-800 space-y-3">
               <h3 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
                 <Activity className="h-4.5 w-4.5 text-emerald-500" />
                 AI Summary
               </h3>
-              <p className="text-xs text-slate-705 dark:text-slate-300 leading-relaxed font-semibold">
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-semibold">
                 {uploadedAsset.ai_summary || "Wildlife species detection complete. Telemetry recorded in database logs."}
               </p>
             </div>
 
             {/* Image Visualizer Card (Original vs Annotated) */}
-            <div className="glass-card p-6 border-slate-205 dark:border-slate-805 space-y-4">
-              <h3 className="text-sm font-bold text-slate-905 dark:text-white">Image Analysis Visualizer</h3>
+            <div className="glass-card p-6 border-slate-200 dark:border-slate-800 space-y-4">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white">Image Analysis Visualizer</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 
@@ -1366,13 +1361,13 @@ const WildlifeImageUpload = () => {
                   
                   {/* Download annotated image button */}
                   <div className="mt-2.5 flex items-center justify-between gap-3">
-                    <span className="text-[10px] text-slate-550 font-mono">Annotated Bounding Box view</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Annotated Bounding Box view</span>
                     <a
                       href={`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.filepath}`}
                       download={uploadedAsset.filename}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-2xs font-bold text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors bg-white dark:bg-slate-950"
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-2xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 transition-colors bg-white dark:bg-slate-950"
                     >
                       <Download className="h-4 w-4 text-emerald-500" />
                       <span>Download Annotated Image</span>
@@ -1392,10 +1387,6 @@ const WildlifeImageUpload = () => {
               quality={uploadedAsset.image_quality}
             />
 
-            {uploadedAsset.ecosystem_health_score && (
-              <EcosystemHealthCard healthData={uploadedAsset.ecosystem_health_score} />
-            )}
-
             {/* Predictions Details (Expandable Cards List) */}
             <div className="space-y-4">
               <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1404,7 +1395,7 @@ const WildlifeImageUpload = () => {
               </h3>
 
               {!uploadedAsset.detections || uploadedAsset.detections.length === 0 ? (
-                <div className="glass-card p-6 border-slate-205 text-center text-slate-500 text-xs">
+                <div className="glass-card p-6 border-slate-200 text-center text-slate-500 text-xs">
                   No wildlife species detected.
                 </div>
               ) : (
@@ -1423,11 +1414,11 @@ const WildlifeImageUpload = () => {
                     
                     // Map IUCN status to colors
                     const iucn = profile.iucn_status || "Least Concern";
-                    let iucnColor = "bg-emerald-50 text-emerald-700 border-emerald-250 dark:bg-emerald-950/35 dark:text-emerald-400 dark:border-emerald-900/30";
+                    let iucnColor = "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/35 dark:text-emerald-400 dark:border-emerald-900/30";
                     if (["Vulnerable", "Near Threatened", "Vulnerable (VU)"].includes(iucn) || iucn.includes("VU") || iucn.includes("Threatened")) {
-                      iucnColor = "bg-amber-50 text-amber-700 border-amber-250 dark:bg-amber-950/35 dark:text-amber-450 dark:border-amber-900/30";
+                      iucnColor = "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/35 dark:text-amber-400 dark:border-amber-900/30";
                     } else if (["Endangered", "Critically Endangered", "Endangered (EN)"].includes(iucn) || iucn.includes("EN") || iucn.includes("CR")) {
-                      iucnColor = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-955/30 dark:text-rose-455 dark:border-rose-900/30";
+                      iucnColor = "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/30 dark:text-rose-400 dark:border-rose-900/30";
                     }
 
                     // Map confidence colors
@@ -1449,7 +1440,7 @@ const WildlifeImageUpload = () => {
                       <React.Fragment key={index}>
                         {index > 0 && <div className="border-t border-slate-200 dark:border-slate-800 my-6 opacity-60" />}
                         <div 
-                          className="glass-card overflow-hidden border-slate-205 dark:border-slate-805 shadow-sm transition-all duration-200"
+                          className="glass-card overflow-hidden border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-200"
                         >
                         {/* Expandable Header */}
                         <div 
@@ -1488,14 +1479,14 @@ const WildlifeImageUpload = () => {
                         {isExpanded && (
                           <div className="p-5 space-y-4 animate-slide-down">
                                                        {det.is_unknown ? (
-                              <div className="p-5 rounded-2xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-955/10 flex flex-col gap-4 text-slate-800 dark:text-slate-200">
+                              <div className="p-5 rounded-2xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-950/10 flex flex-col gap-4 text-slate-800 dark:text-slate-200">
                                 <div className="flex items-start gap-3">
                                   <AlertCircle className="h-6 w-6 text-amber-500 shrink-0 mt-0.5" />
                                   <div className="space-y-1">
                                     <h4 className="text-sm font-extrabold uppercase tracking-wider text-amber-600 dark:text-amber-400">
                                       {det.ecological_plausibility === 'Low' ? '⚠️ Low Ecological Plausibility' : '⚠️ Manual Verification Recommended'}
                                     </h4>
-                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-350">
+                                    <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                                       {det.ecological_plausibility === 'Low'
                                         ? (det.plausibility_reason || 'Terrestrial camera trap detected marine life. Manual verification is highly recommended.')
                                         : `Unable to confidently identify this species. The classification confidence (${confPct}%) is below the minimum operational threshold.`}
@@ -1521,17 +1512,17 @@ const WildlifeImageUpload = () => {
                               <>
                                 {/* Endangered Species Alert Banner */}
                                 {det.is_endangered && (
-                                  <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5 dark:bg-rose-955/5 flex items-start gap-3 text-xs text-rose-705 dark:text-rose-400">
+                                  <div className="p-4 rounded-xl border border-rose-500/20 bg-rose-500/5 dark:bg-rose-950/5 flex items-start gap-3 text-xs text-rose-700 dark:text-rose-400">
                                     <AlertCircle className="h-5 w-5 shrink-0 text-rose-500 mt-0.5" />
                                     <div className="space-y-1">
-                                      <span className="font-extrabold uppercase tracking-wider text-[10px] text-rose-650 dark:text-rose-350">
+                                      <span className="font-extrabold uppercase tracking-wider text-[10px] text-rose-600 dark:text-rose-300">
                                         ⚠️ Conservation Alert — Threatened Species Detected
                                       </span>
-                                      <p className="font-semibold text-slate-700 dark:text-slate-350">
+                                      <p className="font-semibold text-slate-700 dark:text-slate-300">
                                         This animal is classified as <span className="font-bold underline">{profile.iucn_status}</span>. Immediate protection actions are recommended.
                                       </p>
                                       <div className="pt-1.5 flex flex-wrap gap-4 text-3xs font-bold text-slate-500 dark:text-slate-400">
-                                        <span>Priority Level: <span className="text-rose-600 dark:text-rose-455">{profile.iucn_status === 'Critically Endangered' ? 'High Priority (Critical)' : (profile.iucn_status === 'Endangered' ? 'High Priority' : 'Medium-High Priority')}</span></span>
+                                        <span>Priority Level: <span className="text-rose-600 dark:text-rose-400">{profile.iucn_status === 'Critically Endangered' ? 'High Priority (Critical)' : (profile.iucn_status === 'Endangered' ? 'High Priority' : 'Medium-High Priority')}</span></span>
                                         <span>Recommended Actions: Enable continuous camera surveillance & restrict zone entry.</span>
                                       </div>
                                     </div>
@@ -1544,13 +1535,13 @@ const WildlifeImageUpload = () => {
                                   {/* Classification column */}
                                   <div className="space-y-4 md:col-span-2">
                                     {det.is_likely && (
-                                      <div className="p-4 rounded-xl border border-orange-500/20 bg-orange-500/5 dark:bg-orange-955/5 flex items-start gap-3 text-xs text-orange-700 dark:text-orange-400 mb-4">
+                                      <div className="p-4 rounded-xl border border-orange-500/20 bg-orange-500/5 dark:bg-orange-950/5 flex items-start gap-3 text-xs text-orange-700 dark:text-orange-400 mb-4">
                                         <AlertTriangle className="h-5 w-5 shrink-0 text-orange-500 mt-0.5" />
                                         <div className="space-y-1 font-sans">
-                                          <span className="font-extrabold uppercase tracking-wider text-[10px] text-orange-600 dark:text-orange-350">
+                                          <span className="font-extrabold uppercase tracking-wider text-[10px] text-orange-600 dark:text-orange-300">
                                             ⚠️ Likely Species — Low Confidence Prediction
                                           </span>
-                                          <p className="font-semibold text-slate-700 dark:text-slate-350">
+                                          <p className="font-semibold text-slate-700 dark:text-slate-300">
                                             Low confidence prediction. Manual verification is recommended.
                                           </p>
                                         </div>
@@ -1559,10 +1550,10 @@ const WildlifeImageUpload = () => {
                                     <div>
                                       {det.is_possible_species ? (
                                         <div className="mb-2">
-                                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-955/20 dark:text-amber-400 text-5xs font-black uppercase tracking-wider">
+                                          <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded border border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-400 text-5xs font-black uppercase tracking-wider">
                                             Possible Species ( Felidae Ambiguity )
                                           </span>
-                                          <div className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-350 space-y-1.5">
+                                          <div className="mt-2 text-xs font-semibold text-slate-700 dark:text-slate-300 space-y-1.5">
                                             <p className="text-3xs text-slate-500 font-medium">Candidate List (close confidence predictions):</p>
                                             <div className="flex flex-wrap gap-2">
                                               {det.candidates.map((c, cIdx) => (
@@ -1574,11 +1565,11 @@ const WildlifeImageUpload = () => {
                                           </div>
                                         </div>
                                       ) : det.is_likely ? (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded border border-orange-300 bg-orange-50 text-orange-800 dark:border-orange-900/40 dark:bg-orange-955/20 dark:text-orange-400 text-5xs font-black uppercase tracking-wider mb-2">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded border border-orange-300 bg-orange-50 text-orange-800 dark:border-orange-900/40 dark:bg-orange-950/20 dark:text-orange-400 text-5xs font-black uppercase tracking-wider mb-2">
                                           Likely Species
                                         </span>
                                       ) : (
-                                        <span className="inline-flex items-center px-2 py-0.5 rounded border border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-955/20 dark:text-emerald-400 text-5xs font-black uppercase tracking-wider mb-2">
+                                        <span className="inline-flex items-center px-2 py-0.5 rounded border border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20 dark:text-emerald-400 text-5xs font-black uppercase tracking-wider mb-2">
                                           Confirmed Species
                                         </span>
                                       )}
@@ -1608,7 +1599,7 @@ const WildlifeImageUpload = () => {
                                     {profile.description && (
                                     <div className="space-y-1">
                                       <span className="block text-xs sm:text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 font-extrabold">Description</span>
-                                      <p className="text-xs text-slate-655 dark:text-slate-350 leading-relaxed font-semibold">
+                                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-semibold">
                                         {profile.description}
                                       </p>
                                     </div>
@@ -1620,7 +1611,7 @@ const WildlifeImageUpload = () => {
                                     <h4 className="block text-xs sm:text-sm uppercase tracking-wider text-slate-800 dark:text-slate-200 font-extrabold mb-2.5">
                                       Sighting Metadata & Taxonomy
                                     </h4>
-                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 text-[10px] font-semibold text-slate-750 dark:text-slate-400">
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3 text-[10px] font-semibold text-slate-700 dark:text-slate-400">
                                       <div>
                                         <span className="text-slate-400 font-medium uppercase text-[9px] block mb-0.5">Kingdom</span>
                                         <p className="text-3xs text-slate-900 dark:text-white font-extrabold">{tax.kingdom || "Animalia"}</p>
@@ -1701,13 +1692,13 @@ const WildlifeImageUpload = () => {
             <div className="pt-6 flex flex-wrap justify-center gap-3.5 border-t border-slate-100 dark:border-slate-800 mt-6 w-full">
               <button
                 onClick={() => { setSuccess(false); setUploadedAsset(null); }}
-                className="px-4 py-2.5 rounded-xl border border-slate-205 dark:border-slate-800 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-350 focus:outline-none transition-all shadow-sm"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white hover:bg-slate-50 dark:bg-slate-950 dark:hover:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-300 focus:outline-none transition-all shadow-sm"
               >
                 Upload Another Image
               </button>
               <Link
                 to="/observations"
-                className="px-4 py-2.5 rounded-xl border border-slate-250 dark:border-slate-800 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center"
+                className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center"
               >
                 View Observation
               </Link>
@@ -1737,7 +1728,7 @@ const WildlifeImageUpload = () => {
             
             <div className="space-y-3 pt-2">
               <div>
-                <label className="block text-4xs uppercase tracking-wider text-slate-505 font-bold mb-1">
+                <label className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">
                   Taxonomic Common Name
                 </label>
                 <input
@@ -1751,7 +1742,7 @@ const WildlifeImageUpload = () => {
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-4xs uppercase tracking-wider text-slate-505 font-bold mb-1">
+                  <label className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">
                     Sighted Count
                   </label>
                   <input
@@ -1763,20 +1754,20 @@ const WildlifeImageUpload = () => {
                   />
                 </div>
                 <div>
-                  <label className="block text-4xs uppercase tracking-wider text-slate-505 font-bold mb-1">
+                  <label className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">
                     Sighting Type
                   </label>
                   <input
                     type="text"
                     disabled
                     value="Visual Sighting"
-                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-955 px-3 py-2 text-xs w-full text-slate-500 cursor-not-allowed"
+                    className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 px-3 py-2 text-xs w-full text-slate-500 cursor-not-allowed"
                   />
                 </div>
               </div>
               
               <div>
-                <label className="block text-4xs uppercase tracking-wider text-slate-505 font-bold mb-1">
+                <label className="block text-4xs uppercase tracking-wider text-slate-500 font-bold mb-1">
                   Field Investigator Remarks
                 </label>
                 <textarea
@@ -1800,7 +1791,7 @@ const WildlifeImageUpload = () => {
                 type="button"
                 onClick={handleSaveManualObs}
                 disabled={manualObsSaving}
-                className="px-4 py-2 rounded-xl bg-rose-605 hover:bg-rose-500 text-white font-bold transition-all focus:outline-none disabled:opacity-40"
+                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold transition-all focus:outline-none disabled:opacity-40"
               >
                 {manualObsSaving ? "Logging..." : "Log Sighting"}
               </button>

@@ -40,6 +40,19 @@ class ExecutiveActivityPoint(BaseModel):
     action: str
 
 class ExecutiveMapPin(BaseModel):
+    id: Optional[int] = None
+    name: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     lat: float
     lng: float
     popup: str
+    type: Optional[str] = "site"
+    site_name: Optional[str] = None
+    survey_name: Optional[str] = None
+    habitat_type: Optional[str] = None
+    latest_detection: Optional[str] = None
+    observation_count: Optional[int] = None
+    last_updated: Optional[str] = None
+    boundary: Optional[List[List[float]]] = None
+
