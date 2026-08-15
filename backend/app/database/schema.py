@@ -19,6 +19,7 @@ UPLOAD_COLUMNS = {
     "ai_summary": "TEXT",
     "animal_call_detected": "BOOLEAN DEFAULT FALSE",
     "animal_call_category": "VARCHAR(100)",
+    "annotated_filepath": "VARCHAR(500)",
 }
 PREDICTION_COLUMNS = {
     "behaviour": "TEXT",

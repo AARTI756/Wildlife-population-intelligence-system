@@ -9,17 +9,17 @@ const EcosystemHealthCard = ({ healthData }) => {
   const getColorClass = (statusName) => {
     switch (statusName) {
       case 'Excellent':
-        return { text: 'text-emerald-500', bg: 'bg-emerald-500/10', border: 'border-emerald-500', stroke: '#10b981' };
+        return { text: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-250', border: 'border-emerald-500', stroke: '#047857' };
       case 'Healthy':
-        return { text: 'text-blue-500', bg: 'bg-blue-500/10', border: 'border-blue-500', stroke: '#3b82f6' };
+        return { text: 'text-emerald-500', bg: 'bg-emerald-50 border-emerald-200', border: 'border-emerald-500', stroke: '#10b981' };
       case 'Moderate Concern':
-        return { text: 'text-amber-500', bg: 'bg-amber-500/10', border: 'border-amber-500', stroke: '#f59e0b' };
+        return { text: 'text-amber-500', bg: 'bg-amber-50 border-amber-200', border: 'border-amber-500', stroke: '#f59e0b' };
       case 'Vulnerable':
-        return { text: 'text-red-500', bg: 'bg-red-500/10', border: 'border-red-500', stroke: '#ef4444' };
+        return { text: 'text-orange-500', bg: 'bg-orange-50 border-orange-200', border: 'border-orange-500', stroke: '#f97316' };
       case 'Critical':
-        return { text: 'text-rose-700', bg: 'bg-rose-700/10', border: 'border-rose-700', stroke: '#b91c1c' };
+        return { text: 'text-rose-600', bg: 'bg-rose-50 border-rose-200', border: 'border-rose-600', stroke: '#ef4444' };
       default:
-        return { text: 'text-slate-500', bg: 'bg-slate-500/10', border: 'border-slate-500', stroke: '#64748b' };
+        return { text: 'text-slate-550', bg: 'bg-slate-50 border-slate-200', border: 'border-slate-500', stroke: '#64748b' };
     }
   };
 
@@ -43,9 +43,9 @@ const EcosystemHealthCard = ({ healthData }) => {
   };
 
   return (
-    <div className={`glass-card p-6 border-l-4 ${colors.border} shadow-lg relative flex flex-col justify-between h-full bg-slate-900/40 backdrop-blur-md`}>
+    <div className={`glass-card p-6 border-l-4 ${colors.border} shadow-sm relative flex flex-col justify-between h-full bg-white border border-slate-200 rounded-2xl`}>
       <div>
-        <h3 className="text-md font-extrabold text-slate-100 mb-4 tracking-wide uppercase">Ecosystem Health</h3>
+        <h3 className="text-xs font-bold text-slate-400 mb-4 tracking-wider uppercase">Ecosystem Health</h3>
         
         <div className="flex items-center gap-6 mb-6">
           {/* Circular Progress Gauge */}
@@ -55,7 +55,7 @@ const EcosystemHealthCard = ({ healthData }) => {
                 cx="48"
                 cy="48"
                 r={radius}
-                className="stroke-slate-700 fill-none"
+                className="stroke-slate-100 fill-none"
                 strokeWidth="7"
               />
               <circle
@@ -71,16 +71,16 @@ const EcosystemHealthCard = ({ healthData }) => {
               />
             </svg>
             <div className="absolute flex flex-col items-center justify-center">
-              <span className="text-xl font-black text-slate-100 tracking-tighter leading-none">{overall_score}</span>
+              <span className="text-xl font-black text-slate-900 tracking-tighter leading-none">{overall_score}</span>
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">/100</span>
             </div>
           </div>
 
           {/* Rating Info */}
           <div className="space-y-1">
-            <span className="text-4xs uppercase tracking-widest text-slate-400 font-bold">Status Rating</span>
-            <div className={`text-2xl font-black uppercase tracking-tight ${colors.text}`}>{status}</div>
-            <p className="text-5xs text-slate-400 leading-relaxed font-medium">
+            <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold block">Status Rating</span>
+            <div className={`text-xl font-black uppercase tracking-tight ${colors.text}`}>{status}</div>
+            <p className="text-[10px] text-slate-500 leading-relaxed font-semibold">
               Ecosystem suitability index based on multi-sensor telemetry indices.
             </p>
           </div>
@@ -89,17 +89,17 @@ const EcosystemHealthCard = ({ healthData }) => {
 
       {/* Component Breakdown */}
       {component_scores && (
-        <div className="space-y-3 pt-4 border-t border-slate-800">
-          <span className="text-4xs uppercase tracking-widest text-slate-400 font-bold block mb-1">Index Breakdown</span>
+        <div className="space-y-3 pt-4 border-t border-slate-100">
+          <span className="text-[9px] uppercase tracking-widest text-slate-400 font-bold block mb-1">Index Breakdown</span>
           {Object.entries(component_scores).map(([key, value]) => {
-            const compColor = value >= 90 ? 'bg-emerald-500' : (value >= 75 ? 'bg-blue-500' : (value >= 60 ? 'bg-amber-500' : 'bg-rose-600'));
+            const compColor = value >= 90 ? 'bg-emerald-600' : (value >= 75 ? 'bg-emerald-500' : (value >= 60 ? 'bg-amber-500' : 'bg-rose-600'));
             return (
               <div key={key} className="space-y-1">
-                <div className="flex justify-between text-5xs font-bold text-slate-300">
+                <div className="flex justify-between text-[10px] font-bold text-slate-655">
                   <span>{getLabel(key)}</span>
-                  <span>{value}%</span>
+                  <span className="font-extrabold text-slate-900">{value}%</span>
                 </div>
-                <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                   <div className={`h-full ${compColor} rounded-full transition-all duration-500`} style={{ width: `${value}%` }}></div>
                 </div>
               </div>

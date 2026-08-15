@@ -44,11 +44,16 @@ services:
       interval: 15s
       timeout: 10s
       retries: 3
+    volumes:
+      - uploads:/app/uploads
+
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_GOOGLE_CLIENT_ID=251145097240-g3h8t0l6ii219nhkv99mvgju6qo9c3ug.apps.googleusercontent.com
     container_name: wpis-frontend
     ports:
       - "80:80"
@@ -57,3 +62,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:

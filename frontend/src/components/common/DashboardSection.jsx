@@ -12,11 +12,11 @@ const DashboardSection = ({
       {title && (
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
+            <h2 className="text-base font-extrabold text-slate-900">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-2xs text-slate-500 dark:text-slate-405 mt-0.5 font-semibold">
+              <p className="text-2xs text-slate-500 mt-0.5 font-semibold">
                 {subtitle}
               </p>
             )}

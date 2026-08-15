@@ -356,6 +356,14 @@ const ObservationHistory = () => {
         )}
       </div>
 
+      {/* Synthetic Dataset Notice */}
+      <div className="flex items-start gap-3 rounded-xl bg-amber-50 border border-amber-200 p-3.5 text-xs text-amber-800">
+        <Info className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+        <span>
+          <strong>Evaluation Dataset:</strong> This database contains a synthetic multi-species evaluation dataset including non-Indian taxa (e.g.&nbsp;Zebra, Kangaroo, Giraffe). Analytical engines filter and standardise toward Indian wildlife taxa. Individual observation logs are shown as-is for completeness.
+        </span>
+      </div>
+
       {error && (
         <div className="flex items-center gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/35 p-4 text-sm text-rose-600 dark:text-rose-455">
           <Info className="h-5 w-5 shrink-0" />

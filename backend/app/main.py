@@ -35,6 +35,15 @@ def verify_and_seed_database():
         db.close()
         return
 
+    # 2b. Idempotent schema migrations — add new columns to existing tables
+    # safe to run every startup; ALTER TABLE errors if column exists are caught silently.
+    try:
+        db.execute(text("ALTER TABLE notifications ADD COLUMN IF NOT EXISTS target_roles JSON"))
+        db.commit()
+        print("LOG: Notification target_roles column ensured.")
+    except Exception:
+        db.rollback()  # Column already exists or unsupported — harmless
+
     # 3. Seed Roles and Users
     try:
         # Seeding Roles
@@ -98,15 +107,51 @@ def verify_and_seed_database():
             db.commit()
             print(f"LOG: Updated user 'researcher' password to default '{default_pwd}'")
             
+        # Conservation Officer demo user
+        officer_user = db.query(User).filter(User.username == "officer").first()
+        if not officer_user:
+            officer_user = User(
+                username="officer",
+                email="officer@wildlife.org",
+                hashed_password=get_password_hash(default_pwd)
+            )
+            officer_user.roles.append(role_objs["Conservation Officer"])
+            db.add(officer_user)
+            db.commit()
+            print(f"LOG: Seeded user 'officer' (Conservation Officer, Password: {default_pwd})")
+            seeded_any = True
+        else:
+            officer_user.hashed_password = get_password_hash(default_pwd)
+            db.commit()
+            print(f"LOG: Updated user 'officer' password to default '{default_pwd}'")
+
+        # Forest Department Officer demo user
+        forester_user = db.query(User).filter(User.username == "forester").first()
+        if not forester_user:
+            forester_user = User(
+                username="forester",
+                email="forester@wildlife.org",
+                hashed_password=get_password_hash(default_pwd)
+            )
+            forester_user.roles.append(role_objs["Forest Department Officer"])
+            db.add(forester_user)
+            db.commit()
+            print(f"LOG: Seeded user 'forester' (Forest Department Officer, Password: {default_pwd})")
+            seeded_any = True
+        else:
+            forester_user.hashed_password = get_password_hash(default_pwd)
+            db.commit()
+            print(f"LOG: Updated user 'forester' password to default '{default_pwd}'")
+
         if seeded_any:
             print("LOG: Database seeding completed successfully.")
         else:
             print("LOG: Database seeding skipped (Default data already seeded).")
-            
+
         # 4. Seed Species Profiles
         from app.models.species import SpeciesProfile
         from app.utils.species_data import SPECIES_SEED_DATA
-        
+
         species_count = db.query(SpeciesProfile).count()
         if species_count == 0:
             print("LOG: Seeding Species Profiles...")
@@ -118,7 +163,22 @@ def verify_and_seed_database():
         else:
             print(f"LOG: Species profiles already seeded. Total: {species_count}")
 
-        # 5. Report Number of Users Created
+        # 5. Auto-seed demo monitoring/survey/observation data if DB is empty
+        from app.models.monitoring import MonitoringSite
+        from app.utils.demo_generator import seed_demo_data
+        sites_count = db.query(MonitoringSite).count()
+        if sites_count == 0:
+            print("LOG: No monitoring sites found — auto-seeding demo dataset...")
+            try:
+                admin_id = db.query(User).filter(User.username == "admin").first().id
+                seed_demo_data(db, admin_id)
+                print("LOG: Demo dataset auto-seeded successfully.")
+            except Exception as seed_err:
+                print(f"WARNING: Demo dataset auto-seed failed: {seed_err}")
+        else:
+            print(f"LOG: Demo dataset already present ({sites_count} monitoring sites).")
+
+        # 6. Report Number of Users Created
         user_count = db.query(User).count()
         print(f"LOG: Total registered users in database: {user_count}")
         print("--------------------------------------------------")
@@ -186,6 +246,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        # Local development (Vite dev server)
         "http://localhost:3000",
         "http://localhost:3001",
         "http://localhost:5173",
@@ -193,6 +254,11 @@ app.add_middleware(
         "http://localhost:5175",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        # Docker / production deployment (nginx on port 80)
+        "http://localhost",
+        "http://localhost:80",
+        "http://127.0.0.1",
+        "http://127.0.0.1:80",
     ],
     allow_credentials=True,
     allow_methods=["*"],

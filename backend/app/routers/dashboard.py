@@ -11,10 +11,19 @@ router = APIRouter(prefix="/api/dashboard", tags=["dashboard"])
 
 @router.get("/stats")
 def get_dashboard_stats(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    from datetime import datetime, date, time
-    
+    from datetime import datetime, date, time, timedelta, timezone
+
     from app.models.prediction_history import PredictionHistory
-    
+
+    # India Standard Time = UTC+05:30
+    # Observation timestamps are stored as naive UTC datetimes (default=datetime.utcnow).
+    # To correctly count "today's" observations for Indian users, we compute the
+    # start-of-day boundary in IST and convert it back to naive UTC for comparison.
+    IST = timezone(timedelta(hours=5, minutes=30))
+    now_ist = datetime.now(timezone.utc).astimezone(IST)
+    today_start_ist = datetime.combine(now_ist.date(), time.min).replace(tzinfo=IST)
+    today_start_utc = today_start_ist.astimezone(timezone.utc).replace(tzinfo=None)
+
     total_surveys = db.query(Survey).count()
     total_sites = db.query(MonitoringSite).count()
     total_camera_traps = db.query(CameraTrap).count()
@@ -42,10 +51,9 @@ def get_dashboard_stats(db: Session = Depends(get_db), current_user: User = Depe
         (Observation.is_unknown == False) | (Observation.is_unknown.is_(None))
     ).distinct().count()
     
-    # 3. Today's Observations (observations logged since start of today in UTC)
-    today_start = datetime.combine(date.today(), time.min)
+    # 3. Today's Observations — uses IST day boundaries (UTC+05:30)
     todays_observations = db.query(Observation).filter(
-        Observation.timestamp >= today_start,
+        Observation.timestamp >= today_start_utc,
         Observation.species_name != "Unknown Species",
         (Observation.is_unknown == False) | (Observation.is_unknown.is_(None))
     ).count()
@@ -89,21 +97,22 @@ def get_dashboard_stats(db: Session = Depends(get_db), current_user: User = Depe
             "created_by": obs.created_by
         })
         
-    # Calculate weekly observations chart data dynamically
-    from datetime import timedelta
+    # Calculate weekly observations chart data using IST day boundaries
     chart_data = []
     for i in range(6, -1, -1):
-        day = date.today() - timedelta(days=i)
-        day_start = datetime.combine(day, time.min)
-        day_end = datetime.combine(day, time.max)
+        ist_day = now_ist.date() - timedelta(days=i)
+        day_start_ist = datetime.combine(ist_day, time.min).replace(tzinfo=IST)
+        day_end_ist   = datetime.combine(ist_day, time.max).replace(tzinfo=IST)
+        day_start_utc = day_start_ist.astimezone(timezone.utc).replace(tzinfo=None)
+        day_end_utc   = day_end_ist.astimezone(timezone.utc).replace(tzinfo=None)
         count = db.query(Observation).filter(
-            Observation.timestamp >= day_start,
-            Observation.timestamp <= day_end,
+            Observation.timestamp >= day_start_utc,
+            Observation.timestamp <= day_end_utc,
             Observation.species_name != "Unknown Species",
             (Observation.is_unknown == False) | (Observation.is_unknown.is_(None))
         ).count()
         chart_data.append({
-            "name": day.strftime("%a"),
+            "name": ist_day.strftime("%a"),
             "count": count
         })
         

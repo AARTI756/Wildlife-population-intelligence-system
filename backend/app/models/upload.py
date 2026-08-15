@@ -11,6 +11,7 @@ class UploadedImage(Base):
     monitoring_site_id = Column(Integer, ForeignKey("monitoring_sites.id", ondelete="CASCADE"), nullable=True)
     filename = Column(String(255), nullable=False)
     filepath = Column(String(500), nullable=False)
+    annotated_filepath = Column(String(500), nullable=True)
     uploader_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     uploaded_at = Column(DateTime, default=datetime.utcnow)
     status = Column(String(50), default="Pending Analysis")

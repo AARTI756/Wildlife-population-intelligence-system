@@ -39,6 +39,7 @@ class SiteSuitabilityPoint(BaseModel):
     quality_score: float
     human_disturbance: float
     protected_area: bool
+    species_count: int
 
 class TimelineEvent(BaseModel):
     id: str

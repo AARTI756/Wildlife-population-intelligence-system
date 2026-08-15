@@ -45,8 +45,11 @@ async def upload_image(
         )
     
     # Create safe unique filename
-    unique_filename = f"{uuid.uuid4()}{ext}"
-    filepath = os.path.join(IMAGES_DIR, unique_filename)
+    unique_id = uuid.uuid4()
+    original_filename = f"{unique_id}_original{ext}"
+    annotated_filename = f"{unique_id}_annotated{ext}"
+    filepath = os.path.join(IMAGES_DIR, original_filename)
+    annotated_filepath = os.path.join(IMAGES_DIR, annotated_filename)
     
     # Save file to disk
     try:
@@ -61,13 +64,15 @@ async def upload_image(
     
     # Save metadata to DB
     # We will store filepath relative to the server so it can be served/accessed
-    db_filepath = f"/uploads/images/{unique_filename}"
+    db_filepath = f"/uploads/images/{original_filename}"
+    db_annotated_filepath = f"/uploads/images/{annotated_filename}"
     
     db_image = UploadedImage(
         survey_id=survey_id,
         monitoring_site_id=monitoring_site_id,
         filename=file.filename,
         filepath=db_filepath,
+        annotated_filepath=db_annotated_filepath,
         uploader_id=current_user.id,
         status="Pending Analysis",
         uploaded_at=datetime.utcnow()
@@ -87,7 +92,7 @@ async def upload_image(
     try:
         # Clean up old records for this image (avoid duplicate entries on retry)
         db.query(Observation).filter(Observation.uploaded_image_id == db_image.id).delete()
-        db.query(PredictionHistory).filter(PredictionHistory.stored_filename == unique_filename).delete()
+        db.query(PredictionHistory).filter(PredictionHistory.stored_filename == annotated_filename).delete()
         db.commit()
 
         # Import shared species resolver and new services
@@ -104,7 +109,7 @@ async def upload_image(
 
         start_time = time.time()
         # Single inference call with LOW threshold to capture all possible detections.
-        raw_detections = yolo_service.run_inference(filepath, conf_threshold=0.10)
+        raw_detections = yolo_service.run_inference(filepath, conf_threshold=0.10, save_annotated_path=annotated_filepath)
         inference_time_ms = (time.time() - start_time) * 1000
         
         # Process and map detections
@@ -285,7 +290,7 @@ async def upload_image(
             
             pred_hist = PredictionHistory(
                 original_filename=file.filename,
-                stored_filename=unique_filename,
+                stored_filename=annotated_filename,
                 species_predicted="Unknown Species" if is_unk else species_name,
                 confidence=confidence,
                 inference_time=inference_time_ms,
@@ -369,7 +374,7 @@ async def upload_image(
         # Generate wildlife report
         monitoring_report = generate_wildlife_monitoring_report(
             filename=file.filename,
-            stored_filename=unique_filename,
+            stored_filename=annotated_filename,
             detections=mapped_detections,
             biodiversity_metrics=biodiversity_metrics,
             image_quality=image_quality,

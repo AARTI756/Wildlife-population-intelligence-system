@@ -2,7 +2,7 @@ import os
 import time
 import logging
 import cv2
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from ultralytics import YOLO
 
 # Setup logging
@@ -48,7 +48,7 @@ class YOLOService:
             print(f"  Class Names: {self._model.names}")
             print("==================================================")
 
-    def run_inference(self, image_path: str, conf_threshold: float = 0.10) -> List[Dict[str, Any]]:
+    def run_inference(self, image_path: str, conf_threshold: float = 0.10, save_annotated_path: Optional[str] = None) -> List[Dict[str, Any]]:
         self.initialize()
         
         if not os.path.exists(image_path):
@@ -113,15 +113,13 @@ class YOLOService:
         print("==================================================")
         
         # Draw annotations directly from raw output before database lookup
-        if len(filtered_detections) > 0:
-            self.draw_annotations(image_path, filtered_detections)
+        # If save_annotated_path is provided, we ALWAYS call draw_annotations to ensure the annotated file is saved
+        if len(filtered_detections) > 0 or save_annotated_path:
+            self.draw_annotations(image_path, filtered_detections, save_path=save_annotated_path)
             
         return filtered_detections
 
-    def draw_annotations(self, image_path: str, detections: List[Dict[str, Any]]):
-        if not detections:
-            return
-
+    def draw_annotations(self, image_path: str, detections: List[Dict[str, Any]], save_path: Optional[str] = None):
         image = cv2.imread(image_path)
         if image is None:
             logger.error(f"Failed to read image for drawing annotations: {image_path}")
@@ -143,8 +141,9 @@ class YOLOService:
             cv2.rectangle(image, (x1, label_y - 18), (x1 + w + 4, label_y + 2), (129, 185, 16), -1)
             cv2.putText(image, label, (x1 + 2, label_y - 4), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (255, 255, 255), 1, cv2.LINE_AA)
             
-        cv2.imwrite(image_path, image)
-        logger.info(f"Annotated image saved at: {image_path}")
+        out_path = save_path if save_path else image_path
+        cv2.imwrite(out_path, image)
+        logger.info(f"Annotated image saved at: {out_path}")
 
 # Initialize singleton instance
 yolo_service = YOLOService()

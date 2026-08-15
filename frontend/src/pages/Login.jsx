@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../hooks/useTheme';
 import { 
   ShieldCheck, 
   Compass, 
@@ -11,9 +10,7 @@ import {
   Eye, 
   EyeOff, 
   Lock, 
-  User, 
-  Sun, 
-  Moon 
+  User
 } from 'lucide-react';
 
 const extractErrorMessage = (err) => {
@@ -48,7 +45,6 @@ const Login = () => {
   const [selectedGoogleRole, setSelectedGoogleRole] = useState('Wildlife Researcher');
   
   const { login, googleLogin } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -119,16 +115,7 @@ const Login = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-white dark:bg-slate-950 transition-colors duration-300">
-      {/* Theme toggle on auth page */}
-      <div className="absolute top-6 right-6 z-30">
-        <button
-          onClick={toggleTheme}
-          className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:scale-105 transition-all"
-        >
-          {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </button>
-      </div>
+    <div className="flex min-h-screen bg-white">
 
       {/* Left: Wildlife Hero Section */}
       <div className="relative hidden w-1/2 lg:flex flex-col justify-between p-12 overflow-hidden bg-cover bg-center select-none"
@@ -287,7 +274,7 @@ const Login = () => {
                 onSuccess={handleGoogleSuccess}
                 onError={handleGoogleError}
                 useOneTap
-                theme={theme === 'dark' ? 'filled_blue' : 'outline'}
+                theme="outline"
                 shape="pill"
                 size="large"
               />

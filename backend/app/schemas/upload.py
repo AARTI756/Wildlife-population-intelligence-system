@@ -7,6 +7,7 @@ class UploadedImageBase(BaseModel):
     monitoring_site_id: Optional[int] = None
     filename: str
     filepath: str
+    annotated_filepath: Optional[str] = None
     status: Optional[str] = "Pending Analysis"
 
 class UploadedImageCreate(UploadedImageBase):

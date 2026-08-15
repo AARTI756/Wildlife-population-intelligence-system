@@ -38,12 +38,34 @@ def _get_species_profile_map(db) -> Dict[str, dict]:
         result = {}
         for p in profiles:
             entry = {
-                "common_name": p.common_name.strip(),
+                "common_name": (p.common_name or "").strip(),
                 "iucn_status": (p.iucn_status or "Least Concern").strip(),
                 "class_name": (p.class_name or "Unknown"),
             }
-            result[p.common_name.strip().lower()] = entry
-            result[p.scientific_name.strip().lower()] = entry
+            if p.common_name:
+                result[p.common_name.strip().lower()] = entry
+            if p.scientific_name:
+                result[p.scientific_name.strip().lower()] = entry
+                
+        # Indian deployment species alias/variant mapping
+        aliases = {
+            "one-horned rhinoceros": "indian rhinoceros",
+            "one horned rhinoceros": "indian rhinoceros",
+            "tiger": "bengal tiger",
+            "lion": "asiatic lion",
+            "leopard": "indian leopard",
+            "elephant": "asian elephant",
+            "indian elephant": "asian elephant",
+            "carrion crow": "house crow",
+            "crow": "house crow",
+            "koel": "asian koel",
+            "red tailed hawk": "red-tailed hawk",
+            "hawk": "red-tailed hawk",
+        }
+        for alias, canonical in aliases.items():
+            if canonical in result:
+                result[alias] = result[canonical]
+                
         return result
     except Exception:
         return {}
@@ -80,7 +102,7 @@ def _compute_species_diversity_score(db, **filters) -> tuple[float, str, float]:
     observations = q.all()
 
     if not observations:
-        return 72.0, "2.10 H'", 8.0
+        return 0.0, "0.00 H'", 0.0
 
     # Count species occurrences
     species_counts: Counter = Counter()
@@ -213,7 +235,7 @@ def _compute_endangered_species_score(db, **filters) -> tuple[float, str, int]:
     profile_map = _get_species_profile_map(db)
 
     if not observations:
-        return 88.0, "Stable", 0
+        return 0.0, "No Data", 0
 
     species_seen: set = set()
     threatened_seen: set = set()
@@ -475,13 +497,7 @@ def get_health_distribution(db, **filters) -> List[Dict[str, Any]]:
     """
     sites = db.query(MonitoringSite).all()
     if not sites:
-        return [
-            {"sector": "Core North",   "score": 85},
-            {"sector": "Core West",    "score": 82},
-            {"sector": "Buffer East",  "score": 72},
-            {"sector": "Buffer South", "score": 65},
-            {"sector": "Corridor A",   "score": 78},
-        ]
+        return []
 
     results = []
     for site in sites:
@@ -520,10 +536,7 @@ def get_health_comparison(db, **filters) -> List[Dict[str, Any]]:
     sites = db.query(MonitoringSite).all()
 
     if not sites:
-        return [
-            {"category": "Protected Reserve", "averageScore": 84},
-            {"category": "Standard Forest",   "averageScore": 64},
-        ]
+        return []
 
     prot_scores, std_scores = [], []
     for site in sites:
@@ -647,32 +660,5 @@ def get_health_alerts(db, **filters) -> List[Dict[str, Any]]:
                     "severity": "Warning",
                 })
                 alert_id += 1
-
-    # --- Guaranteed baseline alerts if none triggered ---
-    if not alerts:
-        alerts = [
-            {
-                "id": "alert-1",
-                "date": today,
-                "area": "Buffer South Sector",
-                "indicator": "Habitat Quality",
-                "message": (
-                    "Feral grazing patterns logged. Invasive weed spread threatens "
-                    "grassland canopy integrity."
-                ),
-                "severity": "Warning",
-            },
-            {
-                "id": "alert-2",
-                "date": (datetime.utcnow() - timedelta(days=5)).strftime("%Y-%m-%d"),
-                "area": "Corridor A Migration Path",
-                "indicator": "Population Stability",
-                "message": (
-                    "Encroachment patterns detected near migration corridor. "
-                    "Human-wildlife conflict risk is elevated."
-                ),
-                "severity": "Critical",
-            },
-        ]
 
     return alerts[:8]  # Cap at 8 for UI clarity

@@ -2,40 +2,799 @@ import React, { useEffect, useState, useRef } from 'react';
 import api from '../services/api';
 import EcosystemHealthCard from '../components/common/EcosystemHealthCard';
 import { useAuth } from '../hooks/useAuth';
-import { useTheme } from '../hooks/useTheme';
 import { useNavigate } from 'react-router-dom';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { INDIA_MAP_CENTER, INDIA_MAP_ZOOM, formatIST, localizeSpeciesName, isIndianWildlife, getScientificName } from '../utils/india';
-import { 
+import { INDIA_MAP_CENTER, INDIA_MAP_ZOOM, formatIST, localizeSpeciesName } from '../utils/india';
+import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  Cell, PieChart, Pie
+  Cell, PieChart, Pie, BarChart, Bar
 } from 'recharts';
-import { 
-  ClipboardList, 
-  MapPin, 
-  Camera, 
-  Volume2, 
-  Eye, 
-  Clock, 
-  Loader2, 
-  AlertCircle, 
-  AlertTriangle,
-  Users,
-  Cpu,
-  BrainCircuit,
-  TrendingUp,
-  Shield,
-  ArrowUpRight,
-  Plus,
-  Settings,
-  Upload
+import {
+  ClipboardList, MapPin, Camera, Volume2, Eye, Clock, Loader2,
+  AlertCircle, AlertTriangle, Users, Cpu, BrainCircuit, TrendingUp,
+  Shield, ArrowUpRight, Plus, Settings, Upload, Leaf, Activity,
+  FileText, Download, CheckCircle, Zap, BookOpen, ChevronRight
 } from 'lucide-react';
+
+const PRIORITY_BADGE = {
+  'Critical': 'bg-rose-50 dark:bg-rose-955/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/30',
+  'High': 'bg-orange-50 dark:bg-orange-955/20 text-orange-700 dark:text-orange-400 border-orange-200',
+  'Medium': 'bg-amber-50 dark:bg-amber-955/20 text-amber-700 dark:text-amber-400 border-amber-200',
+  'Low': 'bg-emerald-50 dark:bg-emerald-955/20 text-emerald-700 dark:text-emerald-400 border-emerald-200',
+};
+
+// ─── Shared utility components ─────────────────────────────────────────────────
+
+const SectionHeader = ({ title, subtitle }) => (
+  <div className="mb-4">
+    <h3 className="text-base font-extrabold text-slate-900 dark:text-white">{title}</h3>
+    {subtitle && <p className="text-2xs text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">{subtitle}</p>}
+  </div>
+);
+
+const EmptyState = ({ icon: Icon, title, desc }) => (
+  <div className="flex-1 flex flex-col items-center justify-center py-10 text-center">
+    <Icon className="h-8 w-8 text-slate-300 dark:text-slate-700 mb-2" />
+    <h4 className="text-xs font-bold text-slate-600 dark:text-slate-400">{title}</h4>
+    {desc && <p className="text-4xs text-slate-450 mt-1 max-w-xs font-semibold leading-relaxed">{desc}</p>}
+  </div>
+);
+
+const MetricTile = ({ label, value, color = 'text-slate-900 dark:text-white' }) => (
+  <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/50">
+    <span className="text-4xs uppercase tracking-wider text-slate-500 dark:text-slate-400 font-bold block mb-1">{label}</span>
+    <span className={`text-lg font-black ${color}`}>{value ?? '—'}</span>
+  </div>
+);
+
+const Card = ({ children, className = '' }) => (
+  <div className={`glass-card p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const SummaryCard = ({ title, value, icon: Icon, color, path, onClick }) => (
+  <div
+    onClick={onClick || undefined}
+    className={`glass-card p-5 flex items-center justify-between border-slate-200 dark:border-slate-800 shadow-sm transition-all ${onClick ? 'cursor-pointer hover:border-emerald-500/40' : ''}`}
+  >
+    <div className="space-y-1">
+      <span className="text-2xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">{title}</span>
+      <p className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">{value}</p>
+    </div>
+    <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${color}`}>
+      <Icon className="h-5 w-5" />
+    </div>
+  </div>
+);
+
+// ─── Wildlife Researcher Dashboard ─────────────────────────────────────────────
+
+const ResearcherDashboard = ({ stats, healthData, sites, popSpecies, habitatClass, endangeredSpecies, navigate }) => {
+  const totalAnimals = stats?.total_animal_count || 0;
+
+  const relativeAbundance = (stats?.detection_distribution || []).map(d => ({
+    ...d,
+    pct: totalAnimals > 0 ? ((d.count / totalAnimals) * 100).toFixed(2) : '0.00'
+  })).slice(0, 10);
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <SummaryCard title="Total Observations" value={stats?.total_observations ?? 0} icon={Eye} color="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-955/30 border-emerald-200" onClick={() => navigate('/observations')} />
+        <SummaryCard title="Unique Species" value={stats?.species_count ?? 0} icon={BrainCircuit} color="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200" onClick={() => navigate('/ai/biodiversity')} />
+        <SummaryCard title="Today's Observations" value={stats?.todays_observations ?? 0} icon={Clock} color="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-955/30 border-amber-200" onClick={() => navigate('/observations')} />
+        <SummaryCard title="Unverified Records" value={stats?.unverified_observations ?? 0} icon={AlertTriangle} color="text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-955/30 border-orange-200" onClick={() => navigate('/observations')} />
+      </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <SectionHeader title="Quick Actions" subtitle="Researcher workflow shortcuts" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Log Observation', path: '/observations', icon: Eye },
+            { label: 'Create Survey', path: '/surveys', icon: ClipboardList },
+            { label: 'Upload Image', path: '/ai/image-upload', icon: Upload },
+            { label: 'View Reports', path: '/reports', icon: FileText },
+          ].map(a => {
+            const Icon = a.icon;
+            return (
+              <button key={a.label} onClick={() => navigate(a.path)} className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-all text-left group focus:outline-none">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-emerald-600 transition-colors">{a.label}</p>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Biodiversity Indicators + Health */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <Card>
+            <SectionHeader title="Biodiversity Indicators" subtitle="Calculated from actual observation database" />
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <MetricTile label="Shannon Index (H')" value={stats?.shannon_diversity_index && parseFloat(stats.shannon_diversity_index) > 0 ? parseFloat(stats.shannon_diversity_index).toFixed(3) : 'Insufficient data'} color="text-emerald-700 dark:text-emerald-400" />
+              <MetricTile label="Simpson Index (D)" value={stats?.simpson_diversity_index && parseFloat(stats.simpson_diversity_index) > 0 ? parseFloat(stats.simpson_diversity_index).toFixed(3) : 'Insufficient data'} color="text-blue-700 dark:text-blue-400" />
+              <MetricTile label="Species Richness" value={stats?.species_richness ? `${stats.species_richness} spp` : 'Not available'} color="text-teal-700 dark:text-teal-400" />
+              <MetricTile label="Total Animals" value={totalAnimals > 0 ? totalAnimals.toLocaleString() : 'Not available'} />
+              <MetricTile label="Endangered (obs)" value={stats?.endangered_species_count ?? '—'} color="text-rose-600 dark:text-rose-400" />
+              <MetricTile label="Vulnerable (obs)" value={stats?.vulnerable_species_count ?? '—'} color="text-amber-600 dark:text-amber-400" />
+            </div>
+            <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <span className="text-3xs font-bold text-slate-400 uppercase tracking-wider">For full biodiversity analytics</span>
+              <button onClick={() => navigate('/reports')} className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline">
+                Open Reports Center <ChevronRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </Card>
+        </div>
+        <div className="lg:col-span-1">
+          <EcosystemHealthCard healthData={healthData} />
+        </div>
+      </div>
+
+      {/* Population Analytics Table */}
+      <Card>
+        <SectionHeader title="Population Analytics" subtitle="Species-level estimated population from observation modelling" />
+        {popSpecies.length > 0 ? (
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-400 text-[10px] uppercase tracking-wider font-black border-b border-slate-200 dark:border-slate-800">
+                  <th className="p-3">Species</th>
+                  <th className="p-3">Taxon Class</th>
+                  <th className="p-3">IUCN Status</th>
+                  <th className="p-3 text-right">Observations</th>
+                  <th className="p-3 text-right">Est. Population</th>
+                  <th className="p-3 text-right">Density (ind/km²)</th>
+                  <th className="p-3 text-right">Detection Freq</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {popSpecies.slice(0, 10).map((sp, i) => (
+                  <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                    <td className="p-3 font-bold text-slate-900 dark:text-white">{localizeSpeciesName(sp.species_name)}</td>
+                    <td className="p-3 text-slate-500 dark:text-slate-400">{sp.taxon_class || '—'}</td>
+                    <td className="p-3">
+                      {sp.iucn_status ? (
+                        <span className={`px-1.5 py-0.5 rounded text-5xs font-bold uppercase border ${PRIORITY_BADGE[sp.iucn_status] || 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                          {sp.iucn_status}
+                        </span>
+                      ) : '—'}
+                    </td>
+                    <td className="p-3 text-right font-semibold">{sp.observation_count ?? 0}</td>
+                    <td className="p-3 text-right font-semibold">{sp.estimated_population?.toLocaleString() ?? '—'}</td>
+                    <td className="p-3 text-right font-semibold">{sp.population_density != null ? sp.population_density.toFixed(2) : '—'}</td>
+                    <td className="p-3 text-right font-semibold">{sp.detection_frequency != null ? `${sp.detection_frequency.toFixed(1)}%` : '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState icon={TrendingUp} title="No population data available" desc="Create surveys and log species observations to generate population estimates." />
+        )}
+      </Card>
+
+      {/* Relative Abundance + Observation Chart */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <SectionHeader title="Relative Species Abundance" subtitle="Percentage of total observations per species" />
+          {relativeAbundance.length > 0 ? (
+            <div className="space-y-2.5 mt-2">
+              {relativeAbundance.map((d, i) => (
+                <div key={i} className="space-y-1">
+                  <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <span className="truncate max-w-[180px]">{localizeSpeciesName(d.species)}</span>
+                    <span className="font-bold tabular-nums">{d.pct}%</span>
+                  </div>
+                  <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${d.pct}%` }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState icon={Activity} title="No observation data" desc="Log observations to see relative species abundance." />
+          )}
+        </Card>
+
+        <Card>
+          <SectionHeader title="Weekly Observation Trend" subtitle="Sightings logged per day over the past 7 days" />
+          <div className="h-56 mt-4">
+            {(stats?.chart_data || []).some(d => d.count > 0) ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats.chart_data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="resGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
+                      <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} />
+                  <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#cbd5e1', borderRadius: '12px', fontSize: 12 }} />
+                  <Area type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#resGrad)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            ) : (
+              <EmptyState icon={TrendingUp} title="Awaiting observation data" desc="Submit observations to chart weekly sighting trends." />
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Habitat Insights */}
+      <Card>
+        <SectionHeader title="Habitat Insights" subtitle="Biome classification coverage from monitoring site data" />
+        {habitatClass.length > 0 ? (
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-400 text-[10px] uppercase tracking-wider font-black border-b border-slate-200 dark:border-slate-800">
+                  <th className="p-3">Biome Type</th>
+                  <th className="p-3 text-right">Coverage (%)</th>
+                  <th className="p-3 text-right">Observations</th>
+                  <th className="p-3">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {habitatClass.map((h, i) => (
+                  <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                    <td className="p-3 font-bold text-slate-900 dark:text-white">{h.name || '—'}</td>
+                    <td className="p-3 text-right font-semibold">{h.value != null ? `${h.value.toFixed(1)}%` : '—'}</td>
+                    <td className="p-3 text-right font-semibold">{h.observations ?? 0}</td>
+                    <td className="p-3">
+                      <span className={`px-1.5 py-0.5 rounded text-5xs font-bold uppercase border ${h.value < 5.0 ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-emerald-50 text-emerald-700 border-emerald-250'}`}>
+                        {h.value < 5.0 ? 'Low Coverage' : 'Stable'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState icon={Leaf} title="No habitat data available" desc="Register monitoring sites with habitat information to view biome coverage analysis." />
+        )}
+      </Card>
+
+      {/* Endangered Species Summary */}
+      <Card>
+        <SectionHeader title="Threatened Species Summary" subtitle="Species with IUCN threatened/endangered status observed in surveys" />
+        {endangeredSpecies.length > 0 ? (
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-400 text-[10px] uppercase tracking-wider font-black border-b border-slate-200 dark:border-slate-800">
+                  <th className="p-3">Species</th>
+                  <th className="p-3">IUCN Status</th>
+                  <th className="p-3 text-right">Observations</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {endangeredSpecies.map((e, i) => (
+                  <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                    <td className="p-3 font-bold text-slate-900 dark:text-white">{localizeSpeciesName(e.species_name)}</td>
+                    <td className="p-3">
+                      <span className="px-1.5 py-0.5 rounded text-5xs font-bold uppercase border bg-rose-50 text-rose-700 border-rose-200">
+                        {e.iucn_status}
+                      </span>
+                    </td>
+                    <td className="p-3 text-right font-semibold">{e.observation_count ?? 0}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <EmptyState icon={Shield} title="No threatened species recorded" desc="No species with IUCN threatened status have been logged in the current observation database." />
+        )}
+      </Card>
+    </div>
+  );
+};
+
+// ─── Conservation Officer Dashboard ─────────────────────────────────────────────
+
+const ConservationDashboard = ({ stats, healthData, consActions, consPriorities, navigate }) => (
+  <div className="space-y-6">
+    {/* Summary Cards */}
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <SummaryCard title="Protected Reserves" value={stats?.total_sites ?? 0} icon={MapPin} color="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200" onClick={() => navigate('/sites')} />
+      <SummaryCard title="Active Surveys" value={stats?.total_surveys ?? 0} icon={ClipboardList} color="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-955/30 border-emerald-200" onClick={() => navigate('/surveys')} />
+      <SummaryCard title="Endangered Observations" value={stats?.endangered_species_count ?? 0} icon={AlertTriangle} color="text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-955/30 border-rose-200" />
+      <SummaryCard title="Vulnerable Observations" value={stats?.vulnerable_species_count ?? 0} icon={Shield} color="text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-955/30 border-amber-200" />
+    </div>
+
+    {/* Quick Actions */}
+    <Card>
+      <SectionHeader title="Quick Actions" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Conservation Maps', path: '/sites', icon: MapPin },
+          { label: 'Active Surveys', path: '/surveys', icon: ClipboardList },
+          { label: 'Upload Field Images', path: '/ai/image-upload', icon: Upload },
+          { label: 'Generate Report', path: '/reports', icon: FileText },
+        ].map(a => {
+          const Icon = a.icon;
+          return (
+            <button key={a.label} onClick={() => navigate(a.path)} className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-all text-left group focus:outline-none">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <Icon className="h-5 w-5" />
+              </div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-emerald-600 transition-colors">{a.label}</p>
+            </button>
+          );
+        })}
+      </div>
+    </Card>
+
+    {/* Ecosystem Health + Threat Monitoring */}
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="lg:col-span-1">
+        <EcosystemHealthCard healthData={healthData} />
+      </div>
+      <div className="lg:col-span-2">
+        <Card className="h-full">
+          <SectionHeader title="Threat Monitoring" subtitle="IUCN-flagged species observations and conservation status" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <MetricTile label="Shannon Index (H')" value={stats?.shannon_diversity_index && parseFloat(stats.shannon_diversity_index) > 0 ? parseFloat(stats.shannon_diversity_index).toFixed(3) : 'Insufficient data'} color="text-emerald-700 dark:text-emerald-400" />
+            <MetricTile label="Endangered (ind. observed)" value={stats?.endangered_species_count ?? '—'} color="text-rose-600 dark:text-rose-400" />
+            <MetricTile label="Vulnerable (ind. observed)" value={stats?.vulnerable_species_count ?? '—'} color="text-amber-600 dark:text-amber-400" />
+          </div>
+          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-3xs text-slate-400 font-semibold">
+              Observation counts reflect actual database records filtered by IUCN species profile status.
+              Use the Reports Center to generate full Biodiversity or Conservation PDF/XLSX reports.
+            </p>
+          </div>
+        </Card>
+      </div>
+    </div>
+
+    {/* Conservation Priorities */}
+    <Card>
+      <SectionHeader title="Conservation Priorities" subtitle="Generated from the conservation recommendation engine" />
+      {consPriorities.length > 0 ? (
+        <div className="space-y-3">
+          {consPriorities.slice(0, 6).map((p, i) => (
+            <div key={i} className="flex items-start gap-4 p-3 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/10">
+              <span className={`shrink-0 mt-0.5 px-2 py-0.5 rounded text-5xs font-black uppercase border ${PRIORITY_BADGE[p.priority] || 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                {p.priority || 'Low'}
+              </span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-slate-900 dark:text-white">{p.species_name ? localizeSpeciesName(p.species_name) : (p.site_name || 'Reserve-wide')}</p>
+                <p className="text-3xs text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">{p.recommendation || p.action || '—'}</p>
+              </div>
+              <span className="shrink-0 text-4xs font-bold text-slate-400">{p.timeline || p.completion_time || '—'}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <EmptyState icon={CheckCircle} title="No active conservation priorities" desc="The recommendation engine found no critical conservation priorities in the current dataset." />
+      )}
+    </Card>
+
+    {/* Actionable Recommendations */}
+    <Card>
+      <SectionHeader title="Actionable Restoration Recommendations" subtitle="Engine-generated priority actions derived from observation and habitat data" />
+      {consActions.length > 0 ? (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-400 text-[10px] uppercase tracking-wider font-black border-b border-slate-200 dark:border-slate-800">
+                <th className="p-3">Action</th>
+                <th className="p-3">Priority</th>
+                <th className="p-3">Department</th>
+                <th className="p-3">Est. Cost</th>
+                <th className="p-3">Timeline</th>
+                <th className="p-3">Expected Impact</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {consActions.map((a, i) => (
+                <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                  <td className="p-3 font-bold text-slate-900 dark:text-white max-w-xs">{a.title}</td>
+                  <td className="p-3">
+                    <span className={`px-1.5 py-0.5 rounded text-5xs font-bold uppercase border ${PRIORITY_BADGE[a.priority] || 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                      {a.priority || '—'}
+                    </span>
+                  </td>
+                  <td className="p-3 text-slate-500 dark:text-slate-400 font-semibold">{a.department || 'Forest Dept'}</td>
+                  <td className="p-3 font-semibold text-slate-700 dark:text-slate-300">{a.estimated_cost || '—'}</td>
+                  <td className="p-3 text-slate-500 dark:text-slate-400 font-semibold">{a.completion_time || '—'}</td>
+                  <td className="p-3 text-slate-500 dark:text-slate-400 font-semibold">{a.expected_impact || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <EmptyState icon={Zap} title="No actionable recommendations generated" desc="The conservation engine requires species observations and habitat data to generate recommendations." />
+      )}
+    </Card>
+
+    {/* Species Trend */}
+    <Card>
+      <SectionHeader title="Species Trend Analysis" subtitle="Observation timeline derived from actual survey database records" />
+      {(stats?.detection_timeline || []).length > 0 ? (
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={stats.detection_timeline.map(t => ({ name: t.date, count: t.count }))} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="name" stroke="#94a3b8" fontSize={10} tickLine={false} />
+              <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+              <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#cbd5e1', borderRadius: '12px', fontSize: 12 }} />
+              <Area type="monotone" dataKey="count" stroke="#0ea5e9" fill="#0ea5e9" fillOpacity={0.12} strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      ) : (
+        <EmptyState icon={TrendingUp} title="Insufficient historical trend data" desc="No observation timeline data exists yet. Submit species observations across multiple dates to generate a trend chart." />
+      )}
+    </Card>
+  </div>
+);
+
+// ─── Forest Department Dashboard ─────────────────────────────────────────────────
+
+const ForestDeptDashboard = ({ stats, sites, surveys, notifications, observations, navigate }) => {
+  // Calculate site activity: count observations per monitoring site
+  const siteActivityMap = {};
+  (observations || []).forEach(obs => {
+    const key = obs.monitoring_site_id;
+    if (key != null) siteActivityMap[key] = (siteActivityMap[key] || 0) + 1;
+  });
+
+  const siteRows = (sites || []).map(s => ({
+    ...s,
+    obs_count: siteActivityMap[s.id] || 0
+  })).sort((a, b) => b.obs_count - a.obs_count);
+
+  const criticalAlerts = (notifications || []).filter(n => n.severity === 'Critical' || n.severity === 'Warning');
+
+  return (
+    <div className="space-y-6">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <SummaryCard title="Monitoring Sites" value={stats?.total_sites ?? 0} icon={MapPin} color="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-955/30 border-emerald-200" onClick={() => navigate('/sites')} />
+        <SummaryCard title="Camera Traps" value={stats?.total_camera_traps ?? 0} icon={Camera} color="text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-955/30 border-teal-200" onClick={() => navigate('/camera-traps')} />
+        <SummaryCard title="Audio Sensors" value={stats?.total_audio_sensors ?? 0} icon={Volume2} color="text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-955/30 border-cyan-200" onClick={() => navigate('/audio-sensors')} />
+        <SummaryCard title="Critical Alerts" value={criticalAlerts.length} icon={AlertTriangle} color="text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-955/30 border-rose-200" />
+      </div>
+
+      {/* Quick Actions */}
+      <Card>
+        <SectionHeader title="Quick Actions" />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {[
+            { label: 'Submit Field Log', path: '/observations', icon: Plus },
+            { label: 'Hardware Nodes', path: '/camera-traps', icon: Camera },
+            { label: 'Audio Sensors', path: '/audio-sensors', icon: Volume2 },
+            { label: 'Active Surveys', path: '/surveys', icon: ClipboardList },
+          ].map(a => {
+            const Icon = a.icon;
+            return (
+              <button key={a.label} onClick={() => navigate(a.path)} className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-all text-left group focus:outline-none">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-emerald-600 transition-colors">{a.label}</p>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      {/* Protected Area Monitoring + Patrol Planning */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card>
+          <SectionHeader title="Protected Area Monitoring" subtitle="Monitoring site activity derived from logged observations" />
+          {siteRows.length > 0 ? (
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-400 text-[10px] uppercase tracking-wider font-black border-b border-slate-200 dark:border-slate-800">
+                    <th className="p-3">Site Name</th>
+                    <th className="p-3">Type</th>
+                    <th className="p-3 text-right">Observations</th>
+                    <th className="p-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {siteRows.slice(0, 6).map((s, i) => (
+                    <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                      <td className="p-3 font-bold text-slate-900 dark:text-white">{s.name}</td>
+                      <td className="p-3">
+                        <span className={`px-1.5 py-0.5 rounded text-5xs font-bold uppercase border ${s.protected_area ? 'bg-emerald-50 text-emerald-700 border-emerald-250' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                          {s.protected_area ? 'Protected' : 'Buffer'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right font-semibold">{s.obs_count}</td>
+                      <td className="p-3">
+                        <span className={`px-1.5 py-0.5 rounded text-5xs font-bold uppercase border ${s.obs_count > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-250' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                          {s.obs_count > 0 ? 'Active' : 'Idle'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={MapPin} title="No monitoring sites configured" desc="Register monitoring sites to track protected area activity." />
+          )}
+        </Card>
+
+        <Card>
+          <SectionHeader title="Patrol Beat Planner" subtitle="Beats generated from monitoring site data and active alerts. Note: Patrol schedules are planning-only; not stored in the database." />
+          {siteRows.length > 0 ? (
+            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-400 text-[10px] uppercase tracking-wider font-black border-b border-slate-200 dark:border-slate-800">
+                    <th className="p-3">Patrol Zone</th>
+                    <th className="p-3">Priority</th>
+                    <th className="p-3">Basis</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {siteRows.slice(0, 5).map(s => {
+                    const hasAlert = criticalAlerts.some(n => n.message?.includes(s.name));
+                    const isHighActivity = s.obs_count > 5;
+                    const priority = hasAlert ? 'Critical' : isHighActivity ? 'High' : 'Standard';
+                    const basis = hasAlert ? 'Active alert' : isHighActivity ? `${s.obs_count} observations` : 'Scheduled beat';
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                        <td className="p-3 font-bold text-slate-900 dark:text-white">{s.name}</td>
+                        <td className="p-3">
+                          <span className={`px-1.5 py-0.5 rounded text-5xs font-bold uppercase border ${PRIORITY_BADGE[priority] || 'bg-slate-50 text-slate-600 border-slate-200'}`}>{priority}</span>
+                        </td>
+                        <td className="p-3 text-slate-500 dark:text-slate-400 font-semibold">{basis}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState icon={Cpu} title="No zones configured" desc="Register monitoring sites to generate patrol zone assignments." />
+          )}
+        </Card>
+      </div>
+
+      {/* Wildlife Movement Analysis */}
+      <Card>
+        <SectionHeader title="Wildlife Movement Analysis" subtitle="Observation concentration by monitoring site — Note: True GPS movement trajectories are not available in the current dataset. This shows observation distribution only." />
+        {siteRows.filter(s => s.obs_count > 0).length > 0 ? (
+          <div className="h-52">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={siteRows.filter(s => s.obs_count > 0).slice(0, 10).map(s => ({ name: s.name.length > 12 ? s.name.slice(0, 12) + '…' : s.name, count: s.obs_count }))} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                <XAxis dataKey="name" stroke="#94a3b8" fontSize={9} tickLine={false} />
+                <YAxis stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} />
+                <Tooltip contentStyle={{ backgroundColor: '#fff', borderColor: '#cbd5e1', borderRadius: '12px', fontSize: 12 }} />
+                <Bar dataKey="count" fill="#0f766e" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <EmptyState icon={Activity} title="No site-level observation data" desc="Log observations linked to monitoring sites to see activity concentration by area." />
+        )}
+      </Card>
+
+      {/* Incident Log */}
+      <Card>
+        <SectionHeader title="Incident & Alert Log" subtitle="Active critical and warning notifications from monitoring hardware" />
+        {criticalAlerts.length > 0 ? (
+          <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+            {criticalAlerts.slice(0, 8).map(n => (
+              <div key={n.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/45 flex items-start justify-between gap-3">
+                <div>
+                  <span className="text-4xs font-bold text-slate-400 block">{n.created_at ? new Date(n.created_at).toLocaleString('en-IN') : '—'}</span>
+                  <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">{n.category || 'Alert'}</p>
+                  <p className="text-3xs text-slate-500 dark:text-slate-400 mt-0.5 font-semibold">{n.message}</p>
+                </div>
+                <span className={`shrink-0 text-5xs font-black uppercase px-2 py-0.5 rounded border ${n.severity === 'Critical' ? 'bg-rose-50 border-rose-200 text-rose-700' : 'bg-amber-50 border-amber-200 text-amber-700'}`}>{n.severity}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon={CheckCircle} title="No active incidents" desc="No critical or warning-level incidents are currently logged. The monitoring system is operating normally." />
+        )}
+      </Card>
+    </div>
+  );
+};
+
+// ─── Administrator Dashboard ─────────────────────────────────────────────────────
+
+const AdminDashboard = ({ stats, usersList, reportsHistory, navigate }) => (
+  <div className="space-y-6">
+    {/* Summary Cards */}
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <SummaryCard title="Registered Users" value={usersList.length || stats?.total_users || 0} icon={Users} color="text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-955/30 border-emerald-200" onClick={() => navigate('/users')} />
+      <SummaryCard title="Monitoring Sites" value={stats?.total_sites ?? 0} icon={MapPin} color="text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200" onClick={() => navigate('/sites')} />
+      <SummaryCard title="Camera Traps" value={stats?.total_camera_traps ?? 0} icon={Camera} color="text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-955/30 border-teal-200" onClick={() => navigate('/camera-traps')} />
+      <SummaryCard title="Audio Sensors" value={stats?.total_audio_sensors ?? 0} icon={Volume2} color="text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-955/30 border-cyan-200" onClick={() => navigate('/audio-sensors')} />
+    </div>
+
+    {/* Quick Actions */}
+    <Card>
+      <SectionHeader title="Administration Actions" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {[
+          { label: 'Register Account', path: '/register', icon: Plus },
+          { label: 'Manage User Roles', path: '/users', icon: Shield },
+          { label: 'Add Monitoring Site', path: '/sites', icon: MapPin },
+          { label: 'Configure Settings', path: '/settings', icon: Settings },
+        ].map(a => {
+          const Icon = a.icon;
+          return (
+            <button key={a.label} onClick={() => navigate(a.path)} className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-all text-left group focus:outline-none">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                <Icon className="h-5 w-5" />
+              </div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-emerald-600 transition-colors">{a.label}</p>
+            </button>
+          );
+        })}
+      </div>
+    </Card>
+
+    {/* Platform Analytics Grid */}
+    <Card>
+      <SectionHeader title="Platform Analytics" subtitle="Live database metrics across the entire WPIS deployment" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <MetricTile label="Total Observations" value={stats?.total_observations?.toLocaleString() ?? '—'} color="text-emerald-700 dark:text-emerald-400" />
+        <MetricTile label="Unique Species" value={stats?.species_count ?? '—'} color="text-blue-700 dark:text-blue-400" />
+        <MetricTile label="Total Surveys" value={stats?.total_surveys ?? '—'} />
+        <MetricTile label="Unverified Records" value={stats?.unverified_observations ?? '—'} color="text-amber-600 dark:text-amber-400" />
+        <MetricTile label="Uploaded Images" value={stats?.total_uploaded_images ?? '—'} />
+        <MetricTile label="Uploaded Audio" value={stats?.total_uploaded_audio ?? '—'} />
+        <MetricTile label="AI Img Predictions" value={stats?.ai_image_predictions ?? '—'} />
+        <MetricTile label="AI Audio Predictions" value={stats?.ai_audio_predictions ?? '—'} />
+      </div>
+    </Card>
+
+    {/* User Management */}
+    <Card>
+      <SectionHeader title="User Management" subtitle="All registered system accounts — Administrator access only" />
+      {usersList.length > 0 ? (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-400 text-[10px] uppercase tracking-wider font-black border-b border-slate-200 dark:border-slate-800">
+                <th className="p-3">Username</th>
+                <th className="p-3">Email</th>
+                <th className="p-3">Role(s)</th>
+                <th className="p-3">Status</th>
+                <th className="p-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {usersList.map(u => (
+                <tr key={u.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                  <td className="p-3 font-bold text-slate-900 dark:text-white">{u.username}</td>
+                  <td className="p-3 text-slate-500 dark:text-slate-400 font-semibold">{u.email}</td>
+                  <td className="p-3">
+                    <div className="flex flex-wrap gap-1">
+                      {(u.roles || []).map(r => (
+                        <span key={r.id} className="px-1.5 py-0.5 rounded text-5xs font-bold uppercase border bg-blue-50 text-blue-700 border-blue-200">
+                          {r.name}
+                        </span>
+                      ))}
+                      {(!u.roles || u.roles.length === 0) && <span className="text-slate-400">—</span>}
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <span className={`px-1.5 py-0.5 rounded text-5xs font-bold uppercase border ${u.status === 'active' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
+                      {u.status || 'active'}
+                    </span>
+                  </td>
+                  <td className="p-3 text-right">
+                    <button onClick={() => navigate('/users')} className="text-emerald-600 dark:text-emerald-400 text-3xs font-bold hover:underline flex items-center gap-0.5 ml-auto">
+                      Manage <ChevronRight className="h-3 w-3" />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <EmptyState icon={Users} title="No user records loaded" desc="User management requires Administrator access. If you are an Administrator and see this, check API connectivity." />
+      )}
+    </Card>
+
+    {/* Monitoring System Management */}
+    <Card>
+      <SectionHeader title="Monitoring System Management" subtitle="Direct access to hardware nodes and survey management" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+        {[
+          { label: 'Camera Traps', count: stats?.total_camera_traps ?? 0, path: '/camera-traps', icon: Camera, active: stats?.active_camera_traps ?? 0 },
+          { label: 'Audio Sensors', count: stats?.total_audio_sensors ?? 0, path: '/audio-sensors', icon: Volume2, active: stats?.active_audio_sensors ?? 0 },
+          { label: 'Surveys', count: stats?.total_surveys ?? 0, path: '/surveys', icon: ClipboardList, active: null },
+          { label: 'Monitoring Sites', count: stats?.total_sites ?? 0, path: '/sites', icon: MapPin, active: null },
+          { label: 'Observations', count: stats?.total_observations ?? 0, path: '/observations', icon: Eye, active: null },
+          { label: 'Reports Center', count: reportsHistory.length, path: '/reports', icon: FileText, active: null },
+        ].map(item => {
+          const Icon = item.icon;
+          return (
+            <div key={item.label} onClick={() => navigate(item.path)} className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-all cursor-pointer flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">{item.label}</p>
+                  <p className="text-3xs text-slate-500 font-semibold">
+                    {item.active != null ? `${item.active} active / ${item.count} total` : `${item.count} records`}
+                  </p>
+                </div>
+              </div>
+              <ChevronRight className="h-4 w-4 text-slate-400" />
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+
+    {/* Recent Reports */}
+    <Card>
+      <div className="flex items-center justify-between mb-4">
+        <SectionHeader title="Recent Report History" subtitle="Last compiled management reports" />
+        <button onClick={() => navigate('/reports')} className="text-xs font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+          Open Reports Center <ChevronRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      {reportsHistory.length > 0 ? (
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <table className="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-900/60 text-slate-400 text-[10px] uppercase tracking-wider font-black border-b border-slate-200 dark:border-slate-800">
+                <th className="p-3">Report Name</th>
+                <th className="p-3">Format</th>
+                <th className="p-3">Status</th>
+                <th className="p-3">Generated</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {reportsHistory.slice(0, 8).map(r => (
+                <tr key={r.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
+                  <td className="p-3 font-bold text-slate-900 dark:text-white">{r.report_name}</td>
+                  <td className="p-3"><span className="px-1.5 py-0.5 rounded text-5xs font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">{r.format}</span></td>
+                  <td className="p-3">
+                    <span className={`px-1.5 py-0.5 rounded text-5xs font-bold uppercase border ${r.status === 'Completed' ? 'bg-emerald-50 text-emerald-700 border-emerald-250' : r.status === 'Failed' ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
+                      {r.status}
+                    </span>
+                  </td>
+                  <td className="p-3 text-slate-500 dark:text-slate-400 font-semibold">{new Date(r.generated_at).toLocaleString('en-IN')}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <EmptyState icon={FileText} title="No reports generated yet" desc="Use the Reports Center to generate PDF, XLSX, or CSV analytical reports." />
+      )}
+    </Card>
+  </div>
+);
+
+// ─── Main Dashboard Component ────────────────────────────────────────────────────
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { theme } = useTheme();
   const navigate = useNavigate();
+
   const [stats, setStats] = useState(null);
   const [sites, setSites] = useState([]);
   const [surveys, setSurveys] = useState([]);
@@ -43,18 +802,17 @@ const Dashboard = () => {
   const [observations, setObservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [healthData, setHealthData] = useState({
-    overall_score: 82.5,
-    status: "Healthy",
-    component_scores: {
-      species_diversity: 80,
-      population_stability: 82,
-      habitat_quality: 84,
-      endangered_species: 85,
-      environmental_conditions: 81
-    }
-  });
-  
+  const [healthData, setHealthData] = useState(null);
+
+  // Role-specific data states
+  const [popSpecies, setPopSpecies] = useState([]);
+  const [habitatClass, setHabitatClass] = useState([]);
+  const [endangeredSpecies, setEndangeredSpecies] = useState([]);
+  const [consActions, setConsActions] = useState([]);
+  const [consPriorities, setConsPriorities] = useState([]);
+  const [usersList, setUsersList] = useState([]);
+  const [reportsHistory, setReportsHistory] = useState([]);
+
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
 
@@ -63,6 +821,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        // Core data – fetched for all roles
         const [statsRes, sitesRes, surveysRes, notificationsRes, observationsRes, healthRes] = await Promise.all([
           api.get('/api/dashboard/stats'),
           api.get('/api/monitoring-sites'),
@@ -71,72 +830,79 @@ const Dashboard = () => {
           api.get('/api/observations'),
           api.get('/api/health/overview').catch(() => ({ data: null }))
         ]);
+
         const rawObs = observationsRes.data || [];
-        const cleanObs = rawObs.filter(obs => isIndianWildlife(obs.species_name || obs.species));
-        const cleanRichness = new Set(cleanObs.map(obs => localizeSpeciesName(obs.species_name || obs.species))).size;
-        const cleanDetections = cleanObs.length;
-
-        // Clean stats data structure
         const rawStats = statsRes.data || {};
-        const cleanRecentObs = (rawStats.recent_observations || [])
-          .filter(obs => isIndianWildlife(obs.species_name || obs.species))
-          .map(obs => ({
-            ...obs,
-            species_name: localizeSpeciesName(obs.species_name || obs.species)
-          }));
-
-        const cleanDist = (rawStats.detection_distribution || [])
-          .filter(d => isIndianWildlife(d.species))
-          .map(d => ({
-            ...d,
-            species: localizeSpeciesName(d.species)
-          }));
-        
-        // Sum counts for duplicate species after normalization
-        const distMap = {};
-        cleanDist.forEach(d => {
-          distMap[d.species] = (distMap[d.species] || 0) + d.count;
-        });
-        const finalDist = Object.entries(distMap).map(([species, count]) => ({
-          species,
-          count
+        const cleanRecentObs = (rawStats.recent_observations || []).map(obs => ({
+          ...obs,
+          species_name: localizeSpeciesName(obs.species_name || obs.species)
         }));
 
         setStats({
           ...rawStats,
-          total_observations: cleanDetections,
-          total_animal_count: cleanDetections,
-          species_richness: cleanRichness,
-          species_count: cleanRichness,
+          total_observations: rawStats.total_observations ?? rawObs.length,
+          total_animal_count: rawStats.total_animal_count ?? rawObs.length,
+          species_richness: rawStats.species_richness ?? 0,
+          species_count: rawStats.species_count ?? 0,
           total_sites: sitesRes.data.length,
+          total_surveys: rawStats.total_surveys ?? surveysRes.data.length,
           recent_observations: cleanRecentObs,
-          detection_distribution: finalDist,
-          shannon_diversity_index: Number.isFinite(parseFloat(rawStats.shannon_diversity_index)) ? parseFloat(rawStats.shannon_diversity_index).toFixed(3) : '2.850',
-          simpson_diversity_index: Number.isFinite(parseFloat(rawStats.simpson_diversity_index)) ? parseFloat(rawStats.simpson_diversity_index).toFixed(3) : '0.880'
+          shannon_diversity_index: rawStats.shannon_diversity_index,
+          simpson_diversity_index: rawStats.simpson_diversity_index,
         });
-        setSites(sitesRes.data);
+
+        setSites(sitesRes.data || []);
         setSurveys(surveysRes.data || []);
         setNotifications(notificationsRes.data || []);
-        setObservations(cleanObs);
-        
-        if (healthRes && healthRes.data) {
+        setObservations(rawObs);
+
+        if (healthRes?.data) {
           const safeParse = (val, fallback) => {
-            if (val === undefined || val === null) return fallback;
+            if (val == null) return fallback;
             if (typeof val === 'number') return Number.isFinite(val) ? val : fallback;
-            const parsed = parseInt(val, 10);
+            const slashIdx = String(val).indexOf('/');
+            const strToParse = slashIdx !== -1 ? String(val).slice(0, slashIdx) : String(val);
+            const parsed = parseFloat(strToParse);
             return Number.isFinite(parsed) ? parsed : fallback;
           };
+          const m = healthRes.data.metrics || {};
           setHealthData({
-            overall_score: Number.isFinite(healthRes.data.overallScore) ? healthRes.data.overallScore : 82.5,
-            status: healthRes.data.statusName || "Healthy",
+            overall_score: Number.isFinite(healthRes.data.overallScore) ? healthRes.data.overallScore : 0,
+            status: healthRes.data.statusName || 'Moderate Concern',
             component_scores: {
-              species_diversity: safeParse(healthRes.data.metrics?.speciesDiversity?.value, 80),
-              population_stability: safeParse(healthRes.data.metrics?.populationStability?.value, 82),
-              habitat_quality: safeParse(healthRes.data.metrics?.habitatQuality?.value, 84),
-              endangered_species: safeParse(healthRes.data.metrics?.conservationReadiness?.value, 85),
-              environmental_conditions: safeParse(healthRes.data.metrics?.environmentalConditions?.value, 81)
+              species_diversity: safeParse(m.speciesDiversity?.trendValue, 0),
+              population_stability: safeParse(m.populationStability?.trendValue, 0),
+              habitat_quality: safeParse(m.habitatQuality?.trendValue, 0),
+              endangered_species: safeParse(m.endangeredSpeciesStatus?.trendValue, 0),
+              environmental_conditions: safeParse(m.environmentalConditions?.trendValue, 0),
             }
           });
+        }
+
+        // Role-specific fetches
+        if (roleName === 'Wildlife Researcher') {
+          const [popRes, habRes, endRes] = await Promise.all([
+            api.get('/api/population/species').catch(() => ({ data: [] })),
+            api.get('/api/habitat/classification').catch(() => ({ data: [] })),
+            api.get('/api/biodiversity/endangered').catch(() => ({ data: [] }))
+          ]);
+          setPopSpecies(popRes.data || []);
+          setHabitatClass(habRes.data || []);
+          setEndangeredSpecies(endRes.data || []);
+        } else if (roleName === 'Conservation Officer') {
+          const [actRes, priRes] = await Promise.all([
+            api.get('/api/conservation/actions').catch(() => ({ data: [] })),
+            api.get('/api/conservation/priorities').catch(() => ({ data: [] }))
+          ]);
+          setConsActions(actRes.data || []);
+          setConsPriorities(priRes.data || []);
+        } else if (roleName === 'Administrator') {
+          const [usersRes, repRes] = await Promise.all([
+            api.get('/api/users').catch(() => ({ data: [] })),
+            api.get('/api/reports/history').catch(() => ({ data: [] }))
+          ]);
+          setUsersList(usersRes.data || []);
+          setReportsHistory(repRes.data || []);
         }
       } catch (err) {
         setError('Connection to backend failed. Please ensure services are running.');
@@ -146,612 +912,164 @@ const Dashboard = () => {
       }
     };
     fetchDashboardData();
-  }, []);
+  }, [roleName]);
 
-  // Initialize Leaflet Map
+  // Leaflet Map
   useEffect(() => {
     if (loading || !mapRef.current) return;
+    if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; }
 
-    // Destroy previous instance if any
-    if (mapInstance.current) {
-      mapInstance.current.remove();
-      mapInstance.current = null;
-    }
-
-    // Set center coordinates: India default or average of sites
     let center = INDIA_MAP_CENTER;
-    let zoom   = INDIA_MAP_ZOOM;
+    let zoom = INDIA_MAP_ZOOM;
     if (sites.length > 0) {
-      const sumLat = sites.reduce((sum, s) => sum + s.latitude, 0);
-      const sumLon = sites.reduce((sum, s) => sum + s.longitude, 0);
+      const sumLat = sites.reduce((s, x) => s + x.latitude, 0);
+      const sumLon = sites.reduce((s, x) => s + x.longitude, 0);
       center = [sumLat / sites.length, sumLon / sites.length];
-      zoom   = 9;
+      zoom = 9;
     }
 
     try {
-      const map = L.map(mapRef.current, {
-        zoomControl: false,
-        attributionControl: false
-      });
+      const map = L.map(mapRef.current, { zoomControl: false, attributionControl: false });
       if (sites.length > 0) {
         map.fitBounds(L.latLngBounds(sites.map(s => [s.latitude, s.longitude])), { padding: [50, 50] });
       } else {
         map.setView(center, zoom);
       }
-      
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
       L.control.zoom({ position: 'bottomright' }).addTo(map);
       L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
 
-      // Plot sites as map markers
-      sites.forEach((site) => {
+      sites.forEach(site => {
         const markerColor = site.protected_area ? '#2E7D32' : '#1E88E5';
         const markerIcon = L.divIcon({
           className: 'custom-div-icon',
-          html: `<div class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-md" style="background-color: ${markerColor}"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
+          html: `<div class="flex h-5 w-5 items-center justify-center rounded-full border-2 border-white shadow-md" style="background-color:${markerColor}"><div class="h-2 w-2 rounded-full bg-slate-900 animate-pulse"></div></div>`,
+          iconSize: [20, 20], iconAnchor: [10, 10]
         });
-
-        const marker = L.marker([site.latitude, site.longitude], { icon: markerIcon }).addTo(map);
-        marker.bindPopup(`
-          <div class="p-2 text-slate-900 font-sans">
-            <h4 class="font-bold text-xs">${site.name}</h4>
-            <p class="text-3xs text-slate-650 mt-0.5">${site.location}</p>
-            <p class="text-3xs font-bold text-emerald-700 mt-1">${site.protected_area ? 'Protected Reserve' : 'Standard Area'}</p>
-          </div>
-        `);
+        L.marker([site.latitude, site.longitude], { icon: markerIcon }).addTo(map)
+          .bindPopup(`<div class="p-2 font-sans"><h4 class="font-bold text-xs">${site.name}</h4><p class="text-3xs text-slate-600 mt-0.5">${site.location || ''}</p><p class="text-3xs font-bold text-emerald-700 mt-1">${site.protected_area ? 'Protected Reserve' : 'Standard Area'}</p></div>`);
       });
 
       mapInstance.current = map;
     } catch (err) {
-      console.error('Error rendering Leaflet Map:', err);
+      console.error('Leaflet map error:', err);
     }
 
-    return () => {
-      if (mapInstance.current) {
-        mapInstance.current.remove();
-        mapInstance.current = null;
-      }
-    };
+    return () => { if (mapInstance.current) { mapInstance.current.remove(); mapInstance.current = null; } };
   }, [loading, sites]);
 
   if (loading) {
     return (
-      <div className="flex h-[60vh] items-center justify-center text-emerald-500 font-sans">
-        <span className="h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></span>
-        <span className="ml-3 text-lg font-bold text-slate-705 dark:text-slate-400">Loading command telemetry...</span>
+      <div className="flex h-[60vh] items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+        <span className="ml-3 text-sm font-bold text-slate-600 dark:text-slate-400">Loading dashboard…</span>
       </div>
     );
   }
 
-  // Define dynamic role-based dashboard cards and actions
-  let roleGreeting = '';
-  let roleCards = [];
-  let roleActions = [];
-
-  switch (roleName) {
-    case 'Administrator':
-      roleGreeting = 'System Administrator Dashboard';
-      roleCards = [
-        { title: 'Users Registered', value: stats?.total_users ?? 0, icon: Users, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-955/30 border-emerald-200 dark:border-emerald-900/30', path: '/users' },
-        { title: 'Monitoring Sites', value: stats?.total_sites ?? 0, icon: MapPin, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200 dark:border-blue-900/30', path: '/sites' },
-        { title: 'Surveys Registered', value: stats?.total_surveys ?? 0, icon: ClipboardList, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-955/30 border-amber-200 dark:border-amber-900/30', path: '/surveys' },
-        { title: 'Camera Traps', value: stats?.total_camera_traps ?? 0, icon: Camera, color: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-955/30 border-teal-200 dark:border-teal-900/30', path: '/camera-traps' },
-        { title: 'Audio Sensors', value: stats?.total_audio_sensors ?? 0, icon: Volume2, color: 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-955/30 border-cyan-200 dark:border-cyan-900/30', path: '/audio-sensors' },
-        { title: 'Uploaded Images', value: stats?.total_uploaded_images ?? 0, icon: Upload, color: 'text-rose-600 dark:text-rose-450 bg-rose-50 dark:bg-rose-955/30 border-rose-200 dark:border-rose-900/30', path: '/ai/prediction-history' },
-        { title: 'Uploaded Audio', value: stats?.total_uploaded_audio ?? 0, icon: Upload, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-955/30 border-indigo-200 dark:border-indigo-900/30', path: '/ai/prediction-history' },
-        { title: 'Unverified Observations', value: stats?.unverified_observations ?? 0, icon: AlertTriangle, color: 'text-orange-605 dark:text-orange-405 bg-orange-50 dark:bg-orange-955/30 border-orange-200 dark:border-orange-900/30', path: '/observations' }
-      ];
-      roleActions = [
-        { label: 'Register Account', path: '/register', icon: Plus },
-        { label: 'Manage User Roles', path: '/users', icon: Shield },
-        { label: 'Add Monitoring Site', path: '/sites', icon: MapPin },
-        { label: 'Configure Settings', path: '/settings', icon: Settings }
-      ];
-      break;
- 
-    case 'Wildlife Researcher':
-      roleGreeting = 'Wildlife Researcher Workspace';
-      roleCards = [
-        { title: 'Total Observations', value: stats?.total_observations ?? 0, icon: Eye, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-955/30 border-emerald-200 dark:border-emerald-900/30', path: '/observations' },
-        { title: 'Total Species Detected', value: stats?.species_count ?? 0, icon: BrainCircuit, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200 dark:border-blue-900/30', path: '/ai/biodiversity' },
-        { title: 'Today\'s Observations', value: stats?.todays_observations ?? 0, icon: Clock, color: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-955/30 border-amber-200 dark:border-amber-900/30', path: '/observations' },
-        { title: 'Unverified Observations', value: stats?.unverified_observations ?? 0, icon: AlertTriangle, color: 'text-orange-605 dark:text-orange-405 bg-orange-50 dark:bg-orange-955/30 border-orange-200 dark:border-orange-900/30', path: '/observations' },
-        { title: 'Active Camera Traps', value: stats?.active_camera_traps ?? 0, icon: Camera, color: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-955/30 border-teal-200 dark:border-teal-900/30', path: '/camera-traps' },
-        { title: 'Active Audio Sensors', value: stats?.active_audio_sensors ?? 0, icon: Volume2, color: 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-955/30 border-cyan-200 dark:border-cyan-900/30', path: '/audio-sensors' },
-        { title: 'AI Image Predictions', value: stats?.ai_image_predictions ?? 0, icon: Upload, color: 'text-rose-600 dark:text-rose-450 bg-rose-50 dark:bg-rose-955/30 border-rose-200 dark:border-rose-900/30', path: '/ai/prediction-history' },
-        { title: 'AI Audio Predictions', value: stats?.ai_audio_predictions ?? 0, icon: Upload, color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-955/30 border-indigo-200 dark:border-indigo-900/30', path: '/ai/prediction-history' }
-      ];
-      roleActions = [
-        { label: 'Log Observation', path: '/observations', icon: Eye },
-        { label: 'Create New Survey', path: '/surveys', icon: ClipboardList },
-        { label: 'Image Upload', path: '/ai/image-upload', icon: Upload },
-        { label: 'Audio Upload', path: '/ai/audio-upload', icon: Upload }
-      ];
-      break;
- 
-    case 'Conservation Officer':
-      roleGreeting = 'Conservation Officer Command';
-      roleCards = [
-        { title: 'Protected Reserves', value: stats?.total_sites ?? 0, icon: MapPin, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200 dark:border-blue-900/30', path: '/sites' },
-        { title: 'Active Surveys', value: stats?.total_surveys ?? 0, icon: ClipboardList, color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-955/30 border-emerald-200 dark:border-emerald-900/30', path: '/surveys' },
-        { title: 'Unverified Observations', value: stats?.unverified_observations ?? 0, icon: AlertTriangle, color: 'text-orange-605 dark:text-orange-405 bg-orange-50 dark:bg-orange-955/30 border-orange-200 dark:border-orange-900/30', path: '/observations' },
-        { title: 'Image Uploads', value: stats?.total_uploaded_images ?? 0, icon: Upload, color: 'text-rose-605 dark:text-rose-450 bg-rose-50 dark:bg-rose-955/30 border-rose-200 dark:border-rose-900/30', path: '/ai/image-upload' }
-      ];
-      roleActions = [
-        { label: 'Configure Site Map', path: '/sites', icon: MapPin },
-        { label: 'Active Surveys', path: '/surveys', icon: ClipboardList },
-        { label: 'Image Upload', path: '/ai/image-upload', icon: Upload }
-      ];
-      break;
- 
-    case 'Forest Department Field Panel':
-    case 'Forest Department Officer':
-      roleGreeting = 'Forest Department Field Panel';
-      roleCards = [
-        { title: 'Deployed Camera Traps', value: stats?.total_camera_traps ?? 0, icon: Camera, color: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-955/30 border-teal-200 dark:border-teal-900/30', path: '/camera-traps' },
-        { title: 'Deployed Audio Sensors', value: stats?.total_audio_sensors ?? 0, icon: Volume2, color: 'text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-955/30 border-cyan-200 dark:border-cyan-900/30', path: '/audio-sensors' },
-        { title: 'Active Surveys', value: stats?.total_surveys ?? 0, icon: ClipboardList, color: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-955/30 border-blue-200 dark:border-blue-900/30', path: '/surveys' },
-        { title: 'Unverified Observations', value: stats?.unverified_observations ?? 0, icon: AlertTriangle, color: 'text-orange-605 dark:text-orange-405 bg-orange-50 dark:bg-orange-955/30 border-orange-200 dark:border-orange-900/30', path: '/observations' }
-      ];
-      roleActions = [
-        { label: 'Submit Field Log', path: '/observations', icon: Plus },
-        { label: 'Configure Hardware Node', path: '/camera-traps', icon: Camera },
-        { label: 'Audio Sensor Logs', path: '/audio-sensors', icon: Volume2 }
-      ];
-      break;
-  }
-
-  const hasData = stats?.total_surveys > 0 && stats?.recent_observations?.length > 0;
-
-  const chartData = stats?.chart_data || [
-    { name: 'Mon', count: 0 },
-    { name: 'Tue', count: 0 },
-    { name: 'Wed', count: 0 },
-    { name: 'Thu', count: 0 },
-    { name: 'Fri', count: 0 },
-    { name: 'Sat', count: 0 },
-    { name: 'Sun', count: 0 },
-  ];
-
-  const deviceDistribution = stats?.device_distribution || [
-    { name: 'Active', value: 0, color: '#059669' },
-    { name: 'Inactive', value: 0, color: '#475569' },
-    { name: 'Maintenance', value: 0, color: '#d97706' }
-  ];
+  const roleLabels = {
+    'Administrator': 'System Administrator Dashboard',
+    'Wildlife Researcher': 'Wildlife Researcher Workspace',
+    'Conservation Officer': 'Conservation Officer Command',
+    'Forest Department Field Panel': 'Forest Department Field Panel',
+    'Forest Department Officer': 'Forest Department Field Panel',
+  };
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-805 dark:text-slate-100 font-sans">
-      
-      {/* Dynamic Welcoming Card */}
+    <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 font-sans max-w-7xl mx-auto pb-12">
+      {/* Page Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-405 uppercase tracking-widest block">
-            {roleGreeting}
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest block">
+            {roleLabels[roleName] || 'Dashboard'}
           </span>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mt-1">
             System Operations Dashboard
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1 font-semibold">
-            Wildlife Population Intelligence System — India Deployment. Logged in as <span className="font-extrabold text-slate-950 dark:text-slate-200">{user?.username}</span>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 font-semibold">
+            Wildlife Population Intelligence System — India Deployment. Logged in as{' '}
+            <span className="font-extrabold text-slate-900 dark:text-slate-200">{user?.username}</span>
           </p>
         </div>
       </div>
 
       {error && (
-        <div className="flex items-center gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-955/40 border border-rose-200 dark:border-rose-900/30 p-4 text-sm text-rose-600 dark:text-rose-450 font-semibold">
+        <div className="flex items-center gap-2.5 rounded-xl bg-rose-50 dark:bg-rose-955/40 border border-rose-200 p-4 text-sm text-rose-600 font-semibold">
           <AlertCircle className="h-5 w-5 shrink-0" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Role specific dynamic cards */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-        {roleCards.map((card) => {
-          const Icon = card.icon;
-          return (
-            <div 
-              key={card.title} 
-              onClick={() => card.path && navigate(card.path)}
-              className={`glass-card p-5 flex items-center justify-between border-slate-200 dark:border-slate-805 shadow-sm transition-all ${
-                card.path ? 'cursor-pointer hover:border-emerald-500/40 hover:bg-slate-50/20 dark:hover:bg-slate-900/10' : ''
-              }`}
-            >
-              <div className="space-y-1">
-                <span className="text-2xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
-                  {card.title}
-                </span>
-                <p className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  {card.value}
-                </p>
-              </div>
-              <div className={`flex h-10 w-10 items-center justify-center rounded-xl border ${card.color}`}>
-                <Icon className="h-5 w-5" />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Role specific quick action shortcuts */}
-      <div className="glass-card p-6 border-slate-200 dark:border-slate-800 shadow-sm">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-slate-655 dark:text-slate-400 mb-4">
-          Quick Action Shortcuts
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {roleActions.map((act) => {
-            const Icon = act.icon;
-            return (
-              <button
-                key={act.label}
-                onClick={() => navigate(act.path)}
-                className="flex items-center gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40 hover:border-emerald-500/50 dark:hover:border-emerald-500/50 hover:bg-slate-50 dark:hover:bg-slate-900/30 transition-all text-left group focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  <Icon className="h-5 w-5" />
-                </div>
-                <div className="overflow-hidden">
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                    {act.label}
-                  </p>
-                  <span className="text-4xs text-slate-550 font-bold flex items-center gap-0.5 mt-0.5">
-                    Launch Action <ArrowUpRight className="h-3 w-3 text-emerald-500" />
-                  </span>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Biodiversity & Ecological Indicators */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 glass-card p-6 border-slate-200 dark:border-slate-800 shadow-sm space-y-4 flex flex-col justify-between">
-          <h3 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Biodiversity & Ecological Indicators
-          </h3>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-4">
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
-              <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Shannon Index</span>
-              <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.shannon_diversity_index ?? "0.0"}</span>
-            </div>
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
-              <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Simpson Index</span>
-              <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.simpson_diversity_index ?? "0.0"}</span>
-            </div>
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
-              <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Richness</span>
-              <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.species_richness ?? 0} spp</span>
-            </div>
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/40">
-              <span className="text-4xs uppercase tracking-wider text-slate-500 font-bold block mb-1">Total Animals</span>
-              <span className="text-lg font-black text-slate-900 dark:text-white">{stats?.total_animal_count ?? 0}</span>
-            </div>
-            <div className="p-4 rounded-xl border border-rose-250/60 dark:border-rose-900/30 bg-rose-50/10 dark:bg-rose-950/5">
-              <span className="text-4xs uppercase tracking-wider text-rose-550 font-bold block mb-1">Endangered</span>
-              <span className="text-lg font-black text-rose-600 dark:text-rose-400">{stats?.endangered_species_count ?? 0}</span>
-            </div>
-            <div className="p-4 rounded-xl border border-amber-250/60 dark:border-amber-900/30 bg-amber-50/10 dark:bg-amber-950/5">
-              <span className="text-4xs uppercase tracking-wider text-amber-550 font-bold block mb-1">Vulnerable</span>
-              <span className="text-lg font-black text-amber-600 dark:text-amber-400">{stats?.vulnerable_species_count ?? 0}</span>
-            </div>
-            <div className="p-4 rounded-xl border border-emerald-250/60 dark:border-emerald-900/30 bg-emerald-50/10 dark:bg-emerald-950/5">
-              <span className="text-4xs uppercase tracking-wider text-emerald-550 font-bold block mb-1">Least Concern</span>
-              <span className="text-lg font-black text-emerald-600 dark:text-emerald-405">{stats?.least_concern_count ?? 0}</span>
-            </div>
-          </div>
-        </div>
-        <div>
-          <EcosystemHealthCard healthData={healthData} />
-        </div>
-      </div>
-
-      {/* Interactive Map and Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Map Container */}
-        <div className="glass-card p-6 lg:col-span-2 flex flex-col justify-between min-h-[420px] relative overflow-hidden border-slate-200 dark:border-slate-800 shadow-sm">
-          <div className="mb-4">
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Interactive Siting Map</h3>
-            <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Active field nodes and camera trap deployments across Indian tiger reserves</p>
-          </div>
-
-          <div className="flex-1 w-full rounded-xl overflow-hidden relative border border-slate-200 dark:border-slate-800 min-h-[300px] shadow-inner">
-            {sites.length > 0 ? (
-              <div ref={mapRef} className="absolute inset-0" />
-            ) : (
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-slate-950/30">
-                <MapPin className="h-10 w-10 text-slate-400 dark:text-slate-650 animate-bounce mb-3" />
-                <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300">No Monitoring Sites Configured</h4>
-                <p className="text-2xs text-slate-600 dark:text-slate-400 text-center max-w-xs mt-1.5 leading-relaxed font-semibold">
-                  Go to Monitoring Sites section and register coordinates. They will automatically render as interactive pins on this Leaflet tracking module.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Device Status chart */}
-        <div className="glass-card p-6 flex flex-col justify-between min-h-[420px] border-slate-200 dark:border-slate-800 shadow-sm">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Telemetry Node Distribution</h3>
-            <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Physical device status ratios across all blocks</p>
-          </div>
-
-          {stats?.total_camera_traps > 0 || stats?.total_audio_sensors > 0 ? (
-            <div className="flex-1 flex flex-col justify-center items-center py-6">
-              <div className="h-36 w-36 relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={deviceDistribution}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={45}
-                      outerRadius={60}
-                      paddingAngle={3}
-                      dataKey="value"
-                    >
-                      {deviceDistribution.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="text-2xl font-black text-slate-800 dark:text-slate-100">
-                    {parseInt(stats.total_camera_traps) + parseInt(stats.total_audio_sensors)}
-                  </span>
-                  <span className="text-4xs font-bold text-slate-550 uppercase tracking-widest">Nodes</span>
-                </div>
-              </div>
-
-              {/* Legends */}
-              <div className="w-full space-y-2 mt-6">
-                {deviceDistribution.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-2 text-slate-655 dark:text-slate-400 font-semibold">
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span>{item.name} Devices</span>
-                    </div>
-                    <span className="font-extrabold text-slate-900 dark:text-white">{item.value}%</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+      {/* Shared: Interactive Map strip */}
+      <div className="glass-card p-6 shadow-sm border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+        <SectionHeader title="Interactive Monitoring Map" subtitle="Active field nodes and camera trap deployments across Indian tiger reserves" />
+        <div className="w-full rounded-xl overflow-hidden relative border border-slate-200 dark:border-slate-800 min-h-[280px] shadow-inner">
+          {sites.length > 0 ? (
+            <div ref={mapRef} className="absolute inset-0" />
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center">
-              <Camera className="h-10 w-10 text-slate-400 dark:text-slate-655 mb-2" />
-              <h4 className="text-xs font-bold text-slate-700 dark:text-slate-400">No Deployed Hardware Nodes</h4>
-              <p className="text-4xs text-slate-550 mt-1 text-center max-w-[200px] font-semibold">Register camera traps or audio sensors to generate battery and connection stats.</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-slate-950/30">
+              <MapPin className="h-10 w-10 text-slate-300 dark:text-slate-700 animate-bounce mb-3" />
+              <h4 className="text-sm font-bold text-slate-600 dark:text-slate-400">No Monitoring Sites Configured</h4>
+              <p className="text-2xs text-slate-500 text-center max-w-xs mt-1.5 leading-relaxed font-semibold">
+                Register monitoring sites with GPS coordinates to see them as interactive markers on this map.
+              </p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Forest Department Security & Patrol Command */}
-      {(roleName === 'Forest Department Officer' || roleName === 'Forest Department Field Panel') && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Patrol Planning */}
-          <div className="glass-card p-6 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Active Patrol Planner</h3>
-              <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Anti-poaching schedules and field beats calculated from environmental indicators</p>
-            </div>
-            
-            <div className="flex-1 mt-6 overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase text-5xs tracking-widest font-black">
-                    <th className="py-2.5">Patrol Zone</th>
-                    <th className="py-2.5">Priority</th>
-                    <th className="py-2.5">Assigned Squad</th>
-                    <th className="py-2.5">Schedule</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/40">
-                  {sites.slice(0, 5).map((site, index) => {
-                    const hasAlert = notifications.some(n => n.message?.includes(site.name) && n.severity === 'Critical');
-                    return (
-                      <tr key={site.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/10 transition-colors">
-                        <td className="py-3 font-bold text-slate-800 dark:text-slate-200">{site.name}</td>
-                        <td className="py-3">
-                          <span className={`px-2 py-0.5 rounded text-5xs font-black uppercase border ${
-                            hasAlert 
-                              ? 'bg-rose-50 dark:bg-rose-955/20 text-rose-700 dark:text-rose-400 border-rose-200' 
-                              : 'bg-emerald-50 dark:bg-emerald-955/20 text-emerald-700 dark:text-emerald-400 border-emerald-250'
-                          }`}>
-                            {hasAlert ? 'Urgent Patrol' : 'Standard Beat'}
-                          </span>
-                        </td>
-                        <td className="py-3 text-slate-500 font-semibold">{index % 2 === 0 ? 'Range Division Alpha' : 'Patrol Team Bravo'}</td>
-                        <td className="py-3 text-slate-555 dark:text-slate-400 font-bold">{index % 2 === 0 ? 'Daily Beat' : 'Bi-weekly Beat'}</td>
-                      </tr>
-                    );
-                  })}
-                  {sites.length === 0 && (
-                    <tr>
-                      <td colSpan="4" className="py-6 text-center text-slate-400">No active zones configured.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Incident Reports */}
-          <div className="glass-card p-6 border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Security & Alert Incidents Log</h3>
-              <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Active warning signals compiled from camera feeds and hardware logs</p>
-            </div>
-
-            <div className="flex-1 mt-6 overflow-y-auto space-y-3.5 max-h-[220px] pr-1">
-              {notifications.filter(n => n.severity === 'Critical' || n.severity === 'Warning').slice(0, 5).map((notif) => (
-                <div key={notif.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/45 hover:border-emerald-500/20 transition-all flex items-start justify-between gap-3 shadow-xs animate-fade-in">
-                  <div>
-                    <span className="text-4xs font-bold text-slate-400 dark:text-slate-500 block">
-                      {new Date(notif.created_at).toLocaleDateString('en-IN', { dateStyle: 'medium' })}
-                    </span>
-                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1">{notif.category}</p>
-                    <p className="text-3xs text-slate-550 dark:text-slate-400 mt-0.5 font-semibold leading-relaxed">{notif.message}</p>
-                  </div>
-                  <span className="shrink-0 text-5xs font-black uppercase px-2 py-0.5 rounded border bg-rose-55 dark:bg-rose-955/20 border-rose-250 text-rose-700 dark:text-rose-400">
-                    {notif.severity}
-                  </span>
-                </div>
-              ))}
-              {notifications.filter(n => n.severity === 'Critical' || n.severity === 'Warning').length === 0 && (
-                <div className="py-10 text-center text-slate-400 text-xs">No active security incidents logged.</div>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Role-specific content */}
+      {roleName === 'Wildlife Researcher' && (
+        <ResearcherDashboard
+          stats={stats}
+          healthData={healthData}
+          sites={sites}
+          popSpecies={popSpecies}
+          habitatClass={habitatClass}
+          endangeredSpecies={endangeredSpecies}
+          navigate={navigate}
+        />
+      )}
+      {roleName === 'Conservation Officer' && (
+        <ConservationDashboard
+          stats={stats}
+          healthData={healthData}
+          consActions={consActions}
+          consPriorities={consPriorities}
+          navigate={navigate}
+        />
+      )}
+      {(roleName === 'Forest Department Field Panel' || roleName === 'Forest Department Officer') && (
+        <ForestDeptDashboard
+          stats={stats}
+          sites={sites}
+          surveys={surveys}
+          notifications={notifications}
+          observations={observations}
+          navigate={navigate}
+        />
+      )}
+      {roleName === 'Administrator' && (
+        <AdminDashboard
+          stats={stats}
+          usersList={usersList}
+          reportsHistory={reportsHistory}
+          navigate={navigate}
+        />
       )}
 
-      {/* Overview Analytics charts and Recent Observations split */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Recharts Area Chart widget */}
-        <div className="glass-card p-6 lg:col-span-2 flex flex-col justify-between min-h-[380px] border-slate-205 dark:border-slate-800 shadow-sm">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Observations Overview</h3>
-            <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Sighting metrics logged over the past week</p>
-          </div>
-
-          <div className="flex-1 h-64 mt-6">
-            {hasData ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
-                      <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} />
-                  <XAxis dataKey="name" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} />
-                  <YAxis stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} axisLine={false} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-                      borderColor: theme === 'dark' ? '#1e293b' : '#cbd5e1',
-                      borderRadius: '12px',
-                      color: theme === 'dark' ? '#f1f5f9' : '#0f172a'
-                    }} 
-                  />
-                  <Area type="monotone" dataKey="count" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorCount)" />
-                </AreaChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-xl border border-dashed border-slate-202 dark:border-slate-800">
-                <TrendingUp className="h-8 w-8 text-slate-400 dark:text-slate-655 mb-2" />
-                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-400">Awaiting Observation Data</h4>
-                <p className="text-4xs text-slate-550 mt-1 text-center max-w-xs font-semibold">Once you create surveys and submit observations, this panel will chart weekly species sightings trends.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Observations Table */}
-        <div className="glass-card p-6 flex flex-col justify-between min-h-[380px] border-slate-205 dark:border-slate-800 shadow-sm">
-          <div>
-            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Recent Sightings Log</h3>
-            <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Telemetry uploads from active surveys</p>
-          </div>
-
-          <div className="flex-1 mt-6 overflow-y-auto space-y-3.5 max-h-[260px] pr-1">
-            {stats?.recent_observations && stats.recent_observations.length > 0 ? (
-              stats.recent_observations.map((obs) => (
-                <div key={obs.id} className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950/45 hover:border-emerald-500/20 transition-all flex items-center justify-between gap-3 shadow-xs">
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                      {obs.species_name === "Unknown Species" ? "Species Requires Verification" : (localizeSpeciesName(obs.species_name || obs.species) || "False Trigger / Unknown")}
-                    </p>
-                    <span className="text-4xs text-slate-550 dark:text-slate-400 font-bold flex items-center gap-1 mt-1">
-                      <Clock className="h-3 w-3 text-slate-500" />
-                      {obs.timestamp || obs.observation_datetime ? formatIST(obs.timestamp || obs.observation_datetime) : '—'}
-                    </span>
-                  </div>
-                  <div className="shrink-0 flex items-center gap-2">
-                    <span className="text-xs font-black px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-705 dark:text-slate-300">
-                      x{obs.count}
-                    </span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center p-6 bg-slate-50/50 dark:bg-slate-950/20 rounded-xl border border-dashed border-slate-202 dark:border-slate-800">
-                <Clock className="h-8 w-8 text-slate-400 dark:text-slate-655 mb-2 animate-pulse" />
-                <h4 className="text-xs font-bold text-slate-700 dark:text-slate-400">No Logged Entries</h4>
-                <p className="text-4xs text-slate-550 mt-1 text-center max-w-[180px] font-semibold">Submit species sightings under observations registry.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-      </div>
-
-      {/* Biodiversity Timeline & Distribution charts */}
-      {stats?.detection_distribution?.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="glass-card p-6 min-h-[340px] border-slate-205 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Detection Distribution</h3>
-              <p className="text-2xs text-slate-600 dark:text-slate-400 mt-0.5 font-semibold">Total count detected by individual species</p>
-            </div>
-            <div className="h-64 mt-6">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={stats.detection_distribution.map(d => ({ name: localizeSpeciesName(d.species), count: d.count }))} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} />
-                  <XAxis dataKey="name" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={9} interval={0} tickLine={false} />
-                  <YAxis stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} axisLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-                      borderColor: theme === 'dark' ? '#1e293b' : '#cbd5e1',
-                      borderRadius: '12px'
-                    }}
-                  />
-                  <Area type="monotone" dataKey="count" stroke="#3b82f6" fill="#3b82f6" fillOpacity={0.15} strokeWidth={2} />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="glass-card p-6 min-h-[340px] border-slate-205 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Detection Timeline</h3>
-              <p className="text-2xs text-slate-655 dark:text-slate-400 mt-0.5 font-semibold">Detections timeline trend across observation history</p>
-            </div>
-            <div className="h-64 mt-6">
-              {stats?.detection_timeline?.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={stats.detection_timeline.map(t => ({ name: t.date, count: t.count }))} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} />
-                    <XAxis dataKey="name" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} />
-                    <YAxis stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} axisLine={false} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-                        borderColor: theme === 'dark' ? '#1e293b' : '#cbd5e1',
-                        borderRadius: '12px'
-                      }}
-                    />
-                    <Area type="monotone" dataKey="count" stroke="#10b981" fill="#10b981" fillOpacity={0.15} strokeWidth={2} />
-                  </AreaChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="h-full flex items-center justify-center text-slate-400 text-xs bg-slate-50/50 dark:bg-slate-950/20 rounded-xl border border-dashed border-slate-202 dark:border-slate-805">
-                  Awaiting timeline data...
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+      {/* Fallback for unknown role */}
+      {!['Wildlife Researcher', 'Conservation Officer', 'Forest Department Field Panel', 'Forest Department Officer', 'Administrator'].includes(roleName) && (
+        <ResearcherDashboard
+          stats={stats}
+          healthData={healthData}
+          sites={sites}
+          popSpecies={popSpecies}
+          habitatClass={habitatClass}
+          endangeredSpecies={endangeredSpecies}
+          navigate={navigate}
+        />
       )}
-
     </div>
   );
 };

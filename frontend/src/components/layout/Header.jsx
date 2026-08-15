@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useTheme } from '../../hooks/useTheme';
 import api from '../../services/api';
 import { 
   LogOut, 
-  Sun, 
-  Moon, 
   Bell, 
   User, 
-  Shield,
   ChevronDown,
   Settings,
   Compass
@@ -18,7 +14,6 @@ import { getUserAvatar } from '../../utils/india';
 
 const Header = () => {
   const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -86,43 +81,43 @@ const Header = () => {
   const roleName = user?.roles?.[0]?.name || 'User';
 
   return (
-    <header className="flex h-16 items-center justify-between bg-white dark:bg-slate-950 px-6 border-b border-slate-200 dark:border-slate-900 sticky top-0 z-20 transition-colors duration-300">
+    <header className="flex h-16 items-center justify-between bg-white px-6 border-b border-slate-200 sticky top-0 z-20">
       
       {/* Left side: Logo and Full Branding Name */}
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
           <Compass className="h-5 w-5 text-emerald-500" />
         </div>
         <div className="hidden lg:block">
-          <h1 className="text-sm font-extrabold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-sm font-extrabold tracking-tight text-slate-900">
             Wildlife Population Intelligence System
           </h1>
-          <p className="text-4xs text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-bold">
+          <p className="text-4xs text-emerald-600 uppercase tracking-widest font-bold">
             AI-Powered Biodiversity Platform
           </p>
         </div>
         <div className="block lg:hidden">
-          <span className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">WPIS</span>
+          <span className="text-sm font-black text-slate-900 uppercase tracking-wider">WPIS</span>
         </div>
       </div>
 
       {/* Middle/Right: Controls */}
       <div className="flex items-center gap-4 ml-auto">
         {/* Live IST Clock */}
-        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <span className="text-4xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">IST</span>
-          <span className="text-2xs font-mono font-bold text-slate-700 dark:text-slate-300">{istTime}</span>
+        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200">
+          <span className="text-4xs font-bold text-emerald-600 uppercase tracking-widest">IST</span>
+          <span className="text-2xs font-mono font-bold text-slate-700">{istTime}</span>
         </div>
 
         {/* Notifications Bell */}
         <button 
           onClick={() => navigate('/notifications')}
-          className="relative p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all animate-fade-in"
+          className="relative p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-900 transition-all"
           title="Notification Center"
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[8px] font-black text-white shadow-xs leading-none">
+            <span className="absolute -top-1.5 -right-1.5 flex h-4 min-w-[16px] px-1 items-center justify-center rounded-full bg-rose-500 text-[8px] font-black text-white leading-none">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
@@ -131,29 +126,20 @@ const Header = () => {
         {/* Settings Shortcut */}
         <button
           onClick={() => navigate('/settings')}
-          className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all"
+          className="p-2 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-900 transition-all"
           title="Settings"
         >
           <Settings className="h-4 w-4" />
         </button>
 
-        {/* Theme Toggle */}
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-650 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-all"
-          title="Toggle Theme"
-        >
-          {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-        </button>
-
-        <div className="h-5 w-px bg-slate-200 dark:bg-slate-800" />
+        <div className="h-5 w-px bg-slate-200" />
 
         {/* User Card & Dropdown */}
         {user && (
           <div className="relative">
             <button
               onClick={() => setDropdownOpen(!dropdownOpen)}
-              className="flex items-center gap-2 p-0.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900 transition-all text-left"
+              className="flex items-center gap-2 p-0.5 rounded-xl hover:bg-slate-50 transition-all text-left"
             >
               <img
                 src={getUserAvatar({ ...user, role: roleName }, api.defaults.baseURL)}
@@ -163,7 +149,7 @@ const Header = () => {
               />
               <div className="hidden sm:block pr-1">
                 <div className="flex items-center gap-1">
-                  <span className="text-xs font-bold text-slate-800 dark:text-slate-200 leading-none">{user.username}</span>
+                  <span className="text-xs font-bold text-slate-800 leading-none">{user.username}</span>
                   <ChevronDown className="h-3.5 w-3.5 text-slate-400" />
                 </div>
                 <div className="mt-0.5 leading-none">
@@ -176,15 +162,15 @@ const Header = () => {
 
             {/* Dropdown Menu */}
             {dropdownOpen && (
-              <div className="absolute right-0 mt-2.5 w-48 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-lg py-1.5 z-30 animate-fade-in">
-                <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="absolute right-0 mt-2.5 w-48 rounded-xl bg-white border border-slate-200 shadow-lg py-1.5 z-30 animate-fade-in">
+                <div className="px-4 py-2 border-b border-slate-100">
                   <p className="text-4xs font-bold text-slate-400 uppercase tracking-widest">Account Role</p>
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate mt-0.5">{roleName}</p>
+                  <p className="text-xs font-bold text-slate-800 truncate mt-0.5">{roleName}</p>
                 </div>
                 
                 <button
                   onClick={() => { setDropdownOpen(false); navigate('/profile'); }}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 text-left transition-colors"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-slate-50 text-left transition-colors"
                 >
                   <User className="h-3.5 w-3.5 text-slate-400" />
                   <span>My Profile</span>
@@ -192,7 +178,7 @@ const Header = () => {
 
                 <button
                   onClick={handleLogout}
-                  className="flex w-full items-center gap-2 px-4 py-2 text-xs text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/20 text-left transition-colors"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 text-left transition-colors"
                 >
                   <LogOut className="h-3.5 w-3.5" />
                   <span>Sign Out</span>

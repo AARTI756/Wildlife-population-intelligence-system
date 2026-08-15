@@ -11,7 +11,7 @@ class Notification(Base):
     priority = Column(String(20), nullable=False, index=True)
     title = Column(String(150), nullable=False)
     message = Column(String(500), nullable=False)
-    is_read = Column(Boolean, default=False, index=True)
+    is_read = Column(Boolean, default=False, index=True)   # Global fallback; per-user read is in NotificationAuditLog
     timestamp = Column(DateTime(timezone=True), default=func.now(), index=True)
     entity_type = Column(String(50), nullable=True)
     entity_id = Column(Integer, nullable=True)
@@ -21,6 +21,10 @@ class Notification(Base):
     resolved = Column(Boolean, default=False, index=True)
     resolved_at = Column(DateTime(timezone=True), nullable=True)
     metadata_json = Column(JSON, nullable=True)
+    # NULL means "visible to all roles". A JSON list like
+    # ["Wildlife Researcher", "Conservation Officer"] restricts visibility.
+    # Added via ALTER TABLE on startup so existing rows retain NULL (= global).
+    target_roles = Column(JSON, nullable=True)
 
 class NotificationAuditLog(Base):
     __tablename__ = "notification_audit_logs"

@@ -26,43 +26,34 @@ def list_notifications(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Retrieve filtered and paginated list of notifications, newest first."""
-    query = db.query(Notification)
-    
-    if category is not None:
-        query = query.filter(Notification.category == category)
-    if severity is not None:
-        query = query.filter(Notification.severity == severity)
-    if priority is not None:
-        query = query.filter(Notification.priority == priority)
-    if is_read is not None:
-        query = query.filter(Notification.is_read == is_read)
-    if resolved is not None:
-        query = query.filter(Notification.resolved == resolved)
-        
-    # Sort: Urgent/High priority first, then newest timestamp
-    query = query.order_by(
-        Notification.resolved.asc(), # unresolved first
-        Notification.timestamp.desc()
+    """Retrieve role-filtered, user-specific read/unread, and paginated list of notifications."""
+    return nsp.list_notifications_for_user(
+        db=db,
+        user=current_user,
+        category=category,
+        severity=severity,
+        priority=priority,
+        is_read_filter=is_read,
+        resolved=resolved,
+        skip=skip,
+        limit=limit
     )
-    
-    return query.offset(skip).limit(limit).all()
 
 @router.get("/count", response_model=NotificationCountResponse)
 def get_counts(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Fetch lightweight statistics on total, unread, and severity levels."""
-    return nsp.get_unread_count(db)
+    """Fetch lightweight statistics on total, unread, and severity levels scoped to this user."""
+    return nsp.get_unread_count_for_user(db, current_user)
 
 @router.get("/unread", response_model=List[NotificationResponse])
 def list_unread_notifications(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Retrieve list of unread notifications."""
-    return db.query(Notification).filter(Notification.is_read == False).order_by(Notification.timestamp.desc()).all()
+    """Retrieve list of unread notifications for this user."""
+    return nsp.list_notifications_for_user(db=db, user=current_user, is_read_filter=False)
 
 @router.patch("/{id}/read", response_model=NotificationResponse)
 def mark_notification_as_read(
@@ -74,6 +65,11 @@ def mark_notification_as_read(
     notif = nsp.mark_read(db, id, current_user.id)
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
+    # Return enriched dict to match response model correctly
+    enriched = nsp.list_notifications_for_user(db=db, user=current_user, skip=0, limit=1000)
+    for item in enriched:
+        if item["id"] == id:
+            return item
     return notif
 
 @router.patch("/read-all")
@@ -82,7 +78,7 @@ def mark_all_notifications_as_read(
     current_user: User = Depends(get_current_user)
 ):
     """Mark all unread notifications as read and record audit logs."""
-    count = nsp.mark_all_read(db, current_user.id)
+    count = nsp.mark_all_read(db, current_user.id, user=current_user)
     return {"message": f"Successfully marked {count} notifications as read"}
 
 @router.patch("/{id}/resolve", response_model=NotificationResponse)
@@ -95,6 +91,11 @@ def resolve_notification(
     notif = nsp.resolve_notification(db, id, current_user.id)
     if not notif:
         raise HTTPException(status_code=404, detail="Notification not found")
+    # Return enriched dict to match response model correctly
+    enriched = nsp.list_notifications_for_user(db=db, user=current_user, skip=0, limit=1000)
+    for item in enriched:
+        if item["id"] == id:
+            return item
     return notif
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)

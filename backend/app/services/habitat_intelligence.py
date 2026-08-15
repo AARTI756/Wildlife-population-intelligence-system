@@ -349,6 +349,9 @@ def get_habitat_suitability(db, **filters) -> List[Dict[str, Any]]:
         # Calculate localized suitability
         veg_indices = calculate_habitat_indices(db, site_id=site.id)
         
+        # Calculate unique species count observed at this site
+        unique_species = {o.species_name for o in o_list if o.species_name}
+        
         results.append({
             "site_id": site.id,
             "site_name": site.name,
@@ -359,7 +362,8 @@ def get_habitat_suitability(db, **filters) -> List[Dict[str, Any]]:
             "suitability_score": veg_indices["habitat_suitability"],
             "quality_score": veg_indices["habitat_quality"],
             "human_disturbance": veg_indices["human_disturbance"],
-            "protected_area": site.protected_area
+            "protected_area": site.protected_area,
+            "species_count": len(unique_species)
         })
     return results
 

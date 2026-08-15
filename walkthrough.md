@@ -1,6 +1,6 @@
-# WPIS Layout Refinements & YOLOv11 Model Integration Walkthrough
+# WPIS Layout Refinements, YOLOv11 Integration & Milestone 4 Visual Cleanup Walkthrough
 
-We have successfully integrated the trained **YOLO11 Wildlife Species Detection model**, completed the **Wildlife Audio Analysis Dashboard** UI refactoring, added extensive **AI Image Analysis enhancements**, and fixed the **Quick Login** connection issue.
+We have successfully integrated the trained **YOLO11 Wildlife Species Detection model**, completed the **Wildlife Audio Analysis Dashboard** UI refactoring, added extensive **AI Image Analysis enhancements**, fixed the **Quick Login** connection issue, and completed the **Milestone 4 requirements alignment, data consistency, and single-mode visual cleanup**.
 
 ---
 
@@ -93,3 +93,29 @@ We have successfully integrated the trained **YOLO11 Wildlife Species Detection 
 ### 3. Real Error Detail Extraction and Telemetry Logging
 *   Enabled Axios error message extraction (`extractErrorMessage`) in the Quick Login alert boundary to display actual backend warnings (e.g. "User account is inactive" or "Incorrect credentials") instead of a generic failure warning.
 *   Added console logging for request payloads, API endpoints, response statuses, and errors.
+
+---
+
+## Part 5 — Milestone 4 Visual, Structural & Data Consistency Refinement
+
+### 1. Theme Selection & Controls Removal (Single Light Mode Theme)
+*   **Header Clean-up**: Removed the non-functional theme toggle button, Moon/Sun icons, and the `useTheme` import hook from `Header.jsx`.
+*   **Auth Pages Clean-up**: Stripped theme toggle options and theme states from the headers of `Login.jsx` and `Register.jsx`.
+*   **Settings Interface Alignments**: Removed the "Theme / Appearance Settings" tab from the user control panel (`Settings.jsx`), leaving only active system preferences and notifications tab options, with `Notifications` set as the default active settings route.
+*   **Chart Visual Standardizations**: Removed `useTheme` and dark-mode conditional colors from recharts components (grids, axes, tooltips) in `Dashboard.jsx`, `InteractiveGisMap.jsx`, and `IntelligenceDashboard.jsx` to output sharp contrast light values exclusively.
+
+### 2. Duplicate Growth Rate KPI & Trend Display Fixes
+*   Eliminated the duplicate population trend and growth rate indicators from the **Estimated Population** metric card in `PopulationEstimation.jsx` to prevent informational overlap with the adjacent dedicated **Population Growth** KPI card.
+*   Removed fabricated trend badges and percentage indicators (`trend`, `trendValue`) from the Critical Habitats, Restoration Projects, Monitoring Coverage, and Recommendation Score cards within the Conservation Recommendation Engine (`ConservationRecommendations.jsx`) as they lacked real historic period baselines.
+
+### 3. Backend Reports & Data Synchronization Consistency
+*   **Date Formatting Fix**: Integrated defensive parsing functions (`parse_date`) in `report_service.py` to convert ISO dates and strings containing UTC timezone formats (`Z`) into valid `datetime` objects before querying PostgreSQL.
+*   **Dictionary Key Mapping Fixes**: Rewrote schema-to-dataset lookup code mapping `shannon_diversity_index`, `simpson_diversity_index`, `species_evenness`, and `total_estimated_population` correctly to their respective calculated keys, correcting a bug that caused empty data logs or null indexes inside generated PDF and HTML reports.
+
+### 4. Code & UI/UX Cleanup Actions (Session Checklist Completed)
+*   **Removed Evaluation & Demonstration Warning Banners**: Cleaned up the production environment UI by stripping away the development-focused warning banner ("Database contains mixed species profiles for evaluation...") from `BiodiversityAnalytics.jsx`, `PopulationEstimation.jsx`, and `ConservationRecommendations.jsx`.
+*   **Fixed Double-Percent Formatting**: Corrected the formatting issue where `monitoring_coverage` in `ConservationRecommendations.jsx` rendered as `84.0%%` by removing the duplicate `%` appended on the frontend (the backend service already provides the formatted `%` symbol in the data payload).
+*   **Fixed Card Footer Overlap**: Prevented layout overlap inside `MetricCard.jsx` where the absolute-positioned action icon would run over/cover the `lastUpdated` timestamp in the card footer by introducing right padding (`pr-12`) to the timestamp container.
+
+### 5. Build Bundler Integrity Verification
+*   Executed a successful production compiler build verification (`npm run build`) ensuring that all modules resolve without bundle, syntax, style, or asset discrepancies.

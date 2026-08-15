@@ -1,7 +1,9 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000',
+  // In Docker/production: nginx proxies /api/* to backend - use relative URL.
+  // In local dev: set VITE_API_URL=http://127.0.0.1:8000 (or leave empty, Vite dev proxy handles it).
+  baseURL: import.meta.env.VITE_API_URL || '',
   headers: {
     'Content-Type': 'application/json',
   },

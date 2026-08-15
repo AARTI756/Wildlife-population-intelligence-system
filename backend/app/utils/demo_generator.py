@@ -544,8 +544,16 @@ def seed_demo_data(db: Session, current_user_id: int):
                 created_at=datetime.utcnow()
             )
             db.add(obs)
-            extra_seeded += 1
         db.commit()
         print(f"LOG: Seeded {extra_seeded} extra standalone observations.")
 
+    # 9. Run automatic notification rules to generate matching alerts
+    try:
+        from app.services.notification_service import run_automatic_notification_rules
+        created_notifs = run_automatic_notification_rules(db)
+        print(f"LOG: Auto-generated {created_notifs} live alerts based on seeded metrics.")
+    except Exception as ne:
+        print(f"WARN: Failed to run notification generator: {ne}")
+
     print(f"LOG: Database seeding process completed successfully!")
+

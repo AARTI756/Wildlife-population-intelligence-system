@@ -11,7 +11,6 @@ import 'leaflet.markercluster';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 import api from '../../services/api';
-import { useTheme } from '../../hooks/useTheme';
 import MetricCard from '../../components/common/MetricCard';
 import { localizeSpeciesName } from '../../utils/india';
 import DashboardSection from '../../components/common/DashboardSection';
@@ -38,7 +37,6 @@ const getTaxonomyColor = (name) => {
 };
 
 const IntelligenceDashboard = () => {
-  const { theme } = useTheme();
 
   // Filtering & API States
   const [filters, setFilters] = useState({});
@@ -56,13 +54,10 @@ const IntelligenceDashboard = () => {
   const [alerts, setAlerts] = useState([]);
   const [pins, setPins] = useState([]);
 
-  // Sandbox Override States for reviewer testing
-  const [sandboxState, setSandboxState] = useState('live'); // 'live', 'loading', 'error', 'empty'
-
   // Map ref and instance
   const overviewMapRef = useRef(null);
   const overviewMapInstance = useRef(null);
-  const [basemapMode, setBasemapMode] = useState('dark');
+  const [basemapMode, setBasemapMode] = useState('light');
   const [showLegend, setShowLegend] = useState(true);
 
   const handleResetView = () => {
@@ -111,24 +106,6 @@ const IntelligenceDashboard = () => {
 
   // Main fetch effect
   useEffect(() => {
-    if (sandboxState !== 'live') {
-      if (sandboxState === 'loading') {
-        setLoading(true);
-        setError(null);
-        setIsEmpty(false);
-      } else if (sandboxState === 'error') {
-        setLoading(false);
-        setError('Sandbox Sim: Connection to API Gateway failed.');
-        setIsEmpty(false);
-      } else if (sandboxState === 'empty') {
-        setLoading(false);
-        setError(null);
-        setIsEmpty(true);
-      }
-      destroyMap();
-      return;
-    }
-
     const fetchData = async () => {
       setLoading(true);
       setError(null);
@@ -168,7 +145,7 @@ const IntelligenceDashboard = () => {
     };
 
     fetchData();
-  }, [filters, sandboxState]);
+  }, [filters]);
 
   // Leaflet map initialization
   useEffect(() => {
@@ -334,7 +311,6 @@ const IntelligenceDashboard = () => {
   }, [loading, error, pins, basemapMode]);
 
   const forceRefresh = () => {
-    setSandboxState('live');
     setFilters({});
   };
 
@@ -445,37 +421,10 @@ const IntelligenceDashboard = () => {
         </div>
       </div>
 
-      {/* Dev Sandbox controls */}
-      <div className="flex flex-wrap items-center gap-2 p-2 rounded-xl bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 text-3xs font-semibold">
-        <span className="text-slate-500 dark:text-slate-400 px-2">Dev Sandbox (API States):</span>
-        <button 
-          onClick={() => setSandboxState('live')}
-          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'live' ? 'bg-emerald-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-        >
-          Connected (Live PostgreSQL DB)
-        </button>
-        <button 
-          onClick={() => setSandboxState('loading')}
-          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'loading' ? 'bg-amber-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-        >
-          Loading State
-        </button>
-        <button 
-          onClick={() => setSandboxState('error')}
-          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'error' ? 'bg-rose-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-        >
-          Error State
-        </button>
-        <button 
-          onClick={() => setSandboxState('empty')}
-          className={`px-2.5 py-1 rounded-lg transition-colors ${sandboxState === 'empty' ? 'bg-slate-500 text-white' : 'hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300'}`}
-        >
-          Empty State
-        </button>
-      </div>
+
 
       {/* Top Filter Bar */}
-      <FilterBar filters={filters} onChange={setFilters} disabled={loading && sandboxState === 'live'} />
+      <FilterBar filters={filters} onChange={setFilters} disabled={loading} />
 
       {/* Hero Summary Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -572,13 +521,13 @@ const IntelligenceDashboard = () => {
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} />
-                <XAxis dataKey="name" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} label={{ value: 'Weekday Sighting Log', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 10 }} />
-                <YAxis stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} axisLine={false} label={{ value: 'Sighting Count', angle: -90, position: 'insideLeft', offset: 5, fill: '#64748b', fontSize: 10 }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={'#e2e8f0'} />
+                <XAxis dataKey="name" stroke={'#475569'} fontSize={10} tickLine={false} label={{ value: 'Weekday Sighting Log', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 10 }} />
+                <YAxis stroke={'#475569'} fontSize={10} tickLine={false} axisLine={false} label={{ value: 'Sighting Count', angle: -90, position: 'insideLeft', offset: 5, fill: '#64748b', fontSize: 10 }} />
                 <Tooltip 
                   contentStyle={{ 
-                    backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-                    borderColor: theme === 'dark' ? '#1e293b' : '#cbd5e1',
+                    backgroundColor: '#ffffff',
+                    borderColor: '#cbd5e1',
                     borderRadius: '12px'
                   }}
                 />
@@ -651,13 +600,13 @@ const IntelligenceDashboard = () => {
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={habitatData} margin={{ top: 15, right: 15, left: -25, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} />
-              <XAxis dataKey="name" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={9} tickLine={false} label={{ value: 'Grid Station', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 10 }} />
-              <YAxis stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={10} tickLine={false} axisLine={false} label={{ value: 'Habitat Quality Score', angle: -90, position: 'insideLeft', offset: 5, fill: '#64748b', fontSize: 10 }} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={'#e2e8f0'} />
+              <XAxis dataKey="name" stroke={'#475569'} fontSize={9} tickLine={false} label={{ value: 'Grid Station', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 10 }} />
+              <YAxis stroke={'#475569'} fontSize={10} tickLine={false} axisLine={false} label={{ value: 'Habitat Quality Score', angle: -90, position: 'insideLeft', offset: 5, fill: '#64748b', fontSize: 10 }} />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#1e293b' : '#cbd5e1',
+                  backgroundColor: '#ffffff',
+                  borderColor: '#cbd5e1',
                   borderRadius: '12px'
                 }}
               />
@@ -677,13 +626,13 @@ const IntelligenceDashboard = () => {
         >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={conservationPriorities} layout="vertical" margin={{ top: 15, right: 15, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={theme === 'dark' ? '#1e293b' : '#e2e8f0'} />
-              <XAxis type="number" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={9} tickLine={false} axisLine={false} label={{ value: 'Priority Index Rating', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 10 }} />
-              <YAxis type="category" dataKey="name" stroke={theme === 'dark' ? '#64748b' : '#475569'} fontSize={9} tickLine={false} width={100} />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={'#e2e8f0'} />
+              <XAxis type="number" stroke={'#475569'} fontSize={9} tickLine={false} axisLine={false} label={{ value: 'Priority Index Rating', position: 'insideBottom', offset: -5, fill: '#64748b', fontSize: 10 }} />
+              <YAxis type="category" dataKey="name" stroke={'#475569'} fontSize={9} tickLine={false} width={100} />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: theme === 'dark' ? '#0f172a' : '#ffffff',
-                  borderColor: theme === 'dark' ? '#1e293b' : '#cbd5e1',
+                  backgroundColor: '#ffffff',
+                  borderColor: '#cbd5e1',
                   borderRadius: '12px'
                 }}
               />

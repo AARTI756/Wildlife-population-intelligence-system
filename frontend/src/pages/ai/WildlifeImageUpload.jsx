@@ -1345,14 +1345,14 @@ const WildlifeImageUpload = () => {
                   </span>
                   <div className="relative group rounded-xl overflow-hidden border border-emerald-500/20 bg-slate-950/10 h-72">
                     <img
-                      src={`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.filepath}?t=${new Date().getTime()}`}
+                      src={`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.annotated_filepath || uploadedAsset.filepath}?t=${new Date().getTime()}`}
                       alt="Annotated Wildlife"
                       className="w-full h-full object-contain cursor-zoom-in"
-                      onClick={() => setZoomImage(`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.filepath}`)}
+                      onClick={() => setZoomImage(`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.annotated_filepath || uploadedAsset.filepath}`)}
                       onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1546182990-dffeafbe841d?w=800&auto=format&fit=crop&q=60'; }}
                     />
                     <div 
-                      onClick={() => setZoomImage(`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.filepath}`)}
+                      onClick={() => setZoomImage(`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.annotated_filepath || uploadedAsset.filepath}`)}
                       className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 text-white p-2 rounded-lg cursor-pointer transition-all shadow-sm"
                     >
                       <Maximize2 className="h-4 w-4" />
@@ -1363,7 +1363,7 @@ const WildlifeImageUpload = () => {
                   <div className="mt-2.5 flex items-center justify-between gap-3">
                     <span className="text-[10px] text-slate-500 font-mono">Annotated Bounding Box view</span>
                     <a
-                      href={`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.filepath}`}
+                      href={`${api.defaults.baseURL || 'http://127.0.0.1:8000'}${uploadedAsset.annotated_filepath || uploadedAsset.filepath}`}
                       download={uploadedAsset.filename}
                       target="_blank"
                       rel="noopener noreferrer"

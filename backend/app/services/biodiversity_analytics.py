@@ -45,14 +45,36 @@ def get_species_profile_map(db) -> Dict[str, tuple]:
         profiles = db.query(SpeciesProfile).all()
         name_map = {}
         for p in profiles:
-            common = p.common_name.strip()
-            scientific = p.scientific_name.strip()
+            common = (p.common_name or "").strip()
+            scientific = (p.scientific_name or "").strip()
             cls = p.class_name or "Mammalia"
             iucn = p.iucn_status or "Least Concern"
             
             val = (common, scientific, cls, iucn)
-            name_map[common.lower()] = val
-            name_map[scientific.lower()] = val
+            if common:
+                name_map[common.lower()] = val
+            if scientific:
+                name_map[scientific.lower()] = val
+                
+        # Indian deployment species alias/variant mapping
+        aliases = {
+            "one-horned rhinoceros": "indian rhinoceros",
+            "one horned rhinoceros": "indian rhinoceros",
+            "tiger": "bengal tiger",
+            "lion": "asiatic lion",
+            "leopard": "indian leopard",
+            "elephant": "asian elephant",
+            "indian elephant": "asian elephant",
+            "carrion crow": "house crow",
+            "crow": "house crow",
+            "koel": "asian koel",
+            "red tailed hawk": "red-tailed hawk",
+            "hawk": "red-tailed hawk",
+        }
+        for alias, canonical in aliases.items():
+            if canonical in name_map:
+                name_map[alias] = name_map[canonical]
+                
         return name_map
     except Exception:
         return {}
@@ -289,14 +311,7 @@ def get_biodiversity_trends(db, **filters) -> List[Dict[str, Any]]:
         })
         
     if not results:
-        # Fallback trend
-        for i in range(6):
-            date = datetime.utcnow() - timedelta(days=(5-i)*30)
-            results.append({
-                "month": date.strftime("%Y-%m"),
-                "shannon": round(2.1 + (i * 0.12), 2),
-                "detections": 15 + i * 5
-            })
+        return []
     return results
 
 def get_species_composition(db, **filters) -> List[Dict[str, Any]]:

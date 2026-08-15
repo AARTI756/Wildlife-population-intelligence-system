@@ -3,7 +3,6 @@ import { MapContainer, TileLayer } from 'react-leaflet';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import api from '../services/api';
-import { useTheme } from '../hooks/useTheme';
 import { formatIST, localizeSpeciesName } from '../utils/india';
 import { Loader2 } from 'lucide-react';
 
@@ -97,7 +96,6 @@ const MarkerCluster = ({ sitesData }) => {
 };
 
 const InteractiveGisMap = () => {
-  const { theme } = useTheme();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sitesData, setSitesData] = useState([]);

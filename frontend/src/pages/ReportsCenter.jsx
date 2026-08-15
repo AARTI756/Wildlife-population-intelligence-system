@@ -39,6 +39,7 @@ const ReportsCenter = () => {
   const [surveyId, setSurveyId] = useState('');
   const [siteId, setSiteId] = useState('');
   const [selectedSpecies, setSelectedSpecies] = useState('');
+  const [conservationStatus, setConservationStatus] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
@@ -138,6 +139,7 @@ const ReportsCenter = () => {
     if (surveyId) filters.survey_id = parseInt(surveyId);
     if (siteId) filters.site_id = parseInt(siteId);
     if (selectedSpecies) filters.species = selectedSpecies;
+    if (conservationStatus) filters.conservation_status = conservationStatus;
     if (startDate) filters.start_date = startDate;
     if (endDate) filters.end_date = endDate;
     
@@ -219,11 +221,12 @@ const ReportsCenter = () => {
     setSelectedFormat(item.format);
     // Parse filters
     const filters = item.filters_json || {};
-    if (filters.survey_id) setSurveyId(filters.survey_id.toString());
-    if (filters.site_id) setSiteId(filters.site_id.toString());
-    if (filters.species) setSelectedSpecies(filters.species);
-    if (filters.start_date) setStartDate(filters.start_date);
-    if (filters.end_date) setEndDate(filters.end_date);
+    setSurveyId(filters.survey_id ? filters.survey_id.toString() : '');
+    setSiteId(filters.site_id ? filters.site_id.toString() : '');
+    setSelectedSpecies(filters.species || '');
+    setConservationStatus(filters.conservation_status || '');
+    setStartDate(filters.start_date || '');
+    setEndDate(filters.end_date || '');
     
     // Automatically trigger
     setTimeout(() => {
@@ -329,7 +332,7 @@ const ReportsCenter = () => {
             </div>
 
             {/* Custom filters panel */}
-            <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-900 bg-slate-50/20 dark:bg-slate-900/5 grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="p-4 rounded-xl border border-slate-100 dark:border-slate-900 bg-slate-50/20 dark:bg-slate-900/5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <div className="space-y-1">
                 <label className="block text-4xs font-bold uppercase tracking-wider text-slate-400">Filter by Site</label>
                 <select
@@ -362,8 +365,51 @@ const ReportsCenter = () => {
                   className="py-1.5 px-2 text-xs w-full rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none"
                 >
                   <option value="">All Species</option>
-                  {speciesList.map(s => <option key={s.id} value={s.common_name}>{localizeSpeciesName(s.common_name)}</option>)}
+                  {Array.from(new Set(speciesList.map(s => s.common_name))).map(name => {
+                    const uniqueSp = speciesList.find(s => s.common_name === name);
+                    return (
+                      <option key={uniqueSp?.id || name} value={name}>
+                        {localizeSpeciesName(name)}
+                      </option>
+                    );
+                  })}
                 </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-4xs font-bold uppercase tracking-wider text-slate-400">Conservation Status</label>
+                <select
+                  value={conservationStatus}
+                  onChange={(e) => setConservationStatus(e.target.value)}
+                  className="py-1.5 px-2 text-xs w-full rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:outline-none"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="Critically Endangered">Critically Endangered</option>
+                  <option value="Endangered">Endangered</option>
+                  <option value="Vulnerable">Vulnerable</option>
+                  <option value="Near Threatened">Near Threatened</option>
+                  <option value="Least Concern">Least Concern</option>
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-4xs font-bold uppercase tracking-wider text-slate-400">Start Date</label>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="py-1 px-2 text-xs w-full rounded-lg bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 focus:outline-none text-slate-700 dark:text-slate-200 h-[28px] leading-tight"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-4xs font-bold uppercase tracking-wider text-slate-400">End Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="py-1 px-2 text-xs w-full rounded-lg bg-white dark:bg-slate-950 border border-slate-205 dark:border-slate-800 focus:outline-none text-slate-700 dark:text-slate-200 h-[28px] leading-tight"
+                />
               </div>
             </div>
           </div>
@@ -487,33 +533,35 @@ const ReportsCenter = () => {
                       <td className="p-4 text-center font-mono text-[11px]">
                         {item.execution_time_ms ? `${(item.execution_time_ms / 1000).toFixed(2)}s` : "-"}
                       </td>
-                      <td className="p-4 text-right flex items-center justify-end gap-2.5">
-                        {item.status === 'Completed' && (
+                      <td className="p-4 text-right">
+                        <div className="flex items-center justify-end gap-2.5">
+                          {item.status === 'Completed' && (
+                            <button
+                              onClick={() => handleDownload(item.id, item.download_filename)}
+                              className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold text-emerald-600 transition-all shadow-3xs cursor-pointer"
+                            >
+                              <FileDown className="h-3.5 w-3.5" />
+                              <span>Download</span>
+                            </button>
+                          )}
                           <button
-                            onClick={() => handleDownload(item.id, item.download_filename)}
-                            className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 text-[10px] font-bold text-emerald-650 dark:text-emerald-450 transition-all shadow-3xs cursor-pointer"
+                            onClick={() => handleRegenerate(item)}
+                            className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-[10px] font-bold text-slate-600 transition-all shadow-3xs cursor-pointer"
+                            title="Re-run Report with Same Config"
                           >
-                            <FileDown className="h-3.5 w-3.5" />
-                            <span>Download</span>
+                            <RefreshCw className="h-3 w-3" />
+                            <span>Regenerate</span>
                           </button>
-                        )}
-                        <button
-                          onClick={() => handleRegenerate(item)}
-                          className="flex items-center gap-1.5 py-1.5 px-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:bg-slate-50 dark:hover:bg-slate-900 text-[10px] font-bold text-slate-655 dark:text-slate-300 transition-all shadow-3xs cursor-pointer"
-                          title="Re-run Report with Same Config"
-                        >
-                          <RefreshCw className="h-3 w-3" />
-                          <span>Regenerate</span>
-                        </button>
-                        {isAdmin && (
-                          <button
-                            onClick={() => handleDelete(item.id)}
-                            className="p-1.5 rounded-lg border border-rose-200 dark:border-rose-900/30 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-955/20 transition-all cursor-pointer"
-                            title="Permanently Delete Run Log"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        )}
+                          {isAdmin && (
+                            <button
+                              onClick={() => handleDelete(item.id)}
+                              className="p-1.5 rounded-lg border border-rose-200 text-rose-600 hover:bg-rose-50 transition-all cursor-pointer"
+                              title="Permanently Delete Run Log"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}

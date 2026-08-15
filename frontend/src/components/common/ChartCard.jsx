@@ -16,14 +16,14 @@ const ChartCard = ({
   className = ''
 }) => {
   return (
-    <div className={`glass-card p-6 flex flex-col justify-between border-slate-202 dark:border-slate-805 shadow-sm min-h-[320px] ${className}`}>
+    <div className={`glass-card p-5 flex flex-col justify-between border-slate-200 shadow-sm min-h-[300px] bg-white ${className}`}>
       {title && (
         <div className="mb-4">
-          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white whitespace-normal break-words leading-snug">
+          <h3 className="text-sm font-extrabold text-slate-900 whitespace-normal break-words leading-snug">
             {title}
           </h3>
           {subtitle && (
-            <p className="text-3xs text-slate-550 dark:text-slate-400 mt-0.5 font-semibold whitespace-normal break-words leading-snug">
+            <p className="text-3xs text-slate-500 mt-0.5 font-semibold whitespace-normal break-words leading-snug">
               {subtitle}
             </p>
           )}
@@ -34,10 +34,10 @@ const ChartCard = ({
         {loading ? (
           <LoadingState message="Fetching analytics telemetry..." />
         ) : error ? (
-          <div className="flex flex-col items-center justify-center p-6 text-center text-rose-600 dark:text-rose-450">
+          <div className="flex flex-col items-center justify-center p-6 text-center text-rose-600">
             <AlertCircle className="h-8 w-8 mb-2" />
             <h4 className="text-xs font-bold">Failed to Load Chart</h4>
-            <p className="text-3xs text-slate-500 dark:text-slate-500 mt-1">{error}</p>
+            <p className="text-3xs text-slate-500 mt-1">{error}</p>
           </div>
         ) : isEmpty ? (
           <EmptyState 

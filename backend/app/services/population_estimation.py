@@ -40,15 +40,42 @@ def get_state_from_location(location_str: str) -> str:
     return "Other Reserve"
 
 def get_species_profile_map(db) -> Dict[str, tuple]:
-    """Build a case-insensitive map of common and scientific names to (common_name, scientific_name)."""
+    """Build a case-insensitive map of common and scientific names to
+    (common_name, scientific_name, class_name, iucn_status).
+    Matches the 4-tuple contract used by biodiversity_analytics."""
     try:
         profiles = db.query(SpeciesProfile).all()
         name_map = {}
         for p in profiles:
-            common = p.common_name.strip()
-            scientific = p.scientific_name.strip()
-            name_map[common.lower()] = (common, scientific)
-            name_map[scientific.lower()] = (common, scientific)
+            common = (p.common_name or "").strip()
+            scientific = (p.scientific_name or "").strip()
+            cls = (p.class_name or "").strip() or None
+            iucn = (p.iucn_status or "").strip() or None
+            val = (common, scientific, cls, iucn)
+            if common:
+                name_map[common.lower()] = val
+            if scientific:
+                name_map[scientific.lower()] = val
+                
+        # Indian deployment species alias/variant mapping
+        aliases = {
+            "one-horned rhinoceros": "indian rhinoceros",
+            "one horned rhinoceros": "indian rhinoceros",
+            "tiger": "bengal tiger",
+            "lion": "asiatic lion",
+            "leopard": "indian leopard",
+            "elephant": "asian elephant",
+            "indian elephant": "asian elephant",
+            "carrion crow": "house crow",
+            "crow": "house crow",
+            "koel": "asian koel",
+            "red tailed hawk": "red-tailed hawk",
+            "hawk": "red-tailed hawk",
+        }
+        for alias, canonical in aliases.items():
+            if canonical in name_map:
+                name_map[alias] = name_map[canonical]
+                
         return name_map
     except Exception:
         return {}
@@ -411,13 +438,17 @@ def get_species_metrics(db, **filters) -> List[Dict[str, Any]]:
         coverage = min(round((sp_sites / max(total_sites, 1)) * 100, 1), 100.0)
         det_freq = min(round((obs_count / max(total_surveys, 1)) * 100, 1), 100.0)
         
-        # Get scientific name from map
+        # Extract catalog fields from the 4-tuple species map
         lookup = species_map.get(sp_name.lower())
         scientific_name = lookup[1] if lookup else None
+        taxon_class = lookup[2] if lookup else None      # class_name from SpeciesProfile
+        iucn_status = lookup[3] if lookup else None       # iucn_status from SpeciesProfile
         
         results.append({
             "species_name": sp_name,
             "scientific_name": scientific_name,
+            "taxon_class": taxon_class,
+            "iucn_status": iucn_status,
             "estimated_population": est_pop,
             "population_density": density,
             "observation_count": obs_count,

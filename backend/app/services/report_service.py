@@ -1,10 +1,25 @@
 import os
 import csv
 import time
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
+
+
+def format_ist_timestamp(dt: datetime = None) -> str:
+    """Convert a UTC datetime (naive or aware) to IST (Asia/Kolkata, UTC+05:30).
+    Returns a clean string like '2026-08-14 19:55:04 IST'.
+    If dt is None, uses the current UTC time.
+    """
+    IST = timezone(timedelta(hours=5, minutes=30))
+    if dt is None:
+        dt = datetime.now(timezone.utc)
+    # Ensure the datetime is timezone-aware
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    ist_dt = dt.astimezone(IST)
+    return ist_dt.strftime("%Y-%m-%d %H:%M:%S IST")
 
 from app.models.report import ReportHistory, ReportAuditLog
 from app.models.monitoring import Survey, MonitoringSite, CameraTrap, AudioSensor
@@ -12,7 +27,7 @@ from app.models.observation import Observation
 
 # Import from other services to avoid calculations duplication
 from app.services.population_estimation import get_population_overview, get_species_metrics
-from app.services.biodiversity_analytics import get_biodiversity_overview, get_species_composition, get_endangered_summary
+from app.services.biodiversity_analytics import get_biodiversity_overview, get_species_composition, get_endangered_summary, get_relative_abundance, get_species_profile_map
 from app.services.habitat_intelligence import get_habitat_overview, get_habitat_classification, get_vegetation_analysis
 from app.services.conservation_recommendations import get_conservation_overview, get_conservation_priorities, get_actionable_recommendations
 from app.services.health_scoring import get_health_overview, get_health_breakdown, get_health_alerts
@@ -24,10 +39,44 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+
+# Try to register Arial font to handle rupee sign (₹) on Windows
+pdf_font = "Helvetica"
+pdf_font_bold = "Helvetica-Bold"
+
+for font_path in [
+    "C:\\Windows\\Fonts\\arial.ttf",
+    "C:\\Windows\\Fonts\\calibri.ttf",
+    "C:\\Windows\\Fonts\\segoeui.ttf",
+    "arial.ttf"
+]:
+    if os.path.exists(font_path):
+        try:
+            pdfmetrics.registerFont(TTFont('Arial', font_path))
+            pdf_font = "Arial"
+            break
+        except Exception:
+            pass
+
+for font_path in [
+    "C:\\Windows\\Fonts\\arialbd.ttf",
+    "C:\\Windows\\Fonts\\calibrib.ttf",
+    "C:\\Windows\\Fonts\\segoeuib.ttf",
+    "arialbd.ttf"
+]:
+    if os.path.exists(font_path):
+        try:
+            pdfmetrics.registerFont(TTFont('Arial-Bold', font_path))
+            pdf_font_bold = "Arial-Bold"
+            break
+        except Exception:
+            pass
 
 class NumberedCanvas(canvas.Canvas):
     """Custom canvas that computes total pages dynamically and adds header/footer lines."""
@@ -49,7 +98,7 @@ class NumberedCanvas(canvas.Canvas):
 
     def draw_page_decorations(self, page_count):
         self.saveState()
-        self.setFont("Helvetica", 8)
+        self.setFont(pdf_font, 8)
         self.setFillColor(colors.HexColor("#475569"))
         
         # Header (Only on page 2 and later)
@@ -70,12 +119,51 @@ class NumberedCanvas(canvas.Canvas):
         self.restoreState()
 
 
+def parse_date(date_str: Optional[str]) -> Optional[datetime]:
+    """Defensive date parser supporting ISO and YYYY-MM-DD strings."""
+    if not date_str:
+        return None
+    try:
+        cleaned = date_str.replace("Z", "+00:00")
+        return datetime.fromisoformat(cleaned)
+    except Exception:
+        try:
+            return datetime.strptime(date_str, "%Y-%m-%d")
+        except Exception:
+            return None
+
 def compile_report_dataset(db: Session, report_type: str, filters: Dict[str, Any]) -> Dict[str, Any]:
-    """Gather live data directly from the corresponding service engine without recomputations."""
     cleaned_filters = {k: v for k, v in filters.items() if v is not None}
     
+    # Remap UI filter keys to service parameters
+    if "start_date" in cleaned_filters:
+        cleaned_filters["date_from"] = cleaned_filters.pop("start_date")
+    if "end_date" in cleaned_filters:
+        cleaned_filters["date_to"] = cleaned_filters.pop("end_date")
+        
+    # Standardize dates and IDs to ensure database comparisons match expected types
+    if "date_from" in cleaned_filters:
+        cleaned_filters["date_from"] = parse_date(cleaned_filters["date_from"])
+    if "date_to" in cleaned_filters:
+        cleaned_filters["date_to"] = parse_date(cleaned_filters["date_to"])
+        
+    for id_key in ["survey_id", "site_id"]:
+        if id_key in cleaned_filters and cleaned_filters[id_key] is not None:
+            try:
+                cleaned_filters[id_key] = int(cleaned_filters[id_key])
+            except (ValueError, TypeError):
+                pass
+
+    # Build a sanitised filter dict that only passes keys accepted by service
+    # functions (i.e. kwargs of get_filtered_observations / _apply_filters).
+    # This prevents TypeError when UI-only keys like conservation_status are
+    # present in the request payload.
+    ALLOWED_SERVICE_KEYS = {"survey_id", "site_id", "species", "habitat",
+                            "date_from", "date_to", "protected_area", "state"}
+    service_filters = {k: v for k, v in cleaned_filters.items() if k in ALLOWED_SERVICE_KEYS}
+
     dataset = {
-        "generated_at": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC"),
+        "generated_at": format_ist_timestamp(),
         "report_type": report_type,
         "filters": cleaned_filters
     }
@@ -93,7 +181,7 @@ def compile_report_dataset(db: Session, report_type: str, filters: Dict[str, Any
             survey_query = survey_query.filter(Survey.monitoring_site_id == cleaned_filters["site_id"])
             obs_query = obs_query.filter(Observation.monitoring_site_id == cleaned_filters["site_id"])
             
-        surveys_list = survey_query.all()
+        surveys_list = survey_query.order_by(Survey.date.desc()).all()
         sites_count = site_query.count()
         observations_count = obs_query.count()
         cameras_count = db.query(CameraTrap).count()
@@ -112,137 +200,216 @@ def compile_report_dataset(db: Session, report_type: str, filters: Dict[str, Any
         ]
         
     elif report_type == "Species Population Report":
-        overview = get_population_overview(db, **cleaned_filters)
-        species_metrics = get_species_metrics(db, **cleaned_filters)
+        # Separate conservation_status since services don't consume it directly
+        target_status = cleaned_filters.get("conservation_status")
+        service_filters = {k: v for k, v in cleaned_filters.items() if k != "conservation_status"}
         
-        dataset["summary"] = {
-            "Total Population Estimate": overview.get("total_population", 0),
-            "Unique Species Count": overview.get("total_species", 0),
-            "Avg Density (ind/km²)": f"{overview.get('average_density', 0.0):.2f}",
-            "Coverage Factor (%)": f"{overview.get('observation_coverage', 0.0):.1f}%"
-        }
+        overview = get_population_overview(db, **service_filters)
+        species_metrics = get_species_metrics(db, **service_filters)
+        
+        if target_status:
+            # Filter metrics based on IUCN status
+            species_metrics = [m for m in species_metrics if (m.get("iucn_status") or "").strip().lower() == target_status.strip().lower()]
+            total_est = sum(m.get("estimated_population", 0) for m in species_metrics)
+            richness = len(species_metrics)
+            dataset["summary"] = {
+                "Total Population Estimate": total_est,
+                "Unique Species Count": richness,
+                "Avg Density (ind/km²)": f"{overview.get('average_density', 0.0):.2f}",
+                "Coverage Factor (%)": f"{overview.get('average_observation_coverage', 0.0):.1f}%"
+            }
+        else:
+            dataset["summary"] = {
+                "Total Population Estimate": overview.get("total_estimated_population", 0),
+                "Unique Species Count": overview.get("total_species_richness", 0),
+                "Avg Density (ind/km²)": f"{overview.get('average_density', 0.0):.2f}",
+                "Coverage Factor (%)": f"{overview.get('average_observation_coverage', 0.0):.1f}%"
+            }
+            
         dataset["data_table"] = [
             {
-                "Species Common Name": m.get("species_name", "Unknown"),
-                "Taxon Class": m.get("taxon_class", "N/A"),
-                "Population Est": m.get("estimated_population", 0),
-                "Sighting Rate MoM": f"{m.get('growth_rate', 0.0):+.1f}%" if m.get('growth_rate') is not None else "Insufficient Data",
-                "IUCN Status": m.get("iucn_status", "LC")
+                "Species Common Name": m.get("species_name", "—"),
+                "Scientific Name": m.get("scientific_name", "—"),
+                "Taxon Class": m.get("taxon_class", "—"),
+                "Observations": m.get("observation_count", 0),
+                "Est. Population": m.get("estimated_population", 0),
+                "Detection Freq (%)": f"{m.get('detection_frequency', 0.0):.1f}%",
+                "IUCN Status": m.get("iucn_status", "—")
             }
             for m in species_metrics
         ]
         
     elif report_type == "Biodiversity Report":
-        overview = get_biodiversity_overview(db, **cleaned_filters)
-        comp = get_species_composition(db, **cleaned_filters)
-        endangered = get_endangered_summary(db, **cleaned_filters)
+        target_status = cleaned_filters.get("conservation_status")
+        service_filters = {k: v for k, v in cleaned_filters.items() if k != "conservation_status"}
         
+        overview = get_biodiversity_overview(db, **service_filters)
+        comp = get_relative_abundance(db, **service_filters)
+        endangered = get_endangered_summary(db, **service_filters)
+        
+        species_map = get_species_profile_map(db)
+        
+        if target_status:
+            # Safe IUCN-status filter: guard against None species_name or missing profile
+            filtered_comp = []
+            for c in comp:
+                sp_name = c.get("species_name") or ""
+                profile = species_map.get(sp_name.lower().strip()) if sp_name else None
+                iucn = (profile[3] if (profile and len(profile) > 3) else "") or ""
+                if iucn.strip().lower() == target_status.strip().lower():
+                    filtered_comp.append(c)
+            comp = filtered_comp
+            endangered = [
+                e for e in endangered
+                if (e.get("iucn_status") or "").strip().lower() == target_status.strip().lower()
+            ]
+
         dataset["summary"] = {
-            "Shannon Index (H')": f"{overview.get('shannon_index', 0.0):.3f}",
-            "Simpson Index (D)": f"{overview.get('simpson_index', 0.0):.3f}",
+            "Shannon Index (H')": f"{overview.get('shannon_diversity_index', 0.0):.3f}",
+            "Simpson Index (D)": f"{overview.get('simpson_diversity_index', 0.0):.3f}",
             "Evenness (E)": f"{overview.get('species_evenness', 0.0):.3f}",
             "Species Richness": overview.get("species_richness", 0)
         }
         dataset["data_table"] = [
             {
-                "Species Name": c.get("species_name", "Unknown"),
-                "Taxonomic Group": c.get("taxon_class", "N/A"),
-                "Observations Count": c.get("observations_count", 0),
-                "Relative Abundance (%)": f"{c.get('relative_abundance', 0.0):.2f}%"
+                "Species Name": c.get("species_name", "—"),
+                "Scientific Name": c.get("scientific_name", "—"),
+                "Observations": c.get("observation_count", 0),
+                "Relative Abundance (%)": f"{c.get('relative_abundance_pct', 0.0):.2f}%"
             }
             for c in comp
         ]
         dataset["extra_table"] = [
-            {"Threatened Species": e.get("species_name"), "IUCN Group": e.get("iucn_status"), "Observations Logged": e.get("observations_count")}
+            {
+                "Threatened Species": e.get("species_name"),
+                "IUCN Group": e.get("iucn_status"),
+                # Use correct key: get_endangered_summary returns 'observation_count'
+                "Observations Logged": e.get("observation_count")
+            }
             for e in endangered
         ]
         
     elif report_type == "Habitat Assessment Report":
-        overview = get_habitat_overview(db, **cleaned_filters)
-        classification = get_habitat_classification(db, **cleaned_filters)
-        veg = get_vegetation_analysis(db, **cleaned_filters)
+        overview = get_habitat_overview(db, **service_filters)
+        classification = get_habitat_classification(db, **service_filters)
+        veg = get_vegetation_analysis(db, **service_filters)
         
+        if veg:
+            avg_ndvi = sum(x["ndvi"] for x in veg) / len(veg)
+            avg_ndvi_str = f"{avg_ndvi:.2f}"
+        else:
+            avg_ndvi_str = "No Data"
+            
         dataset["summary"] = {
             "Ecosystem Quality Index": f"{overview.get('habitat_quality_score', 0.0):.1f}/100",
-            "Human Disturbance Factor": f"{overview.get('human_disturbance_score', 0.0):.1f}/100",
-            "Average NDVI Indicator": f"{overview.get('average_ndvi', 0.0):.2f}"
+            "Human Disturbance Factor": f"{overview.get('human_disturbance', 0.0):.1f}/100",
+            "Average NDVI Indicator": avg_ndvi_str
         }
         dataset["data_table"] = [
             {
-                "Biome Classification": c.get("habitat_type"),
-                "Relative Coverage (%)": f"{c.get('coverage_percentage', 0.0):.1f}%",
-                "Suitability Score": f"{c.get('suitability_score', 0.0):.1f}/100",
-                "Anomaly Alert": "Degradation Warning" if c.get("suitability_score", 100) < 60 else "Stable"
+                "Biome Classification": c.get("name") or "—",
+                "Relative Coverage (%)": f"{c.get('value', 0.0):.1f}%",
+                "Observations": c.get("observations", 0),
+                "Anomaly Alert": "Low Coverage" if c.get("value", 0.0) < 5.0 else "Stable"
             }
             for c in classification
         ]
         
     elif report_type == "Conservation Report":
-        overview = get_conservation_overview(db, **cleaned_filters)
-        priorities = get_conservation_priorities(db, **cleaned_filters)
-        actions = get_actionable_recommendations(db, **cleaned_filters)
+        overview = get_conservation_overview(db, **service_filters)
+        priorities = get_conservation_priorities(db, **service_filters)
+        actions = get_actionable_recommendations(db, **service_filters)
+        
+        import re
+        total_action_cost = 0.0
+        for a in actions:
+            cost_str = a.get("estimated_cost", "₹0")
+            cleaned_cost = re.sub(r'[^\d.]', '', cost_str)
+            try:
+                numeric_cost = float(cleaned_cost) if cleaned_cost else 0.0
+                total_action_cost += numeric_cost
+            except ValueError:
+                pass
+                
+        health_overview = get_health_overview(db, **service_filters)
+        ecosystem_health = health_overview.get("overallScore", 0.0)
         
         dataset["summary"] = {
-            "Active Recommendations": overview.get("active_recommendations", 0),
-            "Ecosystem Health Score": f"{overview.get('ecosystem_health_score', 0.0):.1f}/100",
-            "Total Required Funding": f"₹{overview.get('total_budget_allocated_millions', 0.0):.1f}M"
+            "Active Recommendations": len(actions),
+            "Ecosystem Health Score": f"{ecosystem_health:.1f}/100",
+            "Total Required Funding": f"₹{total_action_cost:,.2f}" if total_action_cost > 0 else "₹0.00"
         }
-        dataset["data_table"] = [
-            {
+        
+        dataset["data_table"] = []
+        for a in actions:
+            cost_str = a.get("estimated_cost", "₹0")
+            cleaned_cost = re.sub(r'[^\d.]', '', cost_str)
+            try:
+                cost_val = float(cleaned_cost) if cleaned_cost else 0.0
+                formatted_cost = f"₹{cost_val:,.2f}"
+            except ValueError:
+                formatted_cost = "₹0.00"
+                
+            dataset["data_table"].append({
                 "Action Description": a.get("title"),
                 "Priority Status": a.get("priority"),
-                "Target Entity/Location": a.get("target"),
-                "Department Owner": a.get("responsible_department", "Forest Dept"),
-                "Completion Time": a.get("completion_time", "6 Months"),
-                "Estimated Cost": a.get("estimated_cost", "₹0")
-            }
-            for a in actions
-        ]
+                "Department Owner": a.get("department", "Forest Dept"),
+                "Completion Time": a.get("completion_time", "30 Days"),
+                "Estimated Cost": formatted_cost,
+                "Expected Impact": a.get("expected_impact", "N/A")
+            })
         
     elif report_type == "Wildlife Health Report":
-        overview = get_health_overview(db, **cleaned_filters)
-        breakdown = get_health_breakdown(db, **cleaned_filters)
-        alerts = get_health_alerts(db, **cleaned_filters)
+        overview = get_health_overview(db, **service_filters)
+        breakdown = get_health_breakdown(db, **service_filters)
         
         dataset["summary"] = {
             "Overall Health Score": f"{overview.get('overallScore', 0.0):.1f}/100",
-            "Ecosystem Rating": overview.get("statusLabel", "Moderate Concern"),
-            "Calculations Framework": "Weighted (25% Pop, 30% Bio, 25% Hab, 20% Cons)"
+            "Ecosystem Rating": overview.get("statusName", "Moderate Concern"),
+            "Calculations Framework": "Weighted Index Model (30% Species Diversity, 25% Population Stability, 20% Habitat Quality, 15% Endangered Species Status, 10% Environmental Conditions)"
         }
+        
+        def _get_pillar_status(score):
+            if score >= 75: return "Healthy"
+            if score >= 60: return "Moderate Concern"
+            return "Critical"
+            
         dataset["data_table"] = [
             {
-                "Ecosystem Index Pillar": b.get("metric"),
-                "Assigned Weighted Score": f"{b.get('score', 0.0):.1f}/100",
-                "Assigned Weight (%)": f"{b.get('weight', 0.0)*100:.0f}%",
-                "Ecosystem Rating": b.get("status")
+                "Ecosystem Index Pillar": b.get("name"),
+                "Assigned Weighted Score": f"{b.get('value', 0.0):.1f}/100",
+                "Assigned Weight (%)": f"{b.get('weight', 0.0):.0f}%",
+                "Ecosystem Rating": _get_pillar_status(b.get("value", 0.0))
             }
             for b in breakdown
         ]
         
     elif report_type == "Executive Summary Report":
-        overview = get_executive_overview(db, **cleaned_filters)
-        trends = get_executive_population_trends(db, **cleaned_filters)
+        overview = get_executive_overview(db, **service_filters)
+        health_data = get_health_overview(db, **service_filters)
+        bio_data = get_biodiversity_overview(db, **service_filters)
+        hab_data = get_habitat_overview(db, **service_filters)
         
         dataset["summary"] = {
-            "Ecosystem Health Rating": f"{overview.get('healthScore', 0.0):.1f}/100",
-            "Shannon Index": f"{overview.get('shannonIndex', 0.0):.2f}",
-            "Habitat Quality score": f"{overview.get('habitatQuality', 0.0):.1f}/100",
-            "Total Live Observations": overview.get("totalObservations", 0)
+            "Ecosystem Health Rating": f"{health_data.get('overallScore', 0.0):.1f}/100",
+            "Shannon Index": f"{bio_data.get('shannon_diversity_index', 0.0):.3f}",
+            "Habitat Quality Score": f"{hab_data.get('habitat_quality_score', 0.0):.1f}/100",
+            "Total Live Observations": overview.get("metrics", {}).get("totalObservations", {}).get("value", "0")
         }
         dataset["data_table"] = [
             {
                 "Ecosystem Index Pillar": "Overall Ecosystem Health",
-                "Score Value": f"{overview.get('healthScore', 0.0):.1f}/100",
-                "Threshold Label": overview.get("healthScoreLabel", "Unknown")
+                "Score Value": f"{health_data.get('overallScore', 0.0):.1f}/100",
+                "Threshold Label": health_data.get("statusName", "Unknown")
             },
             {
                 "Ecosystem Index Pillar": "Shannon Diversity Index",
-                "Score Value": f"{overview.get('shannonIndex', 0.0):.2f}",
+                "Score Value": f"{bio_data.get('shannon_diversity_index', 0.0):.3f}",
                 "Threshold Label": "Stable"
             },
             {
                 "Ecosystem Index Pillar": "Habitat Suitability Index",
-                "Score Value": f"{overview.get('habitatQuality', 0.0):.1f}/100",
+                "Score Value": f"{hab_data.get('habitat_quality_score', 0.0):.1f}/100",
                 "Threshold Label": "Moderate"
             }
         ]
@@ -275,7 +442,7 @@ def generate_pdf_report(dataset: Dict[str, Any], filepath: str):
     title_style = ParagraphStyle(
         'DocTitle',
         parent=styles['Heading1'],
-        fontName='Helvetica-Bold',
+        fontName=pdf_font_bold,
         fontSize=22,
         textColor=primary_color,
         spaceAfter=15
@@ -284,7 +451,7 @@ def generate_pdf_report(dataset: Dict[str, Any], filepath: str):
     h2_style = ParagraphStyle(
         'DocH2',
         parent=styles['Heading2'],
-        fontName='Helvetica-Bold',
+        fontName=pdf_font_bold,
         fontSize=13,
         textColor=slate_color,
         spaceBefore=15,
@@ -294,7 +461,7 @@ def generate_pdf_report(dataset: Dict[str, Any], filepath: str):
     body_style = ParagraphStyle(
         'DocBody',
         parent=styles['Normal'],
-        fontName='Helvetica',
+        fontName=pdf_font,
         fontSize=10,
         leading=14,
         textColor=colors.HexColor("#334155")
@@ -303,7 +470,7 @@ def generate_pdf_report(dataset: Dict[str, Any], filepath: str):
     bold_body_style = ParagraphStyle(
         'DocBoldBody',
         parent=body_style,
-        fontName='Helvetica-Bold'
+        fontName=pdf_font_bold
     )
     
     story = []
@@ -359,11 +526,27 @@ def generate_pdf_report(dataset: Dict[str, Any], filepath: str):
         for row in table_rows:
             pdf_table_data.append([Paragraph(str(row.get(h, "")), body_style) for h in headers])
             
-        # Calculate proportional widths to sum to 500
+        # Calculate custom column widths based on header values to prevent text wrapping or squeezing overlaps (total printable width = 504)
         num_cols = len(headers)
-        col_width = 504 / num_cols
-        
-        detail_table = Table(pdf_table_data, colWidths=[col_width]*num_cols)
+        col_widths = []
+        if "Species Common Name" in headers:
+            col_widths = [100, 80, 80, 54, 60, 80, 50]  # Total = 504 (7 columns)
+        elif "Species Name" in headers:
+            col_widths = [150, 150, 100, 104]    # Total = 504 (4 columns)
+        elif "Biome Classification" in headers:
+            col_widths = [150, 120, 114, 120]    # Total = 504 (4 columns)
+        elif "Action Description" in headers:
+            col_widths = [154, 70, 70, 70, 70, 70] # Total = 504 (6 columns)
+        elif "Ecosystem Index Pillar" in headers:
+            col_widths = [184, 160, 160] if num_cols == 3 else [200, 104, 100, 100]
+        else:
+            col_widths = [504 / num_cols] * num_cols
+
+        # Adjust dynamically if headers length doesn't match default mapping sizes
+        if len(col_widths) != num_cols:
+            col_widths = [504 / num_cols] * num_cols
+            
+        detail_table = Table(pdf_table_data, colWidths=col_widths)
         detail_table.setStyle(TableStyle([
             ('BACKGROUND', (0,0), (-1,0), primary_color),
             ('BOTTOMPADDING', (0,0), (-1,-1), 6),
@@ -613,7 +796,7 @@ def generate_wildlife_monitoring_report(
     report = {
         "report_type": "Telemetry Sighting Report",
         "format": "JSON",
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": format_ist_timestamp(),
         "prediction_type": prediction_type,
         "input_file": filename,
         "stored_file": stored_filename,
