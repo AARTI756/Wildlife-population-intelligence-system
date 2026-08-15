@@ -189,15 +189,3 @@ GEMINI_MODEL=gemini-1.5-flash
 ## 🪪 License & Contributors
 - **License**: MIT Enterprise License
 - **Contributors**: Aarti / Advanced Agentic Coding
-
-
-
-PS C:\Users\spa\OneDrive\Desktop\Wildlife_Population_AI> cd backend                                              
-PS C:\Users\spa\OneDrive\Desktop\Wildlife_Population_AI\backend> .\venv\Scripts\activate                                 
-(venv) PS C:\Users\spa\OneDrive\Desktop\Wildlife_Population_AI\backend> .\venv\Scripts\uvicorn app.main:app --reload --port 8000
-
-
-
-PS C:\Users\spa\OneDrive\Desktop\Wildlife_Population_AI> cd frontend                                             
-PS C:\Users\spa\OneDrive\Desktop\Wildlife_Population_AI\frontend> npm run dev
-

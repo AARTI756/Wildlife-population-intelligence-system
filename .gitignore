@@ -23,3 +23,9 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+walkthrough.md
+task.md
+PROJECT_REPORT.md
+production.env.example
+CHANGELOG.md
