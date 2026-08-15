@@ -165,10 +165,10 @@ Copy the template below to `.env` inside the `/backend` folder:
 DB_HOST=postgres
 DB_PORT=5432
 DB_NAME=wildlife_db
-DB_USER=postgres
-DB_PASSWORD=Aarti
+DB_USER=your_username
+DB_PASSWORD=your_db_password
 
-SECRET_KEY=9a7c64bb939d88040d12574e4c274b534d0b04a8b7c6de4259b39864ab1a2e31
+SECRET_KEY=<your-secret-key>
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=60
 
