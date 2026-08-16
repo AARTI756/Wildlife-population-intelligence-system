@@ -254,6 +254,7 @@ app.add_middleware(
         "http://localhost:5175",
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
+        "https://wpis-frontend.redcliff-0f9ed6b0.malaysiawest.azurecontainerapps.io",
         # Docker / production deployment (nginx on port 80)
         "http://localhost",
         "http://localhost:80",
